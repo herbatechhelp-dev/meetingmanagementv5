@@ -15,9 +15,10 @@ return new class extends Migration {
             $table->string('title');
             $table->text('description');
             $table->date('due_date');
-            $table->enum('status', ['pending', 'in_progress', 'completed', 'cancelled'])->default('pending');
+            $table->enum('status', ['pending', 'in_progress', 'waiting_review', 'completed', 'cancelled'])->default('pending');
             $table->integer('priority')->default(1); // 1: rendah, 2: sedang, 3: tinggi
             $table->text('completion_notes')->nullable();
+            $table->text('revision_notes')->nullable();
             $table->timestamp('completed_at')->nullable();
             $table->timestamps();
         });

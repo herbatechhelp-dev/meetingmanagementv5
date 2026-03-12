@@ -4,7 +4,7 @@
 @section('title', 'Daftar Meeting')
 
 @section('breadcrumb')
-    <li class="breadcrumb-item active">Meeting</li>
+<li class="breadcrumb-item active">Meeting</li>
 @endsection
 
 @section('content')
@@ -19,28 +19,28 @@
         </div>
         @endif
     </div>
-    
+
     <!-- Tabs untuk Admin/Manager -->
     @if(auth()->user()->isAdmin() || auth()->user()->isManager())
     <div class="card-header p-0 border-bottom-0">
         <ul class="nav nav-tabs" id="meetingTabs" role="tablist">
             <li class="nav-item">
-                <a class="nav-link {{ $filters['type'] === 'all' ? 'active' : '' }}" 
-                   href="{{ request()->fullUrlWithQuery(['type' => 'all']) }}">
+                <a class="nav-link {{ $filters['type'] === 'all' ? 'active' : '' }}"
+                    href="{{ request()->fullUrlWithQuery(['type' => 'all']) }}">
                     Semua Meeting
                     <span class="badge badge-primary ml-1">{{ $stats['all'] ?? 0 }}</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link {{ $filters['type'] === 'created' ? 'active' : '' }}" 
-                   href="{{ request()->fullUrlWithQuery(['type' => 'created']) }}">
+                <a class="nav-link {{ $filters['type'] === 'created' ? 'active' : '' }}"
+                    href="{{ request()->fullUrlWithQuery(['type' => 'created']) }}">
                     Yang Saya Buat
                     <span class="badge badge-info ml-1">{{ $stats['created'] ?? 0 }}</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link {{ $filters['type'] === 'participating' ? 'active' : '' }}" 
-                   href="{{ request()->fullUrlWithQuery(['type' => 'participating']) }}">
+                <a class="nav-link {{ $filters['type'] === 'participating' ? 'active' : '' }}"
+                    href="{{ request()->fullUrlWithQuery(['type' => 'participating']) }}">
                     Yang Saya Ikuti
                     <span class="badge badge-success ml-1">{{ $stats['participating'] ?? 0 }}</span>
                 </a>
@@ -48,13 +48,13 @@
         </ul>
     </div>
     @endif
-    
+
     <!-- Filter Section -->
     <div class="card-body border-bottom">
         <form action="{{ route('meetings.index') }}" method="GET" id="filterForm">
             <!-- Tambahkan hidden input untuk type -->
             <input type="hidden" name="type" value="{{ $filters['type'] }}">
-            
+
             <div class="row">
                 <!-- Filter Status -->
                 <div class="col-md-3">
@@ -68,7 +68,7 @@
                         </select>
                     </div>
                 </div>
-                
+
                 <!-- Filter Departemen -->
                 <div class="col-md-3">
                     <div class="form-group">
@@ -76,15 +76,15 @@
                         <select name="department_id" id="department_id" class="form-control">
                             <option value="">Semua Departemen</option>
                             @foreach($departments as $department)
-                                <option value="{{ $department->id }}" 
-                                    {{ request('department_id') == $department->id ? 'selected' : '' }}>
-                                    {{ $department->name }}
-                                </option>
+                            <option value="{{ $department->id }}"
+                                {{ request('department_id') == $department->id ? 'selected' : '' }}>
+                                {{ $department->name }}
+                            </option>
                             @endforeach
                         </select>
                     </div>
                 </div>
-                
+
                 <!-- Filter Jenis Meeting -->
                 <div class="col-md-3">
                     <div class="form-group">
@@ -92,10 +92,10 @@
                         <select name="meeting_type_id" id="meeting_type_id" class="form-control">
                             <option value="">Semua Jenis</option>
                             @foreach($meetingTypes as $type)
-                                <option value="{{ $type->id }}" 
-                                    {{ request('meeting_type_id') == $type->id ? 'selected' : '' }}>
-                                    {{ $type->name }}
-                                </option>
+                            <option value="{{ $type->id }}"
+                                {{ request('meeting_type_id') == $type->id ? 'selected' : '' }}>
+                                {{ $type->name }}
+                            </option>
                             @endforeach
                         </select>
                     </div>
@@ -112,7 +112,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="row">
                 <!-- Tombol Filter -->
                 <div class="col-md-3">
@@ -122,7 +122,7 @@
                         </button>
                     </div>
                 </div>
-                
+
                 <!-- Tombol Reset -->
                 <div class="col-md-3">
                     <div class="form-group">
@@ -133,7 +133,7 @@
                 </div>
             </div>
         </form>
-        
+
         <!-- Info Filter Aktif -->
         @if(request()->anyFilled(['status', 'department_id', 'meeting_type_id', 'sort']))
         <div class="row mt-3">
@@ -142,16 +142,16 @@
                     <small>
                         <strong>Filter Aktif:</strong>
                         @if(request('status'))
-                            <span class="badge badge-info mr-1">Status: {{ request('status') == 'scheduled' ? 'Terjadwal' : (request('status') == 'ongoing' ? 'Berlangsung' : 'Selesai') }}</span>
+                        <span class="badge badge-info mr-1">Status: {{ request('status') == 'scheduled' ? 'Terjadwal' : (request('status') == 'ongoing' ? 'Berlangsung' : 'Selesai') }}</span>
                         @endif
                         @if(request('department_id'))
-                            <span class="badge badge-info mr-1">Departemen: {{ $departments->where('id', request('department_id'))->first()->name ?? '' }}</span>
+                        <span class="badge badge-info mr-1">Departemen: {{ $departments->where('id', request('department_id'))->first()->name ?? '' }}</span>
                         @endif
                         @if(request('meeting_type_id'))
-                            <span class="badge badge-info mr-1">Jenis: {{ $meetingTypes->where('id', request('meeting_type_id'))->first()->name ?? '' }}</span>
+                        <span class="badge badge-info mr-1">Jenis: {{ $meetingTypes->where('id', request('meeting_type_id'))->first()->name ?? '' }}</span>
                         @endif
                         @if(request('sort'))
-                            <span class="badge badge-info mr-1">Urutan: {{ request('sort') == 'desc' ? 'Terbaru - Lama' : 'Lama - Terbaru' }}</span>
+                        <span class="badge badge-info mr-1">Urutan: {{ request('sort') == 'desc' ? 'Terbaru - Lama' : 'Lama - Terbaru' }}</span>
                         @endif
                         <a href="{{ route('meetings.index', ['type' => $filters['type']]) }}" class="badge badge-danger ml-2">Hapus Semua Filter</a>
                     </small>
@@ -168,11 +168,11 @@
                     <small>
                         <i class="fas fa-info-circle mr-1"></i>
                         @if($filters['type'] === 'created')
-                            Menampilkan <strong>meeting yang Anda buat</strong> sebagai organizer.
+                        Menampilkan <strong>meeting yang Anda buat</strong> sebagai organizer.
                         @elseif($filters['type'] === 'participating')
-                            Menampilkan <strong>meeting yang Anda ikuti sebagai peserta</strong> (bukan sebagai organizer).
+                        Menampilkan <strong>meeting yang Anda ikuti sebagai peserta</strong> (bukan sebagai organizer).
                         @else
-                            Menampilkan <strong>semua meeting</strong> dalam sistem.
+                        Menampilkan <strong>semua meeting</strong> dalam sistem.
                         @endif
                     </small>
                 </div>
@@ -226,7 +226,7 @@
         <div class="alert alert-light mb-3 py-2">
             <small>
                 <i class="fas fa-info-circle mr-1"></i>
-                Data diurutkan berdasarkan <strong>tanggal pembuatan</strong> 
+                Data diurutkan berdasarkan <strong>tanggal pembuatan</strong>
                 ({{ request('sort', 'desc') == 'asc' ? 'Lama - Terbaru' : 'Terbaru - Lama' }})
             </small>
         </div>
@@ -235,34 +235,34 @@
             <table class="table table-bordered table-hover">
                 <thead>
                     <tr>
-                        <th>Judul</th>
-                        <th>Jenis</th>
-                        <th>Organizer</th>
-                        <th>Departemen</th>
-                        <th>Waktu Meeting</th>
-                        <th>Lokasi</th>
-                        <th>Status</th>
-                        <th>
-                            <div class="d-flex align-items-center">
+                        <th class="table-header-custom" style="width: 22%;">Judul</th>
+                        <th class="table-header-custom">Jenis</th>
+                        <th class="table-header-custom">Organizer</th>
+                        <th class="table-header-custom">Departemen</th>
+                        <th class="table-header-custom" style="white-space: nowrap;">Waktu Meeting</th>
+                        <th class="table-header-custom">Lokasi</th>
+                        <th class="table-header-custom">Status</th>
+                        <th class="table-header-custom">
+                            <div class="d-flex align-items-center justify-content-center">
                                 <span>Dibuat</span>
                                 @if(request('sort', 'desc') == 'asc')
-                                    <i class="fas fa-sort-up ml-1 text-primary" title="Urutan: Lama - Terbaru"></i>
+                                <i class="fas fa-sort-up ml-1 text-white" title="Urutan: Lama - Terbaru"></i>
                                 @else
-                                    <i class="fas fa-sort-down ml-1 text-primary" title="Urutan: Terbaru - Lama"></i>
+                                <i class="fas fa-sort-down ml-1 text-white" title="Urutan: Terbaru - Lama"></i>
                                 @endif
                             </div>
                         </th>
-                        <th>Aksi</th>
+                        <th class="table-header-custom" style="white-space: nowrap;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($meetings as $meeting)
                     @php
-                        $isOrganizer = $meeting->organizer_id == auth()->id();
-                        $isParticipant = $meeting->participants->contains('user_id', auth()->id());
+                    $isOrganizer = $meeting->organizer_id == auth()->id();
+                    $isParticipant = $meeting->participants->contains('user_id', auth()->id());
                     @endphp
                     <tr class="{{ $isOrganizer ? 'table-info' : ($isParticipant ? 'table-warning' : '') }}">
-                        <td>
+                        <td class="align-middle">
                             <div>
                                 <strong>{{ $meeting->title }}</strong>
                                 @if($isOrganizer)
@@ -275,8 +275,8 @@
                             <br><small class="text-muted">{{ Str::limit($meeting->description, 50) }}</small>
                             @endif
                         </td>
-                        <td>{{ $meeting->meetingType->name }}</td>
-                        <td>
+                        <td class="align-middle">{{ $meeting->meetingType->name }}</td>
+                        <td class="align-middle">
                             <div class="d-flex align-items-center">
                                 <i class="fas fa-user-circle mr-2 {{ $isOrganizer ? 'text-info' : 'text-muted' }}"></i>
                                 <div>
@@ -287,67 +287,58 @@
                                 </div>
                             </div>
                         </td>
-                        <td>{{ $meeting->department->name }}</td>
-                        <td>
+                        <td class="align-middle">{{ $meeting->department->name }}</td>
+                        <td class="text-center align-middle" style="white-space: nowrap;">
                             <small>
                                 <strong>{{ $meeting->start_time->format('d M Y') }}</strong><br>
                                 {{ $meeting->start_time->format('H:i') }} - {{ $meeting->end_time->format('H:i') }}
                             </small>
                         </td>
-                        <td>
+                        <td class="align-middle">
                             @if($meeting->is_online)
-                                <i class="fas fa-video text-info"></i> Online
-                                @if($meeting->meeting_link)
-                                <br><small class="text-muted">{{ Str::limit($meeting->meeting_link, 25) }}</small>
-                                @endif
+                            <i class="fas fa-video text-info"></i> Online
+                            @if($meeting->meeting_link)
+                            <br><small class="text-muted">{{ Str::limit($meeting->meeting_link, 25) }}</small>
+                            @endif
                             @else
-                                <i class="fas fa-building text-secondary"></i> 
-                                <small>{{ Str::limit($meeting->location, 30) }}</small>
+                            <i class="fas fa-building text-secondary"></i>
+                            <small>{{ Str::limit($meeting->location, 30) }}</small>
                             @endif
                         </td>
-                        <td>
+                        <td class="text-center align-middle">
                             <span class="badge badge-{{ $meeting->status === 'scheduled' ? 'primary' : ($meeting->status === 'ongoing' ? 'warning' : 'success') }}">
                                 {{ $meeting->status === 'scheduled' ? 'Terjadwal' : ($meeting->status === 'ongoing' ? 'Berlangsung' : 'Selesai') }}
                             </span>
                         </td>
-                        <td>
-                            <small>{{ $meeting->created_at->format('d M Y') }}</small>
-                            <br><small class="text-muted">{{ $meeting->created_at->format('H:i') }}</small>
+                        <td class="text-center align-middle" style="white-space: nowrap;">
+                            <small>
+                                <strong>{{ $meeting->created_at->format('d M Y') }}</strong><br>
+                                {{ $meeting->created_at->format('H:i') }}
+                            </small>
                         </td>
-                        <td>
-                            <div class="btn-group btn-group-sm">
-                                <a href="{{ route('meetings.show', $meeting) }}" class="btn btn-info" title="Lihat Detail">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                
-                                <!-- Hanya tampilkan edit/hapus jika user adalah pembuat meeting -->
-                                @if($meeting->organizer_id == auth()->id())
-                                    <a href="{{ route('meetings.edit', $meeting) }}" class="btn btn-warning" title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    
-                                    <form action="{{ route('meetings.destroy', $meeting) }}" method="POST" class="d-inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger" 
-                                                onclick="return confirm('Hapus meeting ini?')" title="Hapus">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
-                                @endif
-                                
-                                <!-- Admin masih bisa hapus semua meeting -->
-                                @if(auth()->user()->isAdmin() && $meeting->organizer_id != auth()->id())
-                                    <form action="{{ route('meetings.destroy', $meeting) }}" method="POST" class="d-inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger" 
-                                                onclick="return confirm('Hapus meeting ini?')" title="Hapus">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
-                                @endif
-                            </div>
+
+                        {{-- ================= KOLOM AKSI ================= --}}
+                        <td class="text-center align-middle" style="white-space: nowrap;">
+                            {{-- 1. Tombol Lihat --}}
+                            <a href="{{ route('meetings.show', $meeting) }}" class="btn btn-info btn-sm mr-1" title="Lihat Detail">
+                                <i class="fas fa-eye"></i>
+                            </a>
+
+                            {{-- 2. Tombol Edit & Hapus (Hanya untuk Admin ATAU Organizer) --}}
+                            @if(auth()->user()->isAdmin() || $meeting->organizer_id == auth()->id())
+                            <a href="{{ route('meetings.edit', $meeting) }}" class="btn btn-warning btn-sm mr-1" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+
+                            <form action="{{ route('meetings.destroy', $meeting) }}" method="POST" class="d-inline">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-danger btn-sm"
+                                    onclick="return confirm('Hapus meeting ini?')" title="Hapus">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                            @endif
                         </td>
                     </tr>
                     @empty
@@ -373,90 +364,90 @@
                 </tbody>
             </table>
         </div>
-        
+
         <!-- Pagination -->
         <div class="mt-4 d-flex justify-content-between align-items-center flex-wrap">
             <div class="text-muted mb-2 mb-md-0">
-                Menampilkan {{ $meetings->firstItem() ?? 0 }} - {{ $meetings->lastItem() ?? 0 }} 
+                Menampilkan {{ $meetings->firstItem() ?? 0 }} - {{ $meetings->lastItem() ?? 0 }}
                 dari {{ $meetings->total() }} data
             </div>
-            
+
             <nav aria-label="Page navigation">
                 <ul class="pagination mb-0">
                     {{-- Previous Page Link --}}
                     @if ($meetings->onFirstPage())
-                        <li class="page-item disabled">
-                            <span class="page-link">
-                                <i class="fas fa-chevron-left mr-1"></i> Sebelumnya
-                            </span>
-                        </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">
+                            <i class="fas fa-chevron-left mr-1"></i> Sebelumnya
+                        </span>
+                    </li>
                     @else
-                        <li class="page-item">
-                            <a class="page-link" href="{{ $meetings->previousPageUrl() }}">
-                                <i class="fas fa-chevron-left mr-1"></i> Sebelumnya
-                            </a>
-                        </li>
+                    <li class="page-item">
+                        <a class="page-link" href="{{ $meetings->previousPageUrl() }}">
+                            <i class="fas fa-chevron-left mr-1"></i> Sebelumnya
+                        </a>
+                    </li>
                     @endif
 
                     {{-- Page Numbers --}}
                     @php
-                        $current = $meetings->currentPage();
-                        $last = $meetings->lastPage();
-                        $start = max(1, $current - 2);
-                        $end = min($last, $current + 2);
+                    $current = $meetings->currentPage();
+                    $last = $meetings->lastPage();
+                    $start = max(1, $current - 2);
+                    $end = min($last, $current + 2);
                     @endphp
 
                     {{-- First Page --}}
                     @if ($start > 1)
-                        <li class="page-item">
-                            <a class="page-link" href="{{ $meetings->url(1) }}">1</a>
-                        </li>
-                        @if ($start > 2)
-                            <li class="page-item disabled">
-                                <span class="page-link">...</span>
-                            </li>
-                        @endif
+                    <li class="page-item">
+                        <a class="page-link" href="{{ $meetings->url(1) }}">1</a>
+                    </li>
+                    @if ($start > 2)
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                    @endif
                     @endif
 
                     {{-- Page Numbers --}}
                     @for ($page = $start; $page <= $end; $page++)
-                        @if ($page == $meetings->currentPage())
-                            <li class="page-item active">
-                                <span class="page-link">{{ $page }}</span>
-                            </li>
+                        @if ($page==$meetings->currentPage())
+                        <li class="page-item active">
+                            <span class="page-link">{{ $page }}</span>
+                        </li>
                         @else
-                            <li class="page-item">
-                                <a class="page-link" href="{{ $meetings->url($page) }}">{{ $page }}</a>
-                            </li>
+                        <li class="page-item">
+                            <a class="page-link" href="{{ $meetings->url($page) }}">{{ $page }}</a>
+                        </li>
                         @endif
-                    @endfor
+                        @endfor
 
-                    {{-- Last Page --}}
-                    @if ($end < $last)
-                        @if ($end < $last - 1)
+                        {{-- Last Page --}}
+                        @if ($end < $last)
+                            @if ($end < $last - 1)
                             <li class="page-item disabled">
-                                <span class="page-link">...</span>
+                            <span class="page-link">...</span>
                             </li>
-                        @endif
-                        <li class="page-item">
-                            <a class="page-link" href="{{ $meetings->url($last) }}">{{ $last }}</a>
-                        </li>
-                    @endif
+                            @endif
+                            <li class="page-item">
+                                <a class="page-link" href="{{ $meetings->url($last) }}">{{ $last }}</a>
+                            </li>
+                            @endif
 
-                    {{-- Next Page Link --}}
-                    @if ($meetings->hasMorePages())
-                        <li class="page-item">
-                            <a class="page-link" href="{{ $meetings->nextPageUrl() }}">
-                                Selanjutnya <i class="fas fa-chevron-right ml-1"></i>
-                            </a>
-                        </li>
-                    @else
-                        <li class="page-item disabled">
-                            <span class="page-link">
-                                Selanjutnya <i class="fas fa-chevron-right ml-1"></i>
-                            </span>
-                        </li>
-                    @endif
+                            {{-- Next Page Link --}}
+                            @if ($meetings->hasMorePages())
+                            <li class="page-item">
+                                <a class="page-link" href="{{ $meetings->nextPageUrl() }}">
+                                    Selanjutnya <i class="fas fa-chevron-right ml-1"></i>
+                                </a>
+                            </li>
+                            @else
+                            <li class="page-item disabled">
+                                <span class="page-link">
+                                    Selanjutnya <i class="fas fa-chevron-right ml-1"></i>
+                                </span>
+                            </li>
+                            @endif
                 </ul>
             </nav>
         </div>
@@ -466,151 +457,159 @@
 
 @section('styles')
 <style>
-.info-box {
-    min-height: 70px;
-    margin-bottom: 0;
-    border-radius: 8px;
-}
-.info-box .info-box-icon {
-    width: 70px;
-    height: 70px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    border-radius: 8px 0 0 8px;
-}
-.info-box .info-box-content {
-    padding: 10px;
-}
-.info-box .info-box-text {
-    font-size: 14px;
-    font-weight: 600;
-}
-.info-box .info-box-number {
-    font-size: 18px;
-    font-weight: 700;
-}
-.table th {
-    background-color: #f8f9fa;
-    font-weight: 600;
-}
-.badge {
-    font-size: 11px;
-    padding: 5px 8px;
-}
-.btn-group-sm > .btn {
-    padding: 4px 8px;
-    font-size: 12px;
-}
+    .info-box {
+        min-height: 70px;
+        margin-bottom: 0;
+        border-radius: 8px;
+    }
 
-/* Tab Styles */
-.nav-tabs .nav-link {
-    border: none;
-    border-bottom: 3px solid transparent;
-    color: #6c757d;
-    font-weight: 500;
-    padding: 12px 20px;
-}
-.nav-tabs .nav-link.active {
-    border-bottom-color: #007bff;
-    color: #007bff;
-    background-color: transparent;
-}
-.nav-tabs .nav-link:hover {
-    border-bottom-color: #dee2e6;
-    color: #495057;
-}
+    .info-box .info-box-icon {
+        width: 70px;
+        height: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        border-radius: 8px 0 0 8px;
+    }
 
-/* Table row colors */
-.table-info {
-    background-color: #d1ecf1 !important;
-}
-.table-warning {
-    background-color: #fff3cd !important;
-}
+    .info-box .info-box-content {
+        padding: 10px;
+    }
 
-/* Enhanced Pagination Styles */
-.pagination {
-    margin-bottom: 0;
-    font-size: 0.9rem;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
-}
-.pagination .page-link {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.875rem;
-    line-height: 1.5;
-    border: 1px solid #dee2e6;
-    margin: 0 2px;
-    border-radius: 0.375rem;
-    color: #495057;
-    background-color: #fff;
-    transition: all 0.2s ease-in-out;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 40px;
-    height: 38px;
-}
-.pagination .page-item.active .page-link {
-    background-color: #007bff;
-    border-color: #007bff;
-    color: #fff;
-    font-weight: 600;
-    transform: scale(1.05);
-    box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
-}
-.pagination .page-item:not(.disabled):not(.active) .page-link:hover {
-    background-color: #e9ecef;
-    border-color: #dee2e6;
-    color: #0056b3;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
+    .info-box .info-box-text {
+        font-size: 14px;
+        font-weight: 600;
+    }
 
-/* Mobile responsive */
-@media (max-width: 768px) {
+    .info-box .info-box-number {
+        font-size: 18px;
+        font-weight: 700;
+    }
+
+    .badge {
+        font-size: 11px;
+        padding: 5px 8px;
+    }
+
+    .btn-group-sm>.btn {
+        padding: 4px 8px;
+        font-size: 12px;
+    }
+
+    /* Tab Styles */
+    .nav-tabs .nav-link {
+        border: none;
+        border-bottom: 3px solid transparent;
+        color: #6c757d;
+        font-weight: 500;
+        padding: 12px 20px;
+    }
+
+    .nav-tabs .nav-link.active {
+        border-bottom-color: #007bff;
+        color: #007bff;
+        background-color: transparent;
+    }
+
+    .nav-tabs .nav-link:hover {
+        border-bottom-color: #dee2e6;
+        color: #495057;
+    }
+
+    /* Table row colors */
+    .table-info {
+        background-color: #d1ecf1 !important;
+    }
+
+    .table-warning {
+        background-color: #fff3cd !important;
+    }
+
+    /* Enhanced Pagination Styles */
     .pagination {
-        font-size: 0.8rem;
+        margin-bottom: 0;
+        font-size: 0.9rem;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
     }
+
     .pagination .page-link {
-        padding: 0.4rem 0.6rem;
-        font-size: 0.8rem;
-        min-width: 35px;
-        height: 35px;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        border: 1px solid #dee2e6;
+        margin: 0 2px;
+        border-radius: 0.375rem;
+        color: #495057;
+        background-color: #fff;
+        transition: all 0.2s ease-in-out;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 40px;
+        height: 38px;
     }
-}
+
+    .pagination .page-item.active .page-link {
+        background-color: #007bff;
+        border-color: #007bff;
+        color: #fff;
+        font-weight: 600;
+        transform: scale(1.05);
+        box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+    }
+
+    .pagination .page-item:not(.disabled):not(.active) .page-link:hover {
+        background-color: #e9ecef;
+        border-color: #dee2e6;
+        color: #0056b3;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    @media (max-width: 768px) {
+        .pagination {
+            font-size: 0.8rem;
+        }
+
+        .pagination .page-link {
+            padding: 0.4rem 0.6rem;
+            font-size: 0.8rem;
+            min-width: 35px;
+            height: 35px;
+        }
+    }
 </style>
 @endsection
 
 @section('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Smooth scroll ke atas saat pindah halaman
-    document.querySelectorAll('.pagination .page-link').forEach(link => {
-        link.addEventListener('click', function(e) {
-            if (!this.closest('.page-item').classList.contains('disabled') && 
-                !this.closest('.page-item').classList.contains('active')) {
-                setTimeout(() => {
-                    window.scrollTo({
-                        top: 0,
-                        behavior: 'smooth'
-                    });
-                }, 100);
-            }
+    document.addEventListener('DOMContentLoaded', function() {
+        // Smooth scroll ke atas saat pindah halaman
+        document.querySelectorAll('.pagination .page-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                if (!this.closest('.page-item').classList.contains('disabled') &&
+                    !this.closest('.page-item').classList.contains('active')) {
+                    setTimeout(() => {
+                        window.scrollTo({
+                            top: 0,
+                            behavior: 'smooth'
+                        });
+                    }, 100);
+                }
+            });
         });
-    });
 
-    // Update hidden type input ketika tab diklik
-    document.querySelectorAll('.nav-tabs .nav-link').forEach(tab => {
-        tab.addEventListener('click', function() {
-            const url = new URL(this.href);
-            const type = url.searchParams.get('type') || 'all';
-            document.querySelector('input[name="type"]').value = type;
+        // Update hidden type input ketika tab diklik
+        document.querySelectorAll('.nav-tabs .nav-link').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const url = new URL(this.href);
+                const type = url.searchParams.get('type') || 'all';
+                document.querySelector('input[name="type"]').value = type;
+            });
         });
     });
-});
 </script>
 @endsection

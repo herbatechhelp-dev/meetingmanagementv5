@@ -1,4 +1,3 @@
-<!-- resources/views/action-items/show.blade.php -->
 @extends('layouts.app')
 
 @section('title', 'Detail Tindak Lanjut - ' . $actionItem->title)
@@ -11,39 +10,12 @@
 @section('content')
 <div class="row">
     <div class="col-md-8">
-        <!-- Detail Tindak Lanjut -->
+        
         <div class="card shadow-sm mb-4">
-            <div class="card-header d-flex align-items-center justify-content-between py-3">
+            <div class="card-header py-3">
                 <h3 class="card-title m-0">
                     <i class="fas fa-tasks mr-2 text-primary"></i>Detail Tindak Lanjut
                 </h3>
-                <div class="card-tools">
-                    @if(auth()->user()->canManageMeetings() || $actionItem->meeting->organizer_id == auth()->id() || $actionItem->assigned_to == auth()->id())
-                    <a href="{{ route('action-items.edit', $actionItem) }}" class="btn btn-primary btn-sm">
-                        <i class="fas fa-edit mr-1"></i> Edit
-                    </a>
-                    @endif
-                    
-                    <!-- TAMBAHKAN TOMBOL HAPUS DI SINI -->
-                    @if(auth()->user()->canManageMeetings() || 
-                        $actionItem->meeting->organizer_id == auth()->id() || 
-                        $actionItem->created_by == auth()->id())
-                    <form action="{{ route('action-items.destroy', $actionItem) }}" 
-                          method="POST" 
-                          class="d-inline"
-                          onsubmit="return confirm('Hapus tindak lanjut {{ $actionItem->title }}? Tindakan ini tidak dapat dibatalkan.')">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-danger btn-sm ml-1">
-                            <i class="fas fa-trash mr-1"></i> Hapus
-                        </button>
-                    </form>
-                    @endif
-                    
-                    <a href="{{ route('action-items.index') }}" class="btn btn-secondary btn-sm ml-1">
-                        <i class="fas fa-arrow-left mr-1"></i> Kembali
-                    </a>
-                </div>
             </div>
             <div class="card-body">
                 <div class="row">
@@ -69,6 +41,12 @@
                                     <small class="text-danger">
                                         <i class="fas fa-exclamation-triangle"></i> 
                                         Terlambat {{ $actionItem->due_date->diffInDays(now()) }} hari
+                                    </small>
+                                    @elseif($actionItem->isCompletedLate())
+                                    <br>
+                                    <small class="text-danger">
+                                        <i class="fas fa-exclamation-triangle"></i> 
+                                        Selesai Terlambat {{ $actionItem->due_date->startOfDay()->diffInDays($actionItem->completed_at->startOfDay()) }} hari
                                     </small>
                                     @endif
                                 </span>
@@ -96,15 +74,14 @@
                     </div>
                 </div>
 
-                <!-- Status dan Prioritas -->
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <div class="callout callout-{{ $actionItem->status === 'completed' ? 'success' : ($actionItem->status === 'in_progress' ? 'info' : 'warning') }}">
+                        <div class="callout callout-{{ $actionItem->status === 'completed' ? 'success' : ($actionItem->status === 'needs_revision' ? 'danger' : ($actionItem->status === 'in_progress' ? 'info' : ($actionItem->status === 'waiting_review' ? 'warning' : 'secondary'))) }}">
                             <h6 class="mb-1"><i class="fas fa-flag mr-2"></i>Status</h6>
                             <span class="badge badge-{{ $actionItem->status_badge }}">
                                 {{ $actionItem->status_label }}
                             </span>
-                            @if($actionItem->completed_at)
+                            @if($actionItem->completed_at && $actionItem->status === 'completed')
                             <br>
                             <small class="text-muted">
                                 Diselesaikan: {{ $actionItem->completed_at->format('d M Y H:i') }}
@@ -122,7 +99,17 @@
                     </div>
                 </div>
 
-                <!-- Deskripsi -->
+                @if($actionItem->revision_notes && $actionItem->status == 'needs_revision')
+                <div class="callout callout-danger shadow-sm mb-4">
+                    <h6 class="font-weight-bold mb-2 text-danger"><i class="fas fa-exclamation-triangle mr-2"></i>Tugas Dikembalikan (Perlu Revisi)</h6>
+                    <p class="mb-0 text-sm">Penyelenggara menolak laporan Anda dengan catatan berikut:</p>
+                    <hr class="border-danger my-2">
+                    <div class="bg-white text-dark p-2 rounded text-sm">
+                        {{ $actionItem->revision_notes }}
+                    </div>
+                </div>
+                @endif
+
                 <div class="mb-3">
                     <h6 class="text-primary mb-2"><i class="fas fa-align-left mr-2"></i>Deskripsi</h6>
                     <div class="border rounded p-3 bg-light">
@@ -130,7 +117,6 @@
                     </div>
                 </div>
 
-                <!-- Catatan Penyelesaian -->
                 @if($actionItem->completion_notes)
                 <div class="mb-3">
                     <h6 class="text-success mb-2"><i class="fas fa-check-circle mr-2"></i>Catatan Penyelesaian</h6>
@@ -140,7 +126,6 @@
                 </div>
                 @endif
 
-                <!-- Meeting Asal -->
                 @if($actionItem->meeting)
                 <div class="mb-3">
                     <h6 class="text-primary mb-2"><i class="fas fa-users mr-2"></i>Meeting Asal</h6>
@@ -168,54 +153,31 @@
                 @endif
             </div>
             
-            <!-- TAMBAHKAN FOOTER DENGAN TOMBOL AKSI LENGKAP -->
             <div class="card-footer">
-                <div class="btn-group">
-                    <a href="{{ route('action-items.index') }}" class="btn btn-secondary btn-sm">
+                <div>
+                    <a href="{{ route('action-items.index') }}" class="btn btn-secondary btn-sm mr-2 mb-1">
                         <i class="fas fa-arrow-left mr-1"></i> Kembali ke Daftar
                     </a>
                     
-                    @if($actionItem->meeting)
-                    <a href="{{ route('meetings.show', $actionItem->meeting) }}" class="btn btn-info btn-sm">
-                        <i class="fas fa-users mr-1"></i> Lihat Meeting
+                    @if(auth()->user()->isAdmin() || (isset($actionItem->meeting) && $actionItem->meeting->organizer_id == auth()->id()))
+                    <a href="{{ route('action-items.edit', $actionItem) }}" class="btn btn-primary btn-sm mr-2 mb-1">
+                        <i class="fas fa-edit mr-1"></i> Edit Detail
                     </a>
-                    @endif
-                    
-                    @if(auth()->user()->canManageMeetings() || $actionItem->meeting->organizer_id == auth()->id() || $actionItem->assigned_to == auth()->id())
-                    <a href="{{ route('action-items.edit', $actionItem) }}" class="btn btn-primary btn-sm">
-                        <i class="fas fa-edit mr-1"></i> Edit
-                    </a>
-                    @endif
-                    
-                    @if(auth()->user()->canManageMeetings() || 
-                        $actionItem->meeting->organizer_id == auth()->id() || 
-                        $actionItem->created_by == auth()->id())
-                    <form action="{{ route('action-items.destroy', $actionItem) }}" 
-                          method="POST" 
-                          class="d-inline"
-                          onsubmit="return confirmDeleteActionItem('{{ addslashes($actionItem->title) }}')">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-danger btn-sm">
-                            <i class="fas fa-trash mr-1"></i> Hapus
-                        </button>
-                    </form>
                     @endif
                 </div>
             </div>
         </div>
 
-        <!-- File Lampiran -->
         <div class="card shadow-sm">
-            <div class="card-header d-flex align-items-center justify-content-between py-3">
+            <div class="card-header py-3">
                 <h3 class="card-title m-0">
                     <i class="fas fa-file mr-2 text-primary"></i>File Lampiran
                     <span class="badge badge-info badge-pill ml-1">{{ $actionItem->files->count() }}</span>
                 </h3>
-                @if($actionItem->assigned_to == auth()->id())
+                @if($actionItem->assigned_to == auth()->id() && in_array($actionItem->status, ['pending', 'in_progress', 'needs_revision']))
                 <div class="card-tools">
                     <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#uploadFileModal">
-                        <i class="fas fa-upload mr-1"></i> Upload File
+                        <i class="fas fa-upload mr-1"></i> Upload Bukti
                     </button>
                 </div>
                 @endif
@@ -239,24 +201,21 @@
                                         <i class="fas fa-user mr-1"></i>{{ $file->uploader->name }}
                                     </small>
                                     @if($file->description)
-                                    <small class="text-muted d-block">
-                                        <i class="fas fa-align-left mr-1"></i>{{ Str::limit($file->description, 40) }}
+                                    <small class="text-dark d-block mt-1 p-1 bg-light border-left border-primary" style="font-style: italic;">
+                                        <i class="fas fa-comment-alt mr-1 text-primary"></i> "{{ $file->description }}"
                                     </small>
                                     @endif
                                 </div>
                             </div>
-                            <div class="btn-group btn-group-sm ml-2">
-                                <a href="{{ route('action-items.download-file', [$actionItem, $file]) }}" 
-                                   class="btn btn-success" title="Download">
+                            <div>
+                                <a href="{{ route('action-items.download-file', [$actionItem, $file]) }}" class="btn btn-success btn-sm" title="Download">
                                     <i class="fas fa-download"></i>
                                 </a>
-                                @if($file->uploaded_by == auth()->id())
-                                <form action="{{ route('action-items.delete-file', [$actionItem, $file]) }}" 
-                                      method="POST" class="d-inline">
+                                @if($file->uploaded_by == auth()->id() && in_array($actionItem->status, ['pending', 'in_progress', 'needs_revision']))
+                                <form action="{{ route('action-items.delete-file', [$actionItem, $file]) }}" method="POST" class="d-inline">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-danger" 
-                                            onclick="return confirm('Hapus file ini?')" title="Hapus">
+                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Hapus file ini?')" title="Hapus">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
@@ -269,12 +228,7 @@
                 @else
                 <div class="text-center py-4">
                     <i class="fas fa-file fa-2x text-muted mb-2"></i>
-                    <p class="text-muted mb-0">Belum ada file lampiran.</p>
-                    @if($actionItem->assigned_to == auth()->id())
-                    <button type="button" class="btn btn-primary btn-sm mt-2" data-toggle="modal" data-target="#uploadFileModal">
-                        <i class="fas fa-upload mr-1"></i> Upload File Pertama
-                    </button>
-                    @endif
+                    <p class="text-muted mb-0">Belum ada file bukti yang diunggah.</p>
                 </div>
                 @endif
             </div>
@@ -282,7 +236,7 @@
     </div>
 
     <div class="col-md-4">
-        <!-- Informasi Pembuatan -->
+        
         <div class="card shadow-sm mb-4">
             <div class="card-header py-3">
                 <h3 class="card-title m-0">
@@ -312,27 +266,91 @@
                     </small>
                 </div>
                 
-                @if($actionItem->assigned_to == auth()->id())
+                @if($actionItem->assigned_to == auth()->id() || (isset($actionItem->meeting) && auth()->id() == $actionItem->meeting->organizer_id) || auth()->user()->isAdmin())
                 <hr>
                 <div class="mt-3">
-                    <h6 class="text-primary mb-2">Update Status</h6>
-                    <form action="{{ route('action-items.update-status', $actionItem) }}" method="POST">
-                        @csrf
-                        <div class="form-group">
-                            <select name="status" class="form-control form-control-sm" onchange="this.form.submit()">
-                                <option value="pending" {{ $actionItem->status == 'pending' ? 'selected' : '' }}>Belum Dikerjakan</option>
-                                <option value="in_progress" {{ $actionItem->status == 'in_progress' ? 'selected' : '' }}>Sedang Dikerjakan</option>
-                                <option value="completed" {{ $actionItem->status == 'completed' ? 'selected' : '' }}>Selesai</option>
-                                <option value="cancelled" {{ $actionItem->status == 'cancelled' ? 'selected' : '' }}>Dibatalkan</option>
-                            </select>
-                        </div>
-                    </form>
+                    <h6 class="text-primary mb-3"><i class="fas fa-tasks mr-1"></i> Aksi Tindak Lanjut</h6>
+
+                    @if($actionItem->status == 'completed')
+                        <div class="alert alert-success py-2 m-0"><i class="fas fa-check-circle mr-1"></i> Tugas telah diverifikasi & selesai.</div>
+                    @elseif($actionItem->status == 'cancelled')
+                        <div class="alert alert-danger py-2 m-0"><i class="fas fa-times-circle mr-1"></i> Tugas dibatalkan.</div>
+                    @else
+                        
+                        @if(auth()->id() == $actionItem->assigned_to)
+                            @if($actionItem->status == 'pending')
+                                <form action="{{ route('action-items.update-status', $actionItem) }}" method="POST">
+                                    @csrf
+                                    <input type="hidden" name="status" value="in_progress">
+                                    <button type="submit" class="btn btn-primary btn-sm w-100 mb-2">
+                                        <i class="fas fa-play mr-1"></i> Mulai Kerjakan
+                                    </button>
+                                </form>
+                            @elseif($actionItem->status == 'in_progress' || $actionItem->status == 'needs_revision')
+                                @if($actionItem->files->count() == 0)
+                                    <div class="callout callout-warning py-2 text-sm m-0 mb-2">
+                                        <i class="fas fa-exclamation-triangle mr-1"></i> <strong>Pekerjaan berlangsung.</strong><br>
+                                        Wajib <a href="#uploadFileModal" data-toggle="modal" class="text-primary font-weight-bold">Upload File Bukti</a> di bawah sebelum melaporkan selesai.
+                                    </div>
+                                @else
+                                    <form action="{{ route('action-items.update-status', $actionItem) }}" method="POST">
+                                        @csrf
+                                        <input type="hidden" name="status" value="waiting_review">
+                                        <button type="submit" class="btn btn-warning btn-sm w-100 mb-2" onclick="return confirm('Kirim ke penyelenggara untuk direview?')">
+                                            <i class="fas fa-paper-plane mr-1"></i> Lapor Selesai (Minta Review)
+                                        </button>
+                                    </form>
+                                @endif
+                            @elseif($actionItem->status == 'waiting_review')
+                                <div class="callout callout-info py-2 text-sm m-0 mb-2">
+                                    <i class="fas fa-hourglass-half fa-spin mr-1"></i> Menunggu direview Penyelenggara.
+                                </div>
+                            @endif
+                        @endif
+
+                        @if(auth()->user()->isAdmin() || (isset($actionItem->meeting) && auth()->id() == $actionItem->meeting->organizer_id))
+                            @if($actionItem->status == 'waiting_review')
+                                <div class="callout callout-info py-2 text-sm mb-2">
+                                    <i class="fas fa-bell mr-1"></i> Penerima tugas telah melaporkan selesai. Silakan cek file bukti di bawah.
+                                </div>
+
+                                <form action="{{ route('action-items.update-status', $actionItem) }}" method="POST">
+                                    @csrf
+                                    <input type="hidden" name="status" value="completed">
+                                    <button type="submit" class="btn btn-success btn-sm w-100 mb-2" onclick="return confirm('Tugas sudah sesuai? Tutup tugas ini.')">
+                                        <i class="fas fa-check-double mr-1"></i> Verifikasi & Tutup Tugas
+                                    </button>
+                                </form>
+                                <form action="{{ route('action-items.update-status', $actionItem) }}" method="POST">
+                                    @csrf
+                                    <input type="hidden" name="status" value="needs_revision">
+                                    <div class="form-group mb-2">
+                                        <textarea name="revision_notes" class="form-control form-control-sm" rows="3" required placeholder="Catatan revisi untuk penerima tugas..." style="display: none;" id="revision_notes_input"></textarea>
+                                    </div>
+                                    <button type="button" class="btn btn-outline-danger btn-sm w-100 mb-2" onclick="document.getElementById('revision_notes_input').style.display = 'block'; this.style.display = 'none'; document.getElementById('submit_revision_btn').style.display = 'block';">
+                                        <i class="fas fa-undo mr-1"></i> Tolak (Minta Revisi)
+                                    </button>
+                                    <button type="submit" class="btn btn-danger btn-sm w-100 mb-2" id="submit_revision_btn" style="display: none;">
+                                        <i class="fas fa-paper-plane mr-1"></i> Kirim Revisi
+                                    </button>
+                                </form>
+                            @elseif(in_array($actionItem->status, ['pending', 'in_progress', 'needs_revision']))
+                                <form action="{{ route('action-items.update-status', $actionItem) }}" method="POST">
+                                    @csrf
+                                    <input type="hidden" name="status" value="cancelled">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm w-100" onclick="return confirm('Yakin membatalkan tugas ini secara paksa?')">
+                                        <i class="fas fa-ban mr-1"></i> Batalkan Tugas
+                                    </button>
+                                </form>
+                            @endif
+                        @endif
+
+                    @endif
                 </div>
                 @endif
             </div>
         </div>
 
-        <!-- Tombol Aksi Cepat -->
         <div class="card shadow-sm">
             <div class="card-header py-3">
                 <h3 class="card-title m-0">
@@ -340,35 +358,23 @@
                 </h3>
             </div>
             <div class="card-body">
-                <div class="d-grid gap-2">
-                    @if($actionItem->assigned_to == auth()->id())
-                    <a href="{{ route('action-items.edit', $actionItem) }}" class="btn btn-warning btn-sm">
-                        <i class="fas fa-edit mr-1"></i> Update Progress
-                    </a>
-                    @endif
-                    
-                    <a href="{{ route('action-items.index') }}" class="btn btn-secondary btn-sm">
-                        <i class="fas fa-list mr-1"></i> Semua Tindak Lanjut
+                <div>
+                    <a href="{{ route('action-items.index') }}" class="btn btn-secondary btn-sm mb-2 w-100 text-left">
+                        <i class="fas fa-list mr-2"></i> Semua Tindak Lanjut
                     </a>
                     
                     @if($actionItem->meeting)
-                    <a href="{{ route('meetings.show', $actionItem->meeting) }}" class="btn btn-info btn-sm">
-                        <i class="fas fa-users mr-1"></i> Ke Meeting
+                    <a href="{{ route('meetings.show', $actionItem->meeting) }}" class="btn btn-info btn-sm mb-2 w-100 text-left">
+                        <i class="fas fa-users mr-2"></i> Ke Meeting Asal
                     </a>
                     @endif
                     
-                    <!-- TAMBAHKAN TOMBOL HAPUS DI SIDEBAR JUGA -->
-                    @if(auth()->user()->canManageMeetings() || 
-                        $actionItem->meeting->organizer_id == auth()->id() || 
-                        $actionItem->created_by == auth()->id())
-                    <form action="{{ route('action-items.destroy', $actionItem) }}" 
-                          method="POST" 
-                          class="d-inline"
-                          onsubmit="return confirmDeleteActionItem('{{ addslashes($actionItem->title) }}')">
+                    @if(auth()->user()->isAdmin() || (isset($actionItem->meeting) && $actionItem->meeting->organizer_id == auth()->id()))
+                    <form action="{{ route('action-items.destroy', $actionItem) }}" method="POST" class="d-inline" onsubmit="return confirmDeleteActionItem('{{ addslashes($actionItem->title) }}')">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="btn btn-danger btn-sm">
-                            <i class="fas fa-trash mr-1"></i> Hapus Tindak Lanjut
+                        <button type="submit" class="btn btn-danger btn-sm w-100 text-left">
+                            <i class="fas fa-trash mr-2"></i> Hapus Tindak Lanjut
                         </button>
                     </form>
                     @endif
@@ -378,18 +384,43 @@
     </div>
 </div>
 
-<!-- Upload File Modal -->
+@if(auth()->user()->isAdmin() || (isset($actionItem->meeting) && auth()->id() == $actionItem->meeting->organizer_id))
+<div class="modal fade" id="revisiModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white py-3">
+                <h5 class="modal-title m-0"><i class="fas fa-undo mr-2"></i>Tolak Laporan & Minta Revisi</h5>
+                <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <form action="{{ route('action-items.update-status', $actionItem) }}" method="POST">
+                @csrf
+                <input type="hidden" name="status" value="needs_revision">
+                <div class="modal-body">
+                    <div class="alert alert-warning text-sm">
+                        <i class="fas fa-info-circle mr-1"></i> Status tugas akan diubah menjadi <b>Perlu Revisi</b>.
+                    </div>
+                    <div class="form-group">
+                        <label class="font-weight-bold small">Catatan Revisi untuk Penerima Tugas *</label>
+                        <textarea name="revision_notes" class="form-control" rows="4" required placeholder="Contoh: Tolong perbaiki file laporan bulanannya, masih ada data yang kurang..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-paper-plane mr-1"></i>Kirim Revisi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endif
+
 @if($actionItem->assigned_to == auth()->id())
 <div class="modal fade" id="uploadFileModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white py-3">
-                <h5 class="modal-title m-0">
-                    <i class="fas fa-upload mr-2"></i>Upload File
-                </h5>
-                <button type="button" class="close text-white" data-dismiss="modal">
-                    <span>&times;</span>
-                </button>
+                <h5 class="modal-title m-0"><i class="fas fa-upload mr-2"></i>Upload File Bukti</h5>
+                <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
             </div>
             <form action="{{ route('action-items.upload-file', $actionItem) }}" method="POST" enctype="multipart/form-data">
                 @csrf
@@ -400,46 +431,40 @@
                             <input type="file" class="custom-file-input" id="file" name="file" required>
                             <label class="custom-file-label" for="file">Pilih file...</label>
                         </div>
-                        <small class="form-text text-muted">
-                            <i class="fas fa-info-circle mr-1"></i>Maksimal 10MB
-                        </small>
+                        <small class="form-text text-muted"><i class="fas fa-info-circle mr-1"></i>Maksimal 10MB</small>
                     </div>
                     <div class="form-group">
                         <label for="description" class="font-weight-bold small">Deskripsi File</label>
-                        <textarea class="form-control form-control-sm" id="description" name="description" rows="2" 
-                                  placeholder="Deskripsi singkat tentang file ini"></textarea>
+                        <textarea class="form-control form-control-sm" id="description" name="description" rows="2" placeholder="Deskripsi singkat tentang file ini"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer py-2">
-                    <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">
-                        <i class="fas fa-times mr-1"></i>Batal
-                    </button>
-                    <button type="submit" class="btn btn-primary btn-sm">
-                        <i class="fas fa-upload mr-1"></i>Upload
-                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-upload mr-1"></i>Upload</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 @endif
+
 @endsection
 
 @section('scripts')
 <script>
-// Custom file input
+// Custom file input name display
 document.querySelector('.custom-file-input')?.addEventListener('change', function(e) {
     var fileName = document.getElementById("file").files[0].name;
     var nextSibling = e.target.nextElementSibling;
     nextSibling.innerText = fileName;
 });
 
-// Fungsi konfirmasi hapus tindak lanjut
+// Hapus Konfirmasi
 function confirmDeleteActionItem(title) {
     return confirm(`Hapus tindak lanjut "${title}"?\n\nTindakan ini tidak dapat dibatalkan dan semua data terkait akan dihapus permanen!`);
 }
 
-// Handle loading state saat submit form hapus
+// Loading state untuk hapus
 document.addEventListener('DOMContentLoaded', function() {
     const deleteForms = document.querySelectorAll('form[action*="action-items"]');
     deleteForms.forEach(form => {
@@ -449,8 +474,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 const originalText = button.innerHTML;
                 button.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Menghapus...';
                 button.disabled = true;
-                
-                // Re-enable button setelah 5 detik untuk menghindari stuck
                 setTimeout(() => {
                     button.innerHTML = originalText;
                     button.disabled = false;
@@ -462,30 +485,21 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <style>
-.btn-group .btn {
-    margin-right: 5px;
-    margin-bottom: 5px;
-}
-
 .btn-danger {
     transition: all 0.3s ease;
 }
-
 .btn-danger:hover {
     background-color: #c82333;
     border-color: #bd2130;
     transform: scale(1.05);
 }
-
 .fa-spinner {
     animation: spin 1s linear infinite;
 }
-
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
-
 .card-footer {
     background-color: #f8f9fa;
     border-top: 1px solid #e3e6f0;

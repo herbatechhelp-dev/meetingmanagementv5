@@ -177,7 +177,7 @@
                     @endif
                     
                     <!-- Tombol kontrol meeting untuk organizer -->
-                    @if($meeting->organizer_id == auth()->id())
+                    @if(auth()->user()->isAdmin() || $meeting->organizer_id == auth()->id())
                         @if($meeting->status === 'scheduled')
                             <form action="{{ route('meetings.start', $meeting) }}" method="POST" class="d-inline mr-2">
                                 @csrf
@@ -320,7 +320,7 @@
                     @endif
                     
                     <!-- Tombol tambah tindak lanjut (jika meeting completed) -->
-                    @if($meeting->status === 'completed' && $meeting->organizer_id == auth()->id())
+                    @if($meeting->status === 'completed' && (auth()->user()->isAdmin() || $meeting->organizer_id == auth()->id()))
                     <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#addActionItemModal">
                         <i class="fas fa-plus mr-1"></i> Tambah
                     </button>
@@ -426,7 +426,7 @@
                 <div class="text-center py-5">
                     <i class="fas fa-tasks fa-3x text-muted mb-3"></i>
                     
-                    @if($meeting->organizer_id == auth()->id() || $meeting->assigned_action_taker_id == auth()->id())
+                    @if(auth()->user()->isAdmin() || $meeting->organizer_id == auth()->id() || $meeting->assigned_action_taker_id == auth()->id())
                     <h6 class="text-muted">Belum ada tindak lanjut</h6>
                     <p class="text-muted small">
                         @if($meeting->status === 'ongoing')
@@ -636,7 +636,7 @@
                     <i class="fas fa-file mr-2 text-primary"></i>File Meeting
                     <span class="badge badge-info badge-pill ml-1">{{ $meeting->files->count() }}</span>
                 </h3>
-                @if($meeting->organizer_id == auth()->id())
+                @if(auth()->user()->isAdmin() || $meeting->organizer_id == auth()->id())
                 <div class="card-tools">
                     <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#uploadFileModal">
                         <i class="fas fa-upload mr-1"></i> Upload
@@ -669,19 +669,18 @@
                                     @endif
                                 </div>
                             </div>
-                            <div class="btn-group btn-group-sm ml-2">
-                                <!-- Semua partisipan bisa download file -->
+                            <div class="ml-2" style="white-space: nowrap;">
                                 <a href="{{ route('meetings.download-file', [$meeting, $file]) }}" 
-                                   class="btn btn-success" title="Download">
+                                   class="btn btn-success btn-sm mr-1" title="Download">
                                     <i class="fas fa-download"></i>
                                 </a>
-                                <!-- Hanya uploader, organizer, atau admin yang bisa hapus -->
-                                @if(auth()->user()->canManageMeetings() || $meeting->organizer_id == auth()->id() || $file->uploaded_by == auth()->id())
+                                
+                                @if(auth()->user()->isAdmin() || $meeting->organizer_id == auth()->id())
                                 <form action="{{ route('meetings.delete-file', [$meeting, $file]) }}" 
                                       method="POST" class="d-inline">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-danger" 
+                                    <button type="submit" class="btn btn-danger btn-sm" 
                                             onclick="return confirm('Hapus file ini?')" title="Hapus">
                                         <i class="fas fa-trash"></i>
                                     </button>
@@ -890,7 +889,7 @@
 </div>
 
 <!-- Modals -->
-@if(in_array($meeting->status, ['scheduled', 'ongoing', 'completed']) && (auth()->user()->canManageMeetings() || $meeting->organizer_id == auth()->id() || $meeting->assigned_action_taker_id == auth()->id()))
+@if($meeting->status === 'completed' && $meeting->organizer_id == auth()->id())
 <!-- Add Action Item Modal -->
 <div class="modal fade" id="addActionItemModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
@@ -989,7 +988,7 @@
 </div>
 @endif
 
-@if($meeting->organizer_id == auth()->id() || auth()->user()->canManageMeetings())
+@if($meeting->organizer_id == auth()->id())
 <!-- Upload File Modal -->
 <div class="modal fade" id="uploadFileModal" tabindex="-1">
     <div class="modal-dialog">

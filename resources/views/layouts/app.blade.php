@@ -100,6 +100,18 @@
         html {
             scroll-padding-top: 70px;
         }
+        /* Custom table header styling */
+        .table-header-custom {
+            background-color: #2c3e50 !important;
+            color: #ffffff !important;
+            text-align: center !important;
+            vertical-align: middle !important;
+            font-weight: 600 !important;
+            text-transform: uppercase !important;
+            font-size: 0.85rem !important;
+            padding: 15px 10px !important;
+            border: none !important;
+        }
     </style>
 
     @stack('styles')

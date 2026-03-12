@@ -18,9 +18,13 @@
                 </button>
                 <div class="dropdown-menu">
                     <a class="dropdown-item" href="{{ request()->fullUrlWithQuery(['status' => '']) }}">Semua</a>
+                    <a class="dropdown-item" href="{{ request()->fullUrlWithQuery(['status' => 'cancelled']) }}">Dibatalkan</a>
                     <a class="dropdown-item" href="{{ request()->fullUrlWithQuery(['status' => 'pending']) }}">Belum Dikerjakan</a>
                     <a class="dropdown-item" href="{{ request()->fullUrlWithQuery(['status' => 'in_progress']) }}">Sedang Dikerjakan</a>
+                    <a href="{{ request()->fullUrlWithQuery(['status' => 'waiting_review']) }}" class="dropdown-item {{ request('status') == 'waiting_review' ? 'active' : '' }}">Menunggu Review</a>
+                    <a href="{{ request()->fullUrlWithQuery(['status' => 'needs_revision']) }}" class="dropdown-item {{ request('status') == 'needs_revision' ? 'active' : '' }}">Perlu Revisi</a>
                     <a class="dropdown-item" href="{{ request()->fullUrlWithQuery(['status' => 'completed']) }}">Selesai</a>
+                
                 </div>
             </div>
         </div>
@@ -88,16 +92,16 @@
 
         <div class="table-responsive">
             <table class="table table-bordered table-hover">
-                <thead>
+                <thead style="background-color: #2c3e50;">
                     <tr>
-                        <th>Judul</th>
-                        <th>Meeting</th>
-                        <th>Ditugaskan ke</th>
-                        <th>Departemen</th>
-                        <th>Batas Waktu</th>
-                        <th>Status</th>
-                        <th>Prioritas</th>
-                        <th style="width: 120px;">Aksi</th>
+                        <th class="table-header-custom">Judul</th>
+                        <th class="table-header-custom">Meeting</th>
+                        <th class="table-header-custom">Ditugaskan ke</th>
+                        <th class="table-header-custom">Departemen</th>
+                        <th class="table-header-custom">Batas Waktu</th>
+                        <th class="table-header-custom">Status</th>
+                        <th class="table-header-custom">Prioritas</th>
+                        <th class="table-header-custom" style="width: 120px;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -106,13 +110,12 @@
                         $isAssignedToMe = $item->assigned_to == auth()->id();
                         $isCreatedByMe = $item->meeting && $item->meeting->organizer_id == auth()->id();
                         $meetingDeleted = !$item->meeting;
-                        $canEditOrDelete = auth()->user()->canManageMeetings() || 
-                                         ($item->meeting && $item->meeting->organizer_id == auth()->id()) || 
-                                         $item->created_by == auth()->id();
+                        $canEditOrDelete = auth()->user()->isAdmin() || 
+                                         ($item->meeting && $item->meeting->organizer_id == auth()->id());
                     @endphp
                     
                     <tr class="{{ $isAssignedToMe ? 'table-warning' : '' }} {{ $isCreatedByMe ? 'table-info' : '' }} {{ $meetingDeleted ? 'table-danger' : '' }}">
-                        <td>
+                        <td class="align-middle">
                             <div>
                                 <strong>{{ $item->title }}</strong>
                                 @if($isAssignedToMe)
@@ -129,7 +132,7 @@
                             <small class="text-muted">{{ Str::limit($item->description, 50) }}</small>
                             @endif
                         </td>
-                        <td>
+                        <td class="align-middle">
                             @if($item->meeting)
                                 <a href="{{ route('meetings.show', $item->meeting) }}" class="text-decoration-none">
                                     {{ Str::limit($item->meeting->title, 30) }}
@@ -140,7 +143,7 @@
                                 </span>
                             @endif
                         </td>
-                        <td>
+                        <td class="align-middle">
                             <div class="d-flex align-items-center">
                                 <i class="fas fa-user-circle mr-2 
                                     {{ $isAssignedToMe ? 'text-warning' : 'text-muted' }}"></i>
@@ -153,54 +156,57 @@
                                 </div>
                             </div>
                         </td>
-                        <td>{{ $item->department->name }}</td>
-                        <td>
+                        <td class="align-middle">{{ $item->department->name }}</td>
+                        <td class="text-center align-middle">
                             <span class="badge badge-{{ $item->isOverdue() ? 'danger' : 'secondary' }}">
                                 {{ $item->due_date->format('d M Y') }}
                             </span>
                             @if($item->isOverdue())
                             <br><small class="text-danger">Terlambat {{ $item->due_date->diffInDays(now()) }} hari</small>
+                            @elseif($item->isCompletedLate())
+                            <br><small class="text-danger">Selesai Terlambat {{ $item->due_date->startOfDay()->diffInDays($item->completed_at->startOfDay()) }} hari</small>
                             @endif
                         </td>
-                        <td>
+                        <td class="text-center align-middle">
                             <span class="badge badge-{{ $item->status_badge }}">
                                 {{ $item->status_label }}
                             </span>
                         </td>
-                        <td>
+                        <td class="text-center align-middle">
                             <span class="badge badge-{{ $item->priority_badge }}">
                                 {{ $item->priority_label }}
                             </span>
                         </td>
-                        <td>
-                            <div class="btn-group btn-group-sm" role="group">
-                                <a href="{{ route('action-items.show', $item) }}" 
-                                   class="btn btn-info" 
-                                   title="Lihat Detail">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                
-                                @if($canEditOrDelete)
-                                <a href="{{ route('action-items.edit', $item) }}" 
-                                   class="btn btn-primary" 
-                                   title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                
-                                <form action="{{ route('action-items.destroy', $item) }}" 
-                                      method="POST" 
-                                      class="d-inline"
-                                      onsubmit="return confirmDeleteActionItem('{{ addslashes($item->title) }}')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" 
-                                            class="btn btn-danger" 
-                                            title="Hapus">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
-                                @endif
-                            </div>
+                        <td class="text-center align-middle" style="white-space: nowrap;">
+                            {{-- 1. Tombol Lihat --}}
+                            <a href="{{ route('action-items.show', $item) }}" 
+                               class="btn btn-info btn-sm mr-1" 
+                               title="Lihat Detail">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            
+                            @if($canEditOrDelete)
+                            {{-- 2. Tombol Edit --}}
+                            <a href="{{ route('action-items.edit', $item) }}" 
+                               class="btn btn-warning btn-sm mr-1" 
+                               title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            
+                            {{-- 3. Tombol Hapus --}}
+                            <form action="{{ route('action-items.destroy', $item) }}" 
+                                  method="POST" 
+                                  class="d-inline"
+                                  onsubmit="return confirmDeleteActionItem('{{ addslashes($item->title) }}')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" 
+                                        class="btn btn-danger btn-sm" 
+                                        title="Hapus">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                            @endif
                         </td>
                     </tr>
                     @empty
@@ -317,7 +323,7 @@ function showToast(message, type = 'info') {
 @if(session('success'))
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    showToast('{{ session('success') }}', 'success');
+    showToast("{!! session('success') !!}", 'success');
 });
 </script>
 @endif
@@ -325,7 +331,7 @@ document.addEventListener('DOMContentLoaded', function() {
 @if(session('error'))
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    showToast('{{ session('error') }}', 'danger');
+    showToast("{!! session('error') !!}", 'danger');
 });
 </script>
 @endif

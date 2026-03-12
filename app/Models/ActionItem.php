@@ -19,6 +19,7 @@ class ActionItem extends Model
         'status',
         'priority',
         'completion_notes',
+        'revision_notes',
         'completed_at',
     ];
 
@@ -57,9 +58,14 @@ class ActionItem extends Model
         return $query->where('status', 'completed');
     }
 
+    public function scopeNeedsRevision($query)
+    {
+        return $query->where('status', 'needs_revision');
+    }
+
     public function scopeOverdue($query)
     {
-        return $query->where('due_date', '<', now())->whereIn('status', ['pending', 'in_progress']);
+        return $query->where('due_date', '<', now())->whereNotIn('status', ['completed', 'cancelled']);
     }
 
     public function scopeHighPriority($query)
@@ -69,7 +75,12 @@ class ActionItem extends Model
 
     public function isOverdue()
     {
-        return $this->due_date < now() && in_array($this->status, ['pending', 'in_progress']);
+        return $this->due_date->startOfDay() < now()->startOfDay() && !in_array($this->status, ['completed', 'cancelled']);
+    }
+
+    public function isCompletedLate()
+    {
+        return $this->status === 'completed' && $this->completed_at && $this->completed_at->startOfDay() > $this->due_date->startOfDay();
     }
 
 public function getPriorityLabelAttribute()
@@ -85,13 +96,15 @@ public function getPriorityLabelAttribute()
 
     public function getStatusLabelAttribute()
     {
-        return match($this->status) {
+        $labels = [
             'pending' => 'Belum Dikerjakan',
             'in_progress' => 'Sedang Dikerjakan',
+            'waiting_review' => 'Menunggu Review',
+            'needs_revision' => 'Perlu Revisi',
             'completed' => 'Selesai',
             'cancelled' => 'Dibatalkan',
-            default => 'Tidak Diketahui'
-        };
+        ];
+        return $labels[$this->status] ?? $this->status;
     }
 
 public function getPriorityBadgeAttribute()
@@ -118,13 +131,15 @@ public function getPriorityIconAttribute()
 
     public function getStatusBadgeAttribute()
     {
-        return match($this->status) {
-            'pending' => 'danger',
-            'in_progress' => 'warning',
+        $badges = [
+            'pending' => 'secondary',
+            'in_progress' => 'primary',
+            'waiting_review' => 'warning', 
+            'needs_revision' => 'danger',
             'completed' => 'success',
-            'cancelled' => 'secondary',
-            default => 'secondary'
-        };
+            'cancelled' => 'danger',
+        ];
+        return $badges[$this->status] ?? 'secondary';
     }
 
     public function scopeByStatus($query, $status)
