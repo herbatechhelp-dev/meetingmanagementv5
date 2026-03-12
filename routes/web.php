@@ -95,6 +95,10 @@ Route::delete('/meetings/{meeting}/files/{file}/delete', [MeetingController::cla
      Route::post('/meetings/{meeting}/action-items', [MeetingController::class, 'storeActionItem'])
     ->name('meetings.action-items.store');
 
+    // Rate participant
+    Route::post('/meetings/{meeting}/participants/{participant}/rate', [MeetingController::class, 'rateParticipant'])
+        ->name('meetings.participants.rate');
+
     Route::delete('/action-items/{actionItem}', [ActionItemController::class, 'destroy'])
     ->name('action-items.destroy');
 

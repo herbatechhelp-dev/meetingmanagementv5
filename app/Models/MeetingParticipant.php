@@ -16,11 +16,14 @@ class MeetingParticipant extends Model
         'is_required',
         'attended',
         'excuse',
+        'score',
+        'score_note',
     ];
 
     protected $casts = [
         'is_required' => 'boolean',
         'attended' => 'boolean',
+        'score' => 'integer',
     ];
 
     public function meeting()

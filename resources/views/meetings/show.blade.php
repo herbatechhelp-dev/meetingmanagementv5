@@ -435,14 +435,12 @@
                         Tindak lanjut akan muncul setelah meeting selesai
                         @endif
                     </p>
-                    @if($meeting->status === 'ongoing' && ($meeting->organizer_id == auth()->id() || $meeting->assigned_action_taker_id == auth()->id()))
-                    <a href="{{ route('meetings.running', $meeting) }}" class="btn btn-success btn-sm mt-2">
+                    @if($meeting->status === 'ongoing' || $meeting->status === 'completed')
+                    @if(auth()->user()->canManageMeetings() || $meeting->organizer_id == auth()->id() || $meeting->assigned_action_taker_id == auth()->id())
+                    <button type="button" class="btn btn-success btn-sm mt-2" data-toggle="modal" data-target="#addActionItemModal">
                         <i class="fas fa-plus-circle mr-1"></i> Input Tindak Lanjut
-                    </a>
-                    @elseif($meeting->status === 'completed' && $meeting->organizer_id == auth()->id())
-                    <button type="button" class="btn btn-primary btn-sm mt-2" data-toggle="modal" data-target="#addActionItemModal">
-                        <i class="fas fa-plus mr-1"></i> Tambah Tindak Lanjut
                     </button>
+                    @endif
                     @endif
                     @else
                     <h6 class="text-muted">Tidak ada tugas untuk Anda</h6>
@@ -455,6 +453,53 @@
     </div>
 
     <div class="col-md-4">
+        <!-- Quick Actions -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-info text-white py-3">
+                <h3 class="card-title m-0">
+                    <i class="fas fa-bolt mr-2"></i>Aksi Cepat
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <!-- Tombol Assign Minute Taker hanya untuk organizer/admin -->
+                    @if(auth()->user()->canManageMeetings() || $meeting->organizer_id == auth()->id())
+                    <button type="button" class="btn btn-outline-warning btn-sm text-left d-block w-100 mb-2" data-toggle="modal" data-target="#assignMinuteTakerModal">
+                        <i class="fas fa-user-edit mr-2"></i>@if($meeting->assignedMinuteTaker) Ganti @else Tunjuk @endif Penulis Notulensi
+                    </button>
+                    
+                    <!-- Tombol Assign Action Taker hanya untuk organizer/admin -->
+                    <button type="button" class="btn btn-outline-success btn-sm text-left d-block w-100 mb-2" data-toggle="modal" data-target="#assignActionTakerModal">
+                        <i class="fas fa-user-plus mr-2"></i>@if($meeting->assignedActionTaker) Ganti @else Tunjuk @endif Penulis Tindak Lanjut
+                    </button>
+                    @endif
+                    
+                    <!-- Tombol Tambah Tindak Lanjut untuk organizer, admin, dan assigned action taker -->
+                    @if((auth()->user()->canManageMeetings() || $meeting->organizer_id == auth()->id() || $meeting->assigned_action_taker_id == auth()->id()) && in_array($meeting->status, ['scheduled', 'ongoing', 'completed']))
+                        <button type="button" class="btn btn-outline-success btn-sm text-left d-block w-100 mb-2" data-toggle="modal" data-target="#addActionItemModal">
+                            <i class="fas fa-plus-circle mr-2"></i>Tambah Tindak Lanjut
+                        </button>
+                    @endif
+                    
+                    <!-- Tombol Buat/Edit Notulensi -->
+                    @if(in_array($meeting->status, ['scheduled', 'ongoing', 'completed']) && (!$meeting->minutes || !$meeting->minutes->is_finalized))
+                        @if($meeting->assigned_minute_taker_id == auth()->id() || auth()->user()->canManageMeetings() || $meeting->organizer_id == auth()->id())
+                        <a href="{{ route('meetings.running', $meeting) }}#minuteTakerForm" class="btn btn-outline-primary btn-sm text-left d-block w-100 mb-2">
+                            <i class="fas fa-edit mr-2"></i>{{ $meeting->minutes ? 'Edit Notulensi' : 'Buat Notulensi' }}
+                        </a>
+                        @endif
+                    @endif
+                    
+                    <!-- Tombol Upload File -->
+                    @if(in_array($meeting->status, ['scheduled', 'ongoing', 'completed']) && ($meeting->organizer_id == auth()->id() || auth()->user()->canManageMeetings()))
+                    <button type="button" class="btn btn-outline-primary btn-sm text-left d-block w-100" data-toggle="modal" data-target="#uploadFileModal">
+                        <i class="fas fa-upload mr-2"></i>Upload File Baru
+                    </button>
+                    @endif
+                </div>
+            </div>
+        </div>
+
         <!-- Meeting Minutes -->
         <div class="card shadow-sm mb-4">
             <div class="card-header py-3">
@@ -547,8 +592,8 @@
                             @if($meeting->assigned_minute_taker_id == auth()->id())
                             <h6 class="text-muted">Anda adalah Penulis Notulensi</h6>
                             <p class="text-muted mb-3">Belum ada notulensi untuk meeting ini.</p>
-                            @if($meeting->status === 'ongoing')
-                            <a href="{{ route('meetings.running', $meeting) }}" class="btn btn-primary btn-sm">
+                            @if(in_array($meeting->status, ['scheduled', 'ongoing']))
+                            <a href="{{ route('meetings.running', $meeting) }}#minuteTakerForm" class="btn btn-primary btn-sm">
                                 <i class="fas fa-edit mr-1"></i> Buat Notulensi
                             </a>
                             @elseif($meeting->status === 'completed')
@@ -575,7 +620,7 @@
                 @if($meeting->minutes && !$meeting->minutes->is_finalized)
                     @if($meeting->assigned_minute_taker_id == auth()->id() || auth()->user()->canManageMeetings() || $meeting->organizer_id == auth()->id())
                     <div class="mt-3">
-                        <a href="{{ route('meetings.running', $meeting) }}" class="btn btn-primary btn-sm">
+                        <a href="{{ route('meetings.running', $meeting) }}#minuteTakerForm" class="btn btn-primary btn-sm">
                             <i class="fas fa-edit mr-1"></i> Edit Notulensi
                         </a>
                     </div>
@@ -712,12 +757,116 @@
                             </span>
                             @endif
                         </div>
+
+                        {{-- Tampilkan score jika sudah dinilai --}}
+                        @if($participant->score)
+                        <div class="participant-score mt-2 mb-1">
+                            <span class="badge badge-success px-2 py-1" style="font-size:0.7rem;">
+                                Nilai: {{ $participant->score }}<small class="text-white-50">/100</small>
+                            </span>
+                            @if($participant->score_note)
+                            <div class="text-muted mt-1" style="font-size:0.58rem; line-height:1.2;" title="{{ $participant->score_note }}">
+                                "{{ Str::limit($participant->score_note, 30) }}"
+                            </div>
+                            @endif
+                        </div>
+                        @else
+                        @if($meeting->organizer_id == auth()->id() && $meeting->status === 'completed')
+                        <div class="mt-1"><small class="text-muted" style="font-size:0.6rem;">Belum dinilai</small></div>
+                        @endif
+                        @endif
+
+                        {{-- Tombol Beri Nilai: hanya untuk organizer, meeting completed --}}
+                        @if($meeting->organizer_id == auth()->id() && $meeting->status === 'completed')
+                        <button type="button"
+                            class="btn btn-xs btn-outline-warning mt-1 py-0 px-1"
+                            style="font-size: 0.65rem;"
+                            data-toggle="modal"
+                            data-target="#rateModal-{{ $participant->id }}">
+                            <i class="fas fa-star"></i> {{ $participant->score ? 'Edit Nilai' : 'Beri Nilai' }}
+                        </button>
+                        @endif
                     </div>
                     @endforeach
                 </div>
             </div>
         </div>
 
+        {{-- Rating Modals (satu per peserta, hanya untuk organizer) --}}
+        @if($meeting->organizer_id == auth()->id() && $meeting->status === 'completed')
+            @foreach($meeting->participants as $participant)
+            <div class="modal fade" id="rateModal-{{ $participant->id }}" tabindex="-1" role="dialog" aria-labelledby="rateModalLabel-{{ $participant->id }}" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 400px;">
+                    <div class="modal-content border-0 shadow-lg rounded-lg">
+                        <div class="modal-header border-0 pb-0 justify-content-end">
+                            <button type="button" class="close text-muted" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <form action="{{ route('meetings.participants.rate', [$meeting, $participant]) }}" method="POST">
+                            @csrf
+                            <div class="modal-body pt-0 px-4 pb-4">
+                                <!-- User Info Section -->
+                                <div class="text-center mb-4">
+                                    <div class="d-inline-block position-relative mb-3">
+                                        <div class="d-flex align-items-center justify-content-center bg-light rounded-circle shadow-sm" style="width: 70px; height: 70px; margin: 0 auto;">
+                                            <i class="fas fa-user text-primary" style="font-size: 2rem;"></i>
+                                        </div>
+                                    </div>
+                                    <h5 class="font-weight-bold text-dark mb-1">{{ $participant->user->name }}</h5>
+                                    <span class="badge badge-light text-muted px-3 py-1 font-weight-normal border">
+                                        {{ $participant->role_label }}
+                                    </span>
+                                </div>
+
+                                <!-- Rating Score Section -->
+                                <div class="form-group text-center mb-4 bg-light rounded pt-3 pb-3 px-3 border border-light">
+                                    <label class="d-block mb-2 text-dark font-weight-semibold">Beri Penilaian (1-100)</label>
+                                    
+                                    <div class="d-flex align-items-center justify-content-center mb-3">
+                                        <div class="position-relative" style="width: 100px;">
+                                            <input type="number" name="score" id="score-{{ $participant->id }}" 
+                                                   class="form-control text-center font-weight-bold score-number-input" 
+                                                   value="{{ $participant->score ?? '' }}" 
+                                                   min="1" max="100" required placeholder="0"
+                                                   style="font-size: 1.8rem; height: 60px; border-radius: 12px; color: #4e73df; border: 2px solid #e3e6f0; background-color: #fff;"
+                                                   data-slider-target="slider-{{ $participant->id }}">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="px-3">
+                                        <input type="range" class="custom-range score-slider" 
+                                               id="slider-{{ $participant->id }}" 
+                                               min="1" max="100" 
+                                               value="{{ $participant->score ?? 1 }}"
+                                               data-input-target="score-{{ $participant->id }}">
+                                        <div class="d-flex justify-content-between text-muted mt-1 small">
+                                            <span>1</span>
+                                            <span>100</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Notes Section -->
+                                <div class="form-group mb-4">
+                                    <label class="text-dark font-weight-semibold mb-2">Evaluasi Singkat <span class="text-muted font-weight-normal small">(Opsional)</span></label>
+                                    <textarea name="score_note" class="form-control bg-light border-0" rows="3" maxlength="500" placeholder="Tuliskan umpan balik untuk peserta ini... (mis: Sangat proaktif dalam diskusi)" style="resize: none;">{{ $participant->score_note }}</textarea>
+                                </div>
+                                
+                                <!-- Action Buttons -->
+                                <div class="d-flex justify-content-between">
+                                    <button type="button" class="btn btn-light px-4 font-weight-semibold text-muted" data-dismiss="modal">Batal</button>
+                                    <button type="submit" class="btn btn-primary px-4 font-weight-semibold shadow-sm">
+                                        <i class="fas fa-paper-plane mr-2"></i>Kirim Penilaian
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            @endforeach
+        @endif
         <!-- Info Hak Akses untuk Partisipan -->
         @if($meeting->participants->contains('user_id', auth()->id()) && !auth()->user()->canManageMeetings() && $meeting->organizer_id != auth()->id())
         <div class="card shadow-sm mt-3 border-info">
@@ -741,7 +890,7 @@
 </div>
 
 <!-- Modals -->
-@if($meeting->status === 'completed' && $meeting->organizer_id == auth()->id())
+@if(in_array($meeting->status, ['scheduled', 'ongoing', 'completed']) && (auth()->user()->canManageMeetings() || $meeting->organizer_id == auth()->id() || $meeting->assigned_action_taker_id == auth()->id()))
 <!-- Add Action Item Modal -->
 <div class="modal fade" id="addActionItemModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
@@ -781,7 +930,7 @@
                                     <option value="">Pilih User</option>
                                     @foreach($users as $user)
                                         <option value="{{ $user->id }}">
-                                            {{ $user->name }} - {{ $user->department->name }}
+                                            {{ $user->name }} - {{ $user->position ?? 'No Position' }} ({{ $user->department->name ?? 'No Department' }})
                                         </option>
                                     @endforeach
                                 </select>
@@ -812,10 +961,16 @@
                             <div class="form-group">
                                 <label for="priority" class="font-weight-bold small">Prioritas *</label>
                                 <select class="form-control form-control-sm" id="priority" name="priority" required>
-                                    <option value="1">🟢 Rendah</option>
+                                    <!-- PERBAIKAN: Urutan berdasarkan prioritas -->
+                                    <option value="1">🔴 Tinggi</option>
                                     <option value="2" selected>🟡 Sedang</option>
-                                    <option value="3">🔴 Tinggi</option>
+                                    <option value="3">🟢 Rendah</option>
                                 </select>
+                                <small class="form-text text-muted">
+                                    🔴 Tinggi = Sangat penting & mendesak<br>
+                                    🟡 Sedang = Penting tapi tidak mendesak<br>
+                                    🟢 Rendah = Biasa, bisa dikerjakan belakangan
+                                </small>
                             </div>
                         </div>
                     </div>
@@ -834,7 +989,7 @@
 </div>
 @endif
 
-@if($meeting->organizer_id == auth()->id())
+@if($meeting->organizer_id == auth()->id() || auth()->user()->canManageMeetings())
 <!-- Upload File Modal -->
 <div class="modal fade" id="uploadFileModal" tabindex="-1">
     <div class="modal-dialog">
@@ -878,10 +1033,112 @@
         </div>
     </div>
 </div>
+
+<!-- Assign Minute Taker Modal -->
+<div class="modal fade" id="assignMinuteTakerModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-white py-3">
+                <h5 class="modal-title m-0">
+                    <i class="fas fa-user-edit mr-2"></i>Tunjuk Penulis Notulensi
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form action="{{ route('meetings.assign-minute-taker', $meeting) }}" method="POST">
+                @csrf
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="minute_taker_id" class="font-weight-bold small">Pilih Penulis Notulensi *</label>
+                        <select class="form-control form-control-sm select2" id="minute_taker_id" name="minute_taker_id" required>
+                            <option value="">Pilih User</option>
+                            @foreach($users as $user)
+                                <option value="{{ $user->id }}" 
+                                    {{ $meeting->assigned_minute_taker_id == $user->id ? 'selected' : '' }}>
+                                    {{ $user->name }} - {{ $user->position ?? 'No Position' }} ({{ $user->department->name ?? 'No Department' }})
+                                </option>
+                            @endforeach
+                        </select>
+                        <small class="form-text text-muted">
+                            Penulis notulensi yang ditunjuk akan memiliki akses untuk membuat dan mengedit notulensi meeting ini.
+                        </small>
+                    </div>
+                    
+                    @if($meeting->assignedMinuteTaker)
+                    <div class="alert alert-info small">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Saat ini: <strong>{{ $meeting->assignedMinuteTaker->name }}</strong>
+                    </div>
+                    @endif
+                </div>
+                <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">
+                        <i class="fas fa-times mr-1"></i>Batal
+                    </button>
+                    <button type="submit" class="btn btn-warning btn-sm">
+                        <i class="fas fa-save mr-1"></i>Simpan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Assign Action Taker Modal -->
+<div class="modal fade" id="assignActionTakerModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white py-3">
+                <h5 class="modal-title m-0">
+                    <i class="fas fa-user-plus mr-2"></i>Tunjuk Penulis Tindak Lanjut
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form action="{{ route('meetings.assign-action-taker', $meeting) }}" method="POST">
+                @csrf
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="action_taker_id" class="font-weight-bold small">Pilih Penulis Tindak Lanjut *</label>
+                        <select class="form-control form-control-sm select2" id="action_taker_id" name="action_taker_id" required>
+                            <option value="">Pilih User</option>
+                            @foreach($users as $user)
+                                <option value="{{ $user->id }}" 
+                                    {{ $meeting->assigned_action_taker_id == $user->id ? 'selected' : '' }}>
+                                    {{ $user->name }} - {{ $user->position ?? 'No Position' }} ({{ $user->department->name ?? 'No Department' }})
+                                </option>
+                            @endforeach
+                        </select>
+                        <small class="form-text text-muted">
+                            User yang ditunjuk akan memiliki akses untuk menambah tindak lanjut.
+                        </small>
+                    </div>
+                    
+                    @if($meeting->assignedActionTaker)
+                    <div class="alert alert-info small">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Saat ini: <strong>{{ $meeting->assignedActionTaker->name }}</strong>
+                    </div>
+                    @endif
+                </div>
+                <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">
+                        <i class="fas fa-times mr-1"></i>Batal
+                    </button>
+                    <button type="submit" class="btn btn-success btn-sm">
+                        <i class="fas fa-save mr-1"></i>Simpan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 @endif
 @endsection
 
-@section('scripts')
+@push('scripts')
 <script>
 // Custom file input
 document.querySelector('.custom-file-input')?.addEventListener('change', function(e) {
@@ -898,5 +1155,48 @@ if (typeof $.fn.select2 !== 'undefined') {
         width: '100%'
     });
 }
+
+// ── Score Rating Interactive ─────────────────────────────────
+document.querySelectorAll('.score-slider').forEach(function(slider) {
+    slider.addEventListener('input', function() {
+        var inputId = this.dataset.inputTarget;
+        var numberInput = document.getElementById(inputId);
+        if (numberInput) {
+            numberInput.value = this.value;
+        }
+    });
+});
+
+document.querySelectorAll('.score-number-input').forEach(function(input) {
+    input.addEventListener('input', function() {
+        var sliderId = this.dataset.sliderTarget;
+        var slider = document.getElementById(sliderId);
+        
+        // Enforce min/max
+        var val = parseInt(this.value);
+        if (isNaN(val)) val = 0;
+        if (val < 1 && this.value !== "") val = 1;
+        if (val > 100) val = 100;
+        
+        // Only update value if it's out of bounds, let user type empty string temporarily
+        if (this.value !== "" && parseInt(this.value) !== val) {
+            this.value = val;
+        }
+
+        if (slider && val >= 1 && val <= 100) {
+            slider.value = val;
+        }
+    });
+    
+    // Ensure value is set to at least 1 when leaving focus if empty
+    input.addEventListener('blur', function() {
+        if (!this.value || parseInt(this.value) < 1) {
+            this.value = 1;
+            var sliderId = this.dataset.sliderTarget;
+            var slider = document.getElementById(sliderId);
+            if (slider) slider.value = 1;
+        }
+    });
+});
 </script>
-@endsection
+@endpush

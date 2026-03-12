@@ -14,6 +14,11 @@ use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\MeetingInvitation;
+use App\Mail\MinuteTakerAssigned;
+use App\Mail\ActionTakerAssigned;
+use App\Mail\ActionItemAssigned;
 
 class MeetingController extends Controller
 {
@@ -167,7 +172,7 @@ class MeetingController extends Controller
             'department_id' => 'required|exists:departments,id',
             'start_time' => 'required|date',
             'end_time' => 'required|date|after:start_time',
-            'location' => 'required|string|max:255',
+            'location' => 'required_without:is_online|nullable|string|max:255',
             'participants' => 'required|array|min:1',
             'participants.*' => 'exists:users,id',
         ]);
@@ -211,8 +216,21 @@ class MeetingController extends Controller
 
             DB::commit();
 
+            $invitedUsers = User::whereIn('id', $validated['participants'])->get();
+            $delay = 0; // Initialize delay in seconds
+            
+            $senderName = auth()->user()->name;
+            $senderEmail = auth()->user()->email;
+
+            foreach ($invitedUsers as $invitedUser) {
+                // Queue the email with a 20-second incremental delay to safely bypass Mailtrap rate limits
+                Mail::to($invitedUser->email)
+                    ->later(now()->addSeconds($delay), new MeetingInvitation($meeting, $invitedUser, $senderName, $senderEmail));
+                $delay += 20;
+            }
+
             return redirect()->route('meetings.index')
-                ->with('success', 'Meeting berhasil dibuat.');
+                ->with('success', 'Meeting berhasil dibuat dan notifikasi undangan telah dikirim.');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -284,7 +302,7 @@ class MeetingController extends Controller
             'department_id' => 'required|exists:departments,id',
             'start_time' => 'required|date',
             'end_time' => 'required|date|after:start_time',
-            'location' => 'required|string|max:255',
+            'location' => 'required_without:is_online|nullable|string|max:255',
             'is_online' => 'boolean',
             'meeting_link' => 'nullable|url',
             'meeting_platform' => 'nullable|string',
@@ -312,9 +330,16 @@ class MeetingController extends Controller
                 'meeting_password' => $validated['meeting_password'] ?? null,
             ]);
 
-            // Update participants (kecuali organizer)
+            // Dapatkan ID peserta yang sudah ada sebelumnya
+            $existingParticipantIds = $meeting->participants()
+                ->where('role', 'participant')
+                ->pluck('user_id')
+                ->toArray();
+
+            // Hapus peserta yang lama, lalu tambahkan ulang sesuai pilihan baru di form
             $meeting->participants()->where('role', 'participant')->delete();
             
+            $newParticipantIds = [];
             foreach ($validated['participants'] as $participantId) {
                 if ($participantId != auth()->id()) {
                     MeetingParticipant::create([
@@ -323,16 +348,36 @@ class MeetingController extends Controller
                         'role' => 'participant',
                         'is_required' => true,
                     ]);
+
+                    if (!in_array($participantId, $existingParticipantIds)) {
+                        $newParticipantIds[] = $participantId;
+                    }
                 }
             }
 
             DB::commit();
+
+            // Kirim notifikasi email ke peserta yang baru ditambahkan
+            if (!empty($newParticipantIds)) {
+                $newUsers = User::whereIn('id', $newParticipantIds)->get();
+                $delay = 0;
+                
+                $senderName = auth()->user()->name;
+                $senderEmail = auth()->user()->email;
+
+                foreach ($newUsers as $newUser) {
+                    Mail::to($newUser->email)
+                        ->later(now()->addSeconds($delay), new MeetingInvitation($meeting, $newUser, $senderName, $senderEmail));
+                    $delay += 20;
+                }
+            }
 
             return redirect()->route('meetings.show', $meeting)
                 ->with('success', 'Meeting berhasil diperbarui.');
 
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error('Update meeting error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return redirect()->back()
                 ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
@@ -478,8 +523,13 @@ class MeetingController extends Controller
             'assigned_minute_taker_id' => $validated['minute_taker_id']
         ]);
 
+        $user = User::find($validated['minute_taker_id']);
+        if ($user) {
+            Mail::to($user->email)->send(new MinuteTakerAssigned($meeting, $user));
+        }
+
         return redirect()->back()
-            ->with('success', 'Penulis notulensi berhasil ditunjuk.');
+            ->with('success', 'Penulis notulensi berhasil ditunjuk dan notifikasi telah dikirim.');
     }
 
     // Action Items Methods
@@ -500,7 +550,7 @@ public function storeActionItem(Request $request, Meeting $meeting)
         'priority' => 'required|in:1,2,3',
     ]);
 
-    ActionItem::create([
+    $actionItem = ActionItem::create([
         'meeting_id' => $meeting->id,
         'title' => $validated['title'],
         'description' => $validated['description'],
@@ -512,8 +562,13 @@ public function storeActionItem(Request $request, Meeting $meeting)
         'created_by' => auth()->id(),
     ]);
 
+    $user = User::find($validated['assigned_to']);
+    if ($user) {
+        Mail::to($user->email)->send(new ActionItemAssigned($actionItem, $user));
+    }
+
     return redirect()->back()
-        ->with('success', 'Tindak lanjut berhasil ditambahkan.');
+        ->with('success', 'Tindak lanjut berhasil ditambahkan dan notifikasi telah dikirim.');
 }
 
     // File Methods
@@ -627,8 +682,9 @@ public function runningMeeting(Meeting $meeting)
 
     $participants = $meeting->participants->pluck('user');
     $departments = Department::active()->get();
+    $users = User::active()->get();
 
-    return view('meetings.running', compact('meeting', 'participants', 'departments'));
+    return view('meetings.running', compact('meeting', 'participants', 'departments', 'users'));
 }
 
         // Helper methods
@@ -691,13 +747,49 @@ public function runningMeeting(Meeting $meeting)
         'assigned_action_taker_id' => $validated['action_taker_id']
     ]);
 
+    $user = User::find($validated['action_taker_id']);
+    if ($user) {
+        Mail::to($user->email)->send(new ActionTakerAssigned($meeting, $user));
+    }
+
     return redirect()->back()
-        ->with('success', 'Penulis tindak lanjut berhasil ditunjuk.');
+        ->with('success', 'Penulis tindak lanjut berhasil ditunjuk dan notifikasi telah dikirim.');
 }
 
 private function isAssignedActionTaker($meeting)
 {
     return $meeting->assigned_action_taker_id === auth()->id();
 }
+
+    // Rate Participant
+    public function rateParticipant(Request $request, Meeting $meeting, MeetingParticipant $participant)
+    {
+        // Hanya organizer yang boleh memberi nilai
+        if ($meeting->organizer_id !== auth()->id() && !auth()->user()->isAdmin()) {
+            abort(403, 'Hanya pembuat meeting yang dapat memberi nilai peserta.');
+        }
+
+        // Meeting harus sudah selesai
+        if ($meeting->status !== 'completed') {
+            return redirect()->back()->with('error', 'Penilaian hanya bisa dilakukan setelah meeting selesai.');
+        }
+
+        // Validasi participant adalah bagian dari meeting ini
+        if ($participant->meeting_id !== $meeting->id) {
+            abort(404);
+        }
+
+        $validated = $request->validate([
+            'score'      => 'required|integer|min:1|max:100',
+            'score_note' => 'nullable|string|max:500',
+        ]);
+
+        $participant->update([
+            'score'      => $validated['score'],
+            'score_note' => $validated['score_note'] ?? null,
+        ]);
+
+        return redirect()->back()->with('success', 'Nilai untuk ' . $participant->user->name . ' berhasil disimpan.');
+    }
 
 }

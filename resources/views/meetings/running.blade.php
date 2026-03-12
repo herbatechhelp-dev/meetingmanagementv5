@@ -793,9 +793,9 @@
                                 <label for="assigned_to" class="font-weight-bold small">Ditugaskan ke *</label>
                                 <select class="form-control form-control-sm select2" id="assigned_to" name="assigned_to" required>
                                     <option value="">Pilih User</option>
-                                    @foreach($participants as $participant)
-                                        <option value="{{ $participant->id }}">
-                                            {{ $participant->name }} - {{ $participant->department->name ?? 'No Department' }}
+                                    @foreach($users as $user)
+                                        <option value="{{ $user->id }}">
+                                            {{ $user->name }} - {{ $user->position ?? 'No Position' }} ({{ $user->department->name ?? 'No Department' }})
                                         </option>
                                     @endforeach
                                 </select>
@@ -921,10 +921,10 @@
                         <label for="minute_taker_id" class="font-weight-bold small">Pilih Penulis Notulensi *</label>
                         <select class="form-control form-control-sm select2" id="minute_taker_id" name="minute_taker_id" required>
                             <option value="">Pilih User</option>
-                            @foreach($participants as $participant)
-                                <option value="{{ $participant->id }}" 
-                                    {{ $meeting->assigned_minute_taker_id == $participant->id ? 'selected' : '' }}>
-                                    {{ $participant->name }} - {{ $participant->position }} ({{ $participant->department->name }})
+                            @foreach($users as $user)
+                                <option value="{{ $user->id }}" 
+                                    {{ $meeting->assigned_minute_taker_id == $user->id ? 'selected' : '' }}>
+                                    {{ $user->name }} - {{ $user->position ?? 'No Position' }} ({{ $user->department->name ?? 'No Department' }})
                                 </option>
                             @endforeach
                         </select>
@@ -972,10 +972,10 @@
                         <label for="action_taker_id" class="font-weight-bold small">Pilih Penulis Tindak Lanjut *</label>
                         <select class="form-control form-control-sm select2" id="action_taker_id" name="action_taker_id" required>
                             <option value="">Pilih User</option>
-                            @foreach($participants as $participant)
-                                <option value="{{ $participant->id }}" 
-                                    {{ $meeting->assigned_action_taker_id == $participant->id ? 'selected' : '' }}>
-                                    {{ $participant->name }} - {{ $participant->position }} ({{ $participant->department->name }})
+                            @foreach($users as $user)
+                                <option value="{{ $user->id }}" 
+                                    {{ $meeting->assigned_action_taker_id == $user->id ? 'selected' : '' }}>
+                                    {{ $user->name }} - {{ $user->position ?? 'No Position' }} ({{ $user->department->name ?? 'No Department' }})
                                 </option>
                             @endforeach
                         </select>
@@ -1265,4 +1265,24 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endif
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-scroll to hash if present in URL
+    if (window.location.hash) {
+        const targetElement = document.querySelector(window.location.hash);
+        if (targetElement) {
+            // Add a slight delay to ensure the page has completely rendered
+            setTimeout(() => {
+                targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                // Optional: add a highlight effect to draw attention
+                targetElement.classList.add('border-primary', 'shadow');
+                setTimeout(() => {
+                    targetElement.classList.remove('border-primary', 'shadow');
+                }, 2000);
+            }, 300);
+        }
+    }
+});
+</script>
 @endsection

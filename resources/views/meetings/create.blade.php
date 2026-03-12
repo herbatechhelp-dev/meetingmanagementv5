@@ -265,20 +265,57 @@
 </div>
 @endsection
 
-@section('styles')
+@push('styles')
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <style>
 .select2-container--default .select2-selection--multiple {
-    border: 1px solid #ced4da;
+    border: 1px solid #d1d3e2;
+    border-radius: 0.35rem;
+    min-height: 40px;
+    padding-bottom: 2px;
+}
+.select2-container--default .select2-selection--multiple .select2-selection__choice {
+    background-color: #e3e6f0;
+    border: 1px solid #cbd0e3;
     border-radius: 0.25rem;
+    margin-top: 6px;
+    color: #3a3b45; /* Dark text */
+    font-weight: 500;
+    padding: 0; /* Important: remove padding from parent so children can be styled properly */
+    display: inline-flex;
+    align-items: center;
+}
+.select2-container--default .select2-selection--multiple .select2-selection__choice__display {
+    padding: 4px 10px;
+    cursor: default;
+}
+.select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+    color: #858796;
+    font-weight: bold;
+    border: none;
+    border-right: 1px solid #cbd0e3;
+    background: transparent;
+    padding: 4px 8px;
+    border-radius: 0.25rem 0 0 0.25rem;
+    order: -1;
+    position: static;
+}
+.select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
+    color: #e74a3b;
+    background-color: #d1d3e2;
+}
+.select2-container--default.select2-container--focus .select2-selection--multiple {
+    border-color: #bac8f3;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
 }
 #onlineMeetingSection {
     transition: all 0.3s ease;
 }
 </style>
-@endsection
+@endpush
 
-@section('scripts')
+@push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -331,11 +368,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Initialize Select2
     if ($.fn.select2) {
         $('#participants').select2({
             placeholder: 'Pilih peserta meeting',
             allowClear: true,
+            closeOnSelect: false,
             width: '100%'
         });
     }
@@ -382,4 +419,4 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-@endsection
+@endpush
