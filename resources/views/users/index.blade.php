@@ -19,35 +19,35 @@
     </div>
     <div class="card-body">
         <table class="table table-bordered table-hover">
-            <thead>
+            <thead style="background-color: #2c3e50;">
                 <tr>
-                    <th>Nama</th>
-                    <th>Email</th>
-                    <th>Departemen</th>
-                    <th>Posisi</th>
-                    <th>Role</th>
-                    <th>Status</th>
-                    <th>Aksi</th>
+                    <th class="table-header-custom">Nama</th>
+                    <th class="table-header-custom">Email</th>
+                    <th class="table-header-custom">Departemen</th>
+                    <th class="table-header-custom">Posisi</th>
+                    <th class="table-header-custom">Role</th>
+                    <th class="table-header-custom">Status</th>
+                    <th class="table-header-custom" style="width: 120px;">Aksi</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($users as $user)
                 <tr>
-                    <td>{{ $user->name }}</td>
-                    <td>{{ $user->email }}</td>
-                    <td>{{ $user->department->name ?? '-' }}</td>
-                    <td>{{ $user->position }}</td>
-                    <td>
+                    <td class="align-middle">{{ $user->name }}</td>
+                    <td class="align-middle">{{ $user->email }}</td>
+                    <td class="align-middle">{{ $user->department->name ?? '-' }}</td>
+                    <td class="align-middle">{{ $user->position }}</td>
+                    <td class="text-center align-middle">
                         <span class="badge badge-{{ $user->role == 'admin' ? 'danger' : ($user->role == 'manager' ? 'warning' : 'info') }}">
                             {{ ucfirst($user->role) }}
                         </span>
                     </td>
-                    <td>
+                    <td class="text-center align-middle">
                         <span class="badge badge-{{ $user->is_active ? 'success' : 'danger' }}">
                             {{ $user->is_active ? 'Aktif' : 'Non-Aktif' }}
                         </span>
                     </td>
-                    <td>
+                    <td class="text-center align-middle" style="white-space: nowrap;">
                         <a href="{{ route('users.show', $user) }}" class="btn btn-sm btn-info">
                             <i class="fas fa-eye"></i>
                         </a>
