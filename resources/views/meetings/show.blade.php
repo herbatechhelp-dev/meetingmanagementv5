@@ -740,62 +740,65 @@
                 </div>
             </div>
         @endforeach
-@if(auth()->user()->canManageMeetings() || $meeting->organizer_id == auth()->id())
-<div class="modal fade" id="attendanceModal" tabindex="-1">
-    <div class="modal-dialog modal-lg border-0 shadow-lg">
-        <div class="modal-content border-0" style="border-radius: 20px;">
-            <div class="modal-header border-0 pb-0 pt-4 px-4">
-                <h5 class="font-weight-bold text-dark mb-0">
-                    <i class="fas fa-check-double mr-2 text-emerald"></i>Daftar Kehadiran
-                </h5>
-                <button type="button" class="close" data-dismiss="modal">
-                    <span>&times;</span>
-                </button>
-            </div>
-            <div class="modal-body p-4">
-                <div class="table-responsive">
-                    <table class="table table-hover border-0">
-                        <thead>
-                            <tr class="text-xxs text-muted text-uppercase font-weight-bold letter-spacing-1">
-                                <th class="border-0 px-0">Peserta</th>
-                                <th class="border-0 text-center">Status</th>
-                                <th class="border-0">Keterangan</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($meeting->participants as $participant)
-                            <tr class="border-bottom">
-                                <td class="border-0 px-0 py-3">
-                                    <div class="font-weight-bold text-dark">{{ $participant->user->name }}</div>
-                                    <div class="text-xxs text-muted">{{ $participant->user->department->name }}</div>
-                                </td>
-                                <td class="border-0 text-center py-3">
-                                    @if($participant->attended === true)
-                                        <span class="badge badge-soft-success rounded-pill px-3">Hadir</span>
-                                    @elseif($participant->attended === false && $participant->excuse)
-                                        <span class="badge badge-soft-warning rounded-pill px-3">Izin</span>
-                                    @elseif($participant->attended === false)
-                                        <span class="badge badge-soft-danger rounded-pill px-3">Alfa</span>
-                                    @else
-                                        <span class="badge badge-soft-secondary rounded-pill px-3">Belum Isi</span>
-                                    @endif
-                                </td>
-                                <td class="border-0 py-3">
-                                    <span class="text-sm text-muted italic">{{ $participant->excuse ?? '-' }}</span>
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+
+        @if(auth()->user()->canManageMeetings() || $meeting->organizer_id == auth()->id())
+        <div class="modal fade" id="attendanceModal" tabindex="-1">
+            <div class="modal-dialog modal-lg border-0 shadow-lg">
+                <div class="modal-content border-0" style="border-radius: 20px;">
+                    <div class="modal-header border-0 pb-0 pt-4 px-4">
+                        <h5 class="font-weight-bold text-dark mb-0">
+                            <i class="fas fa-check-double mr-2 text-emerald"></i>Daftar Kehadiran
+                        </h5>
+                        <button type="button" class="close" data-dismiss="modal">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="table-responsive">
+                            <table class="table table-hover border-0">
+                                <thead>
+                                    <tr class="text-xxs text-muted text-uppercase font-weight-bold letter-spacing-1">
+                                        <th class="border-0 px-0">Peserta</th>
+                                        <th class="border-0 text-center">Status</th>
+                                        <th class="border-0">Keterangan</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($meeting->participants as $participant)
+                                    <tr class="border-bottom">
+                                        <td class="border-0 px-0 py-3">
+                                            <div class="font-weight-bold text-dark">{{ $participant->user->name }}</div>
+                                            <div class="text-xxs text-muted">{{ $participant->user->department->name }}</div>
+                                        </td>
+                                        <td class="border-0 text-center py-3">
+                                            @if($participant->attended === true)
+                                                <span class="badge badge-soft-success rounded-pill px-3">Hadir</span>
+                                            @elseif($participant->attended === false && $participant->excuse)
+                                                <span class="badge badge-soft-warning rounded-pill px-3">Izin</span>
+                                            @elseif($participant->attended === false)
+                                                <span class="badge badge-soft-danger rounded-pill px-3">Alfa</span>
+                                            @else
+                                                <span class="badge badge-soft-secondary rounded-pill px-3">Belum Isi</span>
+                                            @endif
+                                        </td>
+                                        <td class="border-0 py-3">
+                                            <span class="text-sm text-muted italic">{{ $participant->excuse ?? '-' }}</span>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 p-4 pt-0">
+                        <button type="button" class="btn btn-light btn-block py-2 rounded-xl font-weight-bold" data-dismiss="modal">Tutup</button>
+                    </div>
                 </div>
             </div>
-            <div class="modal-footer border-0 p-4 pt-0">
-                <button type="button" class="btn btn-light btn-block py-2 rounded-xl font-weight-bold" data-dismiss="modal">Tutup</button>
-            </div>
         </div>
-    </div>
-</div>
-@endif
+        @endif
+
+
 
 {{-- Modal Absensi Mandiri untuk Peserta --}}
 @php

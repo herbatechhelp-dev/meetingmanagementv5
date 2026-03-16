@@ -10,6 +10,9 @@ use Illuminate\Http\Request;
 use App\Models\ActionItemFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Mail;
+use App\Mail\ActionItemReviewRequested;
+use App\Mail\ActionItemVerified;
+use App\Mail\ActionItemRevisionRequested;
 use App\Mail\ActionItemUpdated;
 use App\Notifications\MeetingNotification;
 
@@ -218,12 +221,16 @@ class ActionItemController extends Controller
         $assignee = User::find($validated['assigned_to']);
         if ($assignee) {
             // Email Notification
-            Mail::to($assignee->email)->send(new ActionItemUpdated(
-                $actionItem, 
-                $assignee, 
-                auth()->user()->name, 
-                auth()->user()->email
-            ));
+            try {
+                Mail::to($assignee->email)->send(new ActionItemUpdated(
+                    $actionItem, 
+                    $assignee, 
+                    auth()->user()->name, 
+                    auth()->user()->email
+                ));
+            } catch (\Exception $e) {
+                \Log::error('Gagal kirim email update action item: ' . $e->getMessage());
+            }
 
             // In-App Notification
             $assignee->notify(new MeetingNotification(
@@ -238,7 +245,7 @@ class ActionItemController extends Controller
         }
 
         return redirect()->route('action-items.show', $actionItem)
-            ->with('success', 'Tindak lanjut berhasil diperbarui.');
+            ->with('success', 'Tindak lanjut berhasil diperbarui dan notifikasi email telah dikirim.');
     }
 
     public function updateStatus(Request $request, ActionItem $actionItem)
@@ -279,15 +286,23 @@ class ActionItemController extends Controller
             $validated['completed_at'] = now();
         }
 
+        // Deteksi transisi status sebelum update
+        $prevStatus         = $actionItem->status;
+        $isNewWaitingReview = $validated['status'] === 'waiting_review' && $prevStatus !== 'waiting_review';
+        $isNewCompleted     = $validated['status'] === 'completed'      && $prevStatus !== 'completed';
+        $isNewRevision      = $validated['status'] === 'needs_revision'  && $prevStatus !== 'needs_revision';
+
         $actionItem->update($validated);
 
         // NOTIFIKASI BERDASARKAN STATUS
         $organizer = $actionItem->meeting->organizer;
         $assignee = $actionItem->assignedTo;
+        $currentUser = auth()->user();
 
         if ($validated['status'] === 'waiting_review') {
             // Beritahu Organizer bahwa ada yang minta review
             if ($organizer) {
+                // In-App Notification
                 $organizer->notify(new MeetingNotification(
                     'Permintaan Review: ' . $actionItem->title,
                     "{$assignee->name} telah melaporkan penyelesaian tugas dan meminta review.",
@@ -297,10 +312,22 @@ class ActionItemController extends Controller
                     auth()->user()->name,
                     auth()->user()->email
                 ));
+
+                // Email Notification
+                if ($isNewWaitingReview) {
+                    try {
+                        $files = $actionItem->files()->with('uploader')->get();
+                        Mail::to($organizer->email)
+                            ->queue(new ActionItemReviewRequested($actionItem, $organizer, $currentUser, $files));
+                    } catch (\Exception $e) {
+                        \Log::warning('Gagal kirim email ActionItemReviewRequested: ' . $e->getMessage());
+                    }
+                }
             }
         } elseif ($validated['status'] === 'completed') {
             // Beritahu Assignee bahwa tugasnya sudah diverifikasi/ditutup
             if ($assignee) {
+                // In-App Notification
                 $assignee->notify(new MeetingNotification(
                     'Tugas Selesai & Diverifikasi: ' . $actionItem->title,
                     "Tugas Anda telah diverifikasi oleh penyelenggara dan resmi ditutup.",
@@ -310,10 +337,21 @@ class ActionItemController extends Controller
                     auth()->user()->name,
                     auth()->user()->email
                 ));
+
+                // Email Notification
+                if ($isNewCompleted && $organizer) {
+                    try {
+                        Mail::to($assignee->email)
+                            ->queue(new ActionItemVerified($actionItem, $assignee, $organizer));
+                    } catch (\Exception $e) {
+                        \Log::warning('Gagal kirim email ActionItemVerified: ' . $e->getMessage());
+                    }
+                }
             }
         } elseif ($validated['status'] === 'needs_revision') {
             // Beritahu Assignee bahwa ada revisi
             if ($assignee) {
+                // In-App Notification
                 $assignee->notify(new MeetingNotification(
                     'Perlu Revisi: ' . $actionItem->title,
                     "Penyelenggara meminta revisi pada tugas Anda: {$validated['revision_notes']}",
@@ -323,11 +361,22 @@ class ActionItemController extends Controller
                     auth()->user()->name,
                     auth()->user()->email
                 ));
+
+                // Email Notification
+                if ($isNewRevision && $organizer) {
+                    try {
+                        $notes = $validated['revision_notes'] ?? '-';
+                        Mail::to($assignee->email)
+                            ->queue(new ActionItemRevisionRequested($actionItem, $assignee, $organizer, $notes));
+                    } catch (\Exception $e) {
+                        \Log::warning('Gagal kirim email ActionItemRevisionRequested: ' . $e->getMessage());
+                    }
+                }
             }
         }
 
         return redirect()->back()
-            ->with('success', 'Status tindak lanjut berhasil diperbarui.');
+            ->with('success', 'Status tindak lanjut berhasil diperbarui. Notifikasi email telah dikirim.');
     }
 
     public function destroy(ActionItem $actionItem)

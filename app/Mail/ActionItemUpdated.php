@@ -18,6 +18,7 @@ class ActionItemUpdated extends Mailable implements ShouldQueue
 
     public $actionItem;
     public $participant;
+    public $meeting;
     public $senderName;
     public $senderEmail;
 
@@ -25,24 +26,23 @@ class ActionItemUpdated extends Mailable implements ShouldQueue
     {
         $this->actionItem = $actionItem;
         $this->participant = $participant;
-        $this->senderName = $senderName;
-        $this->senderEmail = $senderEmail;
+        $this->meeting = $actionItem->meeting;
+        $this->senderName = $senderName ?? config('mail.from.name');
+        $this->senderEmail = $senderEmail ?? config('mail.from.address');
     }
 
     public function envelope(): Envelope
     {
-        $from = $this->senderEmail ? new Address($this->senderEmail, $this->senderName) : null;
-
         return new Envelope(
-            from: $from,
-            subject: '[Pembaruan] ' . $this->actionItem->title,
+            from: new Address($this->senderEmail, $this->senderName),
+            subject: 'Pembaruan Tindak Lanjut: ' . $this->actionItem->title,
         );
     }
 
     public function content(): Content
     {
         return new Content(
-            view: 'emails.meetings.action_item_updated',
+            markdown: 'emails.meetings.action_item_updated',
         );
     }
 }

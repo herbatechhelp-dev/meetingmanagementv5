@@ -25,8 +25,8 @@ class MinuteTakerAssigned extends Mailable implements ShouldQueue
     {
         $this->meeting = $meeting;
         $this->participant = $participant;
-        $this->senderName = $senderName;
-        $this->senderEmail = $senderEmail;
+        $this->senderName = $senderName ?? config('mail.from.name');
+        $this->senderEmail = $senderEmail ?? config('mail.from.address');
     }
 
     public function envelope(): Envelope
@@ -34,7 +34,7 @@ class MinuteTakerAssigned extends Mailable implements ShouldQueue
         $from = $this->senderEmail ? new Address($this->senderEmail, $this->senderName) : null;
 
         return new Envelope(
-            from: $from,
+            from: new Address($this->senderEmail, $this->senderName),
             subject: 'Penugasan Notulensi: ' . $this->meeting->title,
         );
     }

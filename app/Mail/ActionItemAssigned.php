@@ -27,8 +27,8 @@ class ActionItemAssigned extends Mailable implements ShouldQueue
         $this->actionItem = $actionItem;
         $this->participant = $participant;
         $this->meeting = $actionItem->meeting;
-        $this->senderName = $senderName;
-        $this->senderEmail = $senderEmail;
+        $this->senderName = $senderName ?? config('mail.from.name');
+        $this->senderEmail = $senderEmail ?? config('mail.from.address');
     }
 
     public function envelope(): Envelope
@@ -36,7 +36,7 @@ class ActionItemAssigned extends Mailable implements ShouldQueue
         $from = $this->senderEmail ? new Address($this->senderEmail, $this->senderName) : null;
 
         return new Envelope(
-            from: $from,
+            from: new Address($this->senderEmail, $this->senderName),
             subject: 'Tugas Baru: ' . $this->actionItem->title,
         );
     }
