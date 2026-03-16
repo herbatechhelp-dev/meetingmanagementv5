@@ -181,6 +181,17 @@ class MeetingController extends Controller
         try {
             DB::beginTransaction();
 
+            // CHECK ROOM CONFLICT
+            if ($this->checkRoomConflict($validated['start_time'], $validated['end_time'])) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors([
+                        'start_time' => 'Ruangan sudah dibooking pada hari dan jam tersebut.',
+                        'end_time' => 'Ruangan sudah dibooking pada hari dan jam tersebut.',
+                    ])
+                    ->with('error', 'Konflik Jadwal: Ruangan sudah dibooking pada hari dan jam tersebut.');
+            }
+
             // CREATE MEETING
             $meeting = Meeting::create([
                 'title' => $validated['title'],
@@ -235,7 +246,9 @@ class MeetingController extends Controller
                     "Anda diundang ke meeting: {$meeting->title}",
                     route('meetings.show', $meeting),
                     'fa-calendar-alt',
-                    'text-info'
+                    'text-info',
+                    auth()->user()->name,
+                    auth()->user()->email
                 ));
             }
 
@@ -325,6 +338,17 @@ class MeetingController extends Controller
         try {
             DB::beginTransaction();
 
+            // CHECK ROOM CONFLICT
+            if ($this->checkRoomConflict($validated['start_time'], $validated['end_time'], $meeting->id)) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors([
+                        'start_time' => 'Ruangan sudah dibooking pada hari dan jam tersebut.',
+                        'end_time' => 'Ruangan sudah dibooking pada hari dan jam tersebut.',
+                    ])
+                    ->with('error', 'Konflik Jadwal: Ruangan sudah dibooking pada hari dan jam tersebut.');
+            }
+
             $meeting->update([
                 'title' => $validated['title'],
                 'description' => $validated['description'],
@@ -386,7 +410,9 @@ class MeetingController extends Controller
                         "Anda ditambahkan ke meeting: {$meeting->title}",
                         route('meetings.show', $meeting),
                         'fa-user-plus',
-                        'text-info'
+                        'text-info',
+                        auth()->user()->name,
+                        auth()->user()->email
                     ));
                 }
             }
@@ -544,7 +570,12 @@ class MeetingController extends Controller
 
         $user = User::find($validated['minute_taker_id']);
         if ($user) {
-            Mail::to($user->email)->send(new MinuteTakerAssigned($meeting, $user));
+            Mail::to($user->email)->send(new MinuteTakerAssigned(
+                $meeting, 
+                $user, 
+                auth()->user()->name, 
+                auth()->user()->email
+            ));
             
             // Send In-App Database Notification
             $user->notify(new MeetingNotification(
@@ -552,7 +583,9 @@ class MeetingController extends Controller
                 "Anda ditunjuk sebagai penulis notulensi untuk: {$meeting->title}",
                 route('meetings.running', $meeting),
                 'fa-pencil-alt',
-                'text-warning'
+                'text-warning',
+                auth()->user()->name,
+                auth()->user()->email
             ));
         }
 
@@ -592,7 +625,12 @@ public function storeActionItem(Request $request, Meeting $meeting)
 
     $user = User::find($validated['assigned_to']);
     if ($user) {
-        Mail::to($user->email)->send(new ActionItemAssigned($actionItem, $user));
+        Mail::to($user->email)->send(new ActionItemAssigned(
+            $actionItem, 
+            $user, 
+            auth()->user()->name, 
+            auth()->user()->email
+        ));
         
         // Send In-App Database Notification
         $user->notify(new MeetingNotification(
@@ -600,7 +638,9 @@ public function storeActionItem(Request $request, Meeting $meeting)
             "Anda ditugaskan tindak lanjut dari meeting: {$meeting->title}",
             route('action-items.show', $actionItem),
             'fa-tasks',
-            'text-warning'
+            'text-warning',
+            auth()->user()->name,
+            auth()->user()->email
         ));
     }
 
@@ -728,9 +768,9 @@ public function runningMeeting(Meeting $meeting)
         abort(403, 'Anda tidak memiliki akses untuk mengelola meeting ini.');
     }
 
-    if ($meeting->status !== 'ongoing') {
+    if (!in_array($meeting->status, ['ongoing', 'completed'])) {
         return redirect()->route('meetings.show', $meeting)
-            ->with('error', 'Meeting belum dimulai atau sudah selesai.');
+            ->with('error', 'Meeting belum dimulai.');
     }
 
     // Load relasi
@@ -774,7 +814,7 @@ public function runningMeeting(Meeting $meeting)
             return true;
         }
         
-        // Untuk manajer: hanya meeting yang mereka buat atau ikuti
+        // Untuk manajer: hanya meeting yang mereka buat atau mereka ikuti (member)
         if ($user->isManager()) {
             if ($meeting->organizer_id === $user->id || 
                 $meeting->participants()->where('user_id', $user->id)->exists()) {
@@ -783,16 +823,10 @@ public function runningMeeting(Meeting $meeting)
             abort(403, 'Anda tidak memiliki akses ke meeting ini.');
         }
         
-        // Untuk user biasa
-        if ($meeting->organizer_id === $user->id) {
-            return true;
-        }
-        
-        if ($meeting->participants()->where('user_id', $user->id)->exists()) {
-            return true;
-        }
-        
-        if ($meeting->department_id === $user->department_id) {
+        // Untuk user biasa: meeting yang mereka ikuti, buat, atau di departemen mereka
+        if ($meeting->organizer_id === $user->id || 
+            $meeting->participants()->where('user_id', $user->id)->exists() ||
+            $meeting->department_id === $user->department_id) {
             return true;
         }
         
@@ -802,7 +836,8 @@ public function runningMeeting(Meeting $meeting)
     private function canEditMeeting($meeting)
     {
         $user = auth()->user();
-        return $user->isAdmin() || $user->isManager() || $meeting->organizer_id === $user->id;
+        // Admin bisa edit semua, Manager/User hanya bisa edit jika organizer
+        return $user->isAdmin() || $meeting->organizer_id === $user->id;
     }
 
     private function isAssignedMinuteTaker($meeting)
@@ -827,7 +862,12 @@ public function runningMeeting(Meeting $meeting)
 
     $user = User::find($validated['action_taker_id']);
     if ($user) {
-        Mail::to($user->email)->send(new ActionTakerAssigned($meeting, $user));
+        Mail::to($user->email)->send(new ActionTakerAssigned(
+            $meeting, 
+            $user, 
+            auth()->user()->name, 
+            auth()->user()->email
+        ));
         
         // Send In-App Database Notification
         $user->notify(new MeetingNotification(
@@ -835,7 +875,9 @@ public function runningMeeting(Meeting $meeting)
             "Anda ditunjuk sebagai penulis tindak lanjut meeting: {$meeting->title}",
             route('meetings.show', $meeting),
             'fa-clipboard-list',
-            'text-success'
+            'text-success',
+            auth()->user()->name,
+            auth()->user()->email
         ));
     }
 
@@ -879,4 +921,103 @@ private function isAssignedActionTaker($meeting)
         return redirect()->back()->with('success', 'Nilai untuk ' . $participant->user->name . ' berhasil disimpan.');
     }
 
+    /**
+     * Update attendance for meeting participants
+     */
+    public function updateAttendance(Request $request, Meeting $meeting)
+    {
+        // Hanya organizer atau admin yang bisa update absensi
+        if ($meeting->organizer_id !== auth()->id() && !auth()->user()->isAdmin()) {
+            abort(403, 'Hanya penyelenggara meeting atau Admin yang dapat memperbarui absensi.');
+        }
+
+        $validated = $request->validate([
+            'attendance' => 'required|array',
+            'attendance.*.participant_id' => 'required|exists:meeting_participants,id',
+            'attendance.*.attended' => 'required|boolean',
+            'attendance.*.excuse' => 'nullable|string|max:500',
+        ]);
+
+        foreach ($validated['attendance'] as $item) {
+            $participant = $meeting->participants()->find($item['participant_id']);
+            if ($participant) {
+                $participant->update([
+                    'attended' => $item['attended'],
+                    'excuse' => $item['attended'] ? null : ($item['excuse'] ?? null)
+                ]);
+            }
+        }
+
+        return redirect()->back()->with('success', 'Daftar kehadiran berhasil diperbarui.');
+    }
+
+    /**
+     * Mark self attendance for participant
+     */
+    public function selfAttendance(Request $request, Meeting $meeting)
+    {
+        // Check if meeting is ongoing or completed
+        if (!in_array($meeting->status, ['ongoing', 'completed'])) {
+            return redirect()->back()->with('error', 'Absensi hanya dapat diisi saat rapat berlangsung atau sudah selesai.');
+        }
+
+        // Find participant record for the current user
+        $participant = $meeting->participants()->where('user_id', auth()->id())->first();
+
+        if (!$participant) {
+            abort(403, 'Anda bukan peserta dalam meeting ini.');
+        }
+
+        $validated = $request->validate([
+            'attended' => 'required|boolean',
+            'excuse' => 'nullable|string|max:500',
+        ]);
+
+        $participant->update([
+            'attended' => $validated['attended'],
+            'excuse' => $validated['attended'] ? null : ($validated['excuse'] ?? null)
+        ]);
+
+        return redirect()->back()->with('success', 'Kehadiran Anda berhasil dicatat.');
+    }
+
+    /**
+     * Get booked slots for the datepicker
+     */
+    public function getBookedSlots(\Illuminate\Http\Request $request)
+    {
+        $meetings = Meeting::whereIn('status', ['scheduled', 'ongoing'])
+            ->select('id', 'title', 'start_time', 'end_time')
+            ->get();
+
+        return response()->json($meetings);
+    }
+
+    /**
+     * Check if a meeting room conflict exists
+     */
+    private function checkRoomConflict($startTime, $endTime, $excludeId = null)
+    {
+        $query = Meeting::where(function ($q) use ($startTime, $endTime) {
+            $q->where(function ($query) use ($startTime, $endTime) {
+                $query->where('start_time', '>=', $startTime)
+                      ->where('start_time', '<', $endTime);
+            })->orWhere(function ($query) use ($startTime, $endTime) {
+                $query->where('end_time', '>', $startTime)
+                      ->where('end_time', '<=', $endTime);
+            })->orWhere(function ($query) use ($startTime, $endTime) {
+                $query->where('start_time', '<=', $startTime)
+                      ->where('end_time', '>=', $endTime);
+            });
+        });
+
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
+
+        // Only check for scheduled or ongoing meetings
+        $query->whereIn('status', ['scheduled', 'ongoing']);
+
+        return $query->exists();
+    }
 }

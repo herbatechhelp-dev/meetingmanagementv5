@@ -14,18 +14,15 @@
                 <div class="ornament-circle ornament-3"></div>
                 <div class="ornament-circle ornament-4"></div>
             </div>
-            <div class="login-logo">
-                <div class="logo-container">
-                    @if(file_exists(public_path('images/logo.png')))
-                        <img src="{{ asset('images/logo.png') }}" alt="Meeting Management" class="logo-image">
-                    @else
-                        <div class="logo-fallback">
-                            <i class="fas fa-handshake"></i>
-                        </div>
-                    @endif
-                </div>
-                <h1>Meeting<span>Management</span></h1>
-                <p class="tagline">Efficient Meeting Solutions</p>
+            <div class="login-logo" style="display: flex; align-items: center; justify-content: center; gap: 20px;">
+                @if(file_exists(public_path('images/logo.png')))
+                    <img src="{{ asset('images/logo.png') }}" alt="Logo" style="height: 60px; width: auto; object-fit: contain;">
+                @else
+                    <div class="logo-fallback" style="width: 60px; height: 60px; background: white; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                        <i class="fas fa-handshake" style="font-size: 2rem; color: #10b981;"></i>
+                    </div>
+                @endif
+                <h1 style="margin: 0; display: flex; align-items: center;">HERBA<span>TECH</span></h1>
             </div>
         </div>
         
@@ -180,10 +177,10 @@
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* Ukuran login box yang lebih compact */
+/* Ukuran login box yang lebih proporsional */
 .login-box {
     width: 100%;
-    max-width: 380px;
+    max-width: 420px; /* Increased from 380px to accommodate larger text */
     z-index: 10;
     position: relative;
 }
@@ -210,7 +207,6 @@
     border-radius: 50%;
     background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     opacity: 0.15;
-    animation: float 6s ease-in-out infinite;
 }
 
 .ornament-1 {
@@ -246,25 +242,24 @@
 }
 
 .logo-container {
-    width: 80px;
-    height: 80px;
+    width: 90px;
+    height: 90px;
     margin: 0 auto 20px;
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    border-radius: 20px;
+    background: white;
+    border-radius: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
-    border: 3px solid white;
+    box-shadow: 0 10px 30px rgba(16, 185, 129, 0.2);
+    border: 1px solid #e2e8f0;
     position: relative;
     z-index: 2;
 }
 
 .logo-image {
-    width: 45px;
-    height: 45px;
+    max-width: 80%;
+    max-height: 80%;
     object-fit: contain;
-    border-radius: 8px;
 }
 
 .logo-fallback {
@@ -284,7 +279,7 @@
 
 .login-logo h1 {
     color: #1a202c;
-    font-size: 2rem;
+    font-size: 2.4rem; /* Increased from 2.2rem */
     font-weight: 700;
     margin: 0;
     line-height: 1.2;
@@ -332,8 +327,8 @@
 }
 
 .card-header h2 {
-    margin: 0 0 6px 0;
-    font-size: 1.3rem;
+    margin: 0 0 8px 0;
+    font-size: 1.6rem; /* Increased from 1.3rem */
     font-weight: 600;
 }
 
@@ -354,10 +349,10 @@
 
 .form-group label {
     display: block;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
     font-weight: 500;
     color: #374151;
-    font-size: 0.85rem;
+    font-size: 1rem; /* Increased from 0.85rem */
 }
 
 .input-with-icon {
@@ -376,10 +371,10 @@
 
 .input-with-icon .form-control {
     width: 100%;
-    padding: 12px 45px 12px 40px;
+    padding: 14px 45px 14px 45px;
     border: 2px solid #e2e8f0;
-    border-radius: 10px;
-    font-size: 0.9rem;
+    border-radius: 12px;
+    font-size: 1rem; /* Increased from 0.9rem */
     transition: all 0.3s ease;
     background: #f8fafc;
     color: #1a202c;
@@ -507,9 +502,9 @@
     background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     color: white;
     border: none;
-    padding: 14px 20px;
-    border-radius: 10px;
-    font-size: 0.95rem;
+    padding: 16px 24px;
+    border-radius: 12px;
+    font-size: 1.1rem; /* Increased from 0.95rem */
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -609,7 +604,6 @@
     background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     opacity: 0.08;
     border-radius: 50%;
-    animation: float 8s ease-in-out infinite;
 }
 
 .ornament-1 {
@@ -675,7 +669,6 @@
     background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     opacity: 0.1;
     border-radius: 50%;
-    animation: float 10s ease-in-out infinite;
 }
 
 .particle:nth-child(1) {
@@ -742,18 +735,10 @@
     animation-delay: 7s;
 }
 
-/* Floating Animation */
-@keyframes float {
-    0%, 100% { 
-        transform: translateY(0px) rotate(0deg); 
-    }
-    50% { 
-        transform: translateY(-20px) rotate(180deg); 
-    }
-}
+/* Animation removed for static login page */
 
 .logo-container {
-    animation: float 4s ease-in-out infinite;
+    /* Animation removed for static logo presentation */
 }
 
 /* Responsive Design */

@@ -9,6 +9,8 @@ use App\Models\Department;
 use Illuminate\Http\Request;
 use App\Models\ActionItemFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ActionItemUpdated;
 use App\Notifications\MeetingNotification;
 
 class ActionItemController extends Controller
@@ -146,7 +148,9 @@ class ActionItemController extends Controller
                 "Anda ditugaskan tindak lanjut baru dari meeting: {$meeting->title}",
                 route('action-items.show', $actionItem),
                 'fa-tasks',
-                'text-warning'
+                'text-warning',
+                auth()->user()->name,
+                auth()->user()->email
             ));
         }
 
@@ -210,6 +214,29 @@ class ActionItemController extends Controller
 
         $actionItem->update($validated);
 
+        // Notify the Assignee
+        $assignee = User::find($validated['assigned_to']);
+        if ($assignee) {
+            // Email Notification
+            Mail::to($assignee->email)->send(new ActionItemUpdated(
+                $actionItem, 
+                $assignee, 
+                auth()->user()->name, 
+                auth()->user()->email
+            ));
+
+            // In-App Notification
+            $assignee->notify(new MeetingNotification(
+                'Pembaruan Tugas: ' . $actionItem->title,
+                "Ada perubahan data pada tindak lanjut yang ditugaskan kepada Anda.",
+                route('action-items.show', $actionItem),
+                'fa-edit',
+                'text-info',
+                auth()->user()->name,
+                auth()->user()->email
+            ));
+        }
+
         return redirect()->route('action-items.show', $actionItem)
             ->with('success', 'Tindak lanjut berhasil diperbarui.');
     }
@@ -253,6 +280,51 @@ class ActionItemController extends Controller
         }
 
         $actionItem->update($validated);
+
+        // NOTIFIKASI BERDASARKAN STATUS
+        $organizer = $actionItem->meeting->organizer;
+        $assignee = $actionItem->assignedTo;
+
+        if ($validated['status'] === 'waiting_review') {
+            // Beritahu Organizer bahwa ada yang minta review
+            if ($organizer) {
+                $organizer->notify(new MeetingNotification(
+                    'Permintaan Review: ' . $actionItem->title,
+                    "{$assignee->name} telah melaporkan penyelesaian tugas dan meminta review.",
+                    route('action-items.show', $actionItem),
+                    'fa-search',
+                    'text-primary',
+                    auth()->user()->name,
+                    auth()->user()->email
+                ));
+            }
+        } elseif ($validated['status'] === 'completed') {
+            // Beritahu Assignee bahwa tugasnya sudah diverifikasi/ditutup
+            if ($assignee) {
+                $assignee->notify(new MeetingNotification(
+                    'Tugas Selesai & Diverifikasi: ' . $actionItem->title,
+                    "Tugas Anda telah diverifikasi oleh penyelenggara dan resmi ditutup.",
+                    route('action-items.show', $actionItem),
+                    'fa-check-circle',
+                    'text-success',
+                    auth()->user()->name,
+                    auth()->user()->email
+                ));
+            }
+        } elseif ($validated['status'] === 'needs_revision') {
+            // Beritahu Assignee bahwa ada revisi
+            if ($assignee) {
+                $assignee->notify(new MeetingNotification(
+                    'Perlu Revisi: ' . $actionItem->title,
+                    "Penyelenggara meminta revisi pada tugas Anda: {$validated['revision_notes']}",
+                    route('action-items.show', $actionItem),
+                    'fa-exclamation-triangle',
+                    'text-danger',
+                    auth()->user()->name,
+                    auth()->user()->email
+                ));
+            }
+        }
 
         return redirect()->back()
             ->with('success', 'Status tindak lanjut berhasil diperbarui.');
@@ -349,7 +421,7 @@ class ActionItemController extends Controller
     private function canEditMeeting($meeting)
     {
         $user = auth()->user();
-        return $user->isAdmin() || $user->isManager() || $meeting->organizer_id === $user->id;
+        return $user->isAdmin() || $meeting->organizer_id === $user->id;
     }
 
     public function uploadFile(Request $request, ActionItem $actionItem)

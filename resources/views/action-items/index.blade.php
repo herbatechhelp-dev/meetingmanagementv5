@@ -3,12 +3,10 @@
 
 @section('title', 'Tindak Lanjut')
 
-@section('breadcrumb')
-    <li class="breadcrumb-item active">Tindak Lanjut</li>
-@endsection
+@section('hide_header', true)
 
 @section('content')
-<div class="card">
+    <div class="card">
     <div class="card-header">
         <h3 class="card-title">Daftar Tindak Lanjut</h3>
         <div class="card-tools">
@@ -92,8 +90,10 @@
 
         <div class="table-responsive">
             <table class="table table-bordered table-hover">
-                <thead style="background-color: #2c3e50;">
+                <thead class="text-center" style="background-color: #2c3e50; color: white !important;">
                     <tr>
+
+
                         <th class="table-header-custom">Judul</th>
                         <th class="table-header-custom">Meeting</th>
                         <th class="table-header-custom">Ditugaskan ke</th>
@@ -251,7 +251,6 @@
             {{ $actionItems->links() }}
         </div>
     </div>
-</div>
 @endsection
 
 @section('scripts')

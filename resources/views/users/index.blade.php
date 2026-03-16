@@ -3,9 +3,7 @@
 
 @section('title', 'Pengguna')
 
-@section('breadcrumb')
-    <li class="breadcrumb-item active">Pengguna</li>
-@endsection
+@section('hide_header', true)
 
 @section('content')
 <div class="card">
@@ -19,8 +17,10 @@
     </div>
     <div class="card-body">
         <table class="table table-bordered table-hover">
-            <thead style="background-color: #2c3e50;">
+            <thead class="text-center" style="background-color: #2c3e50; color: white !important;">
                 <tr>
+
+
                     <th class="table-header-custom">Nama</th>
                     <th class="table-header-custom">Email</th>
                     <th class="table-header-custom">Departemen</th>

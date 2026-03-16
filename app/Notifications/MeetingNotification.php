@@ -16,17 +16,21 @@ class MeetingNotification extends Notification implements ShouldQueue
     public $url;
     public $icon;
     public $iconColor;
+    public $senderName;
+    public $senderEmail;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct($title, $message, $url, $icon = 'fa-bell', $iconColor = 'text-primary')
+    public function __construct($title, $message, $url, $icon = 'fa-bell', $iconColor = 'text-primary', $senderName = null, $senderEmail = null)
     {
         $this->title = $title;
         $this->message = $message;
         $this->url = $url;
         $this->icon = $icon;
         $this->iconColor = $iconColor;
+        $this->senderName = $senderName;
+        $this->senderEmail = $senderEmail;
     }
 
     /**
@@ -37,7 +41,7 @@ class MeetingNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        // Currently sending to database only to power the bell notification.
+        // Use only database for in-app bell to avoid doubling with manual Mail:: calls.
         return ['database'];
     }
 
@@ -46,10 +50,16 @@ class MeetingNotification extends Notification implements ShouldQueue
      */
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)
+        $mail = (new MailMessage)
                     ->subject($this->title)
                     ->line($this->message)
                     ->action('Lihat Detail', url($this->url));
+
+        if ($this->senderEmail) {
+            $mail->from($this->senderEmail, $this->senderName);
+        }
+
+        return $mail;
     }
 
     /**

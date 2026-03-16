@@ -88,9 +88,9 @@
                         <label for="priority">Prioritas *</label>
                         <select class="form-control @error('priority') is-invalid @enderror" 
                                 id="priority" name="priority" required>
-                            <option value="1" {{ old('priority', $actionItem->priority) == '1' ? 'selected' : '' }}>Rendah</option>
+                            <option value="3" {{ old('priority', $actionItem->priority) == '3' ? 'selected' : '' }}>Rendah</option>
                             <option value="2" {{ old('priority', $actionItem->priority) == '2' ? 'selected' : '' }}>Sedang</option>
-                            <option value="3" {{ old('priority', $actionItem->priority) == '3' ? 'selected' : '' }}>Tinggi</option>
+                            <option value="1" {{ old('priority', $actionItem->priority) == '1' ? 'selected' : '' }}>Tinggi</option>
                         </select>
                         @error('priority')
                             <span class="invalid-feedback">{{ $message }}</span>

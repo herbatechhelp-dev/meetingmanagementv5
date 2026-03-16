@@ -3,10 +3,7 @@
 
 @section('title', $meeting->title)
 
-@section('breadcrumb')
-    <li class="breadcrumb-item"><a href="{{ route('meetings.index') }}">Meeting</a></li>
-    <li class="breadcrumb-item active">Detail</li>
-@endsection
+@section('hide_header', true)
 
 @section('content')
 @if($meeting->status === 'ongoing' && ($meeting->organizer_id == auth()->id() || $meeting->assigned_action_taker_id == auth()->id()))
@@ -25,1062 +22,832 @@
 </div>
 @endif
 
+@push('styles')
 <style>
-    /* Custom CSS untuk perbaikan tata letak */
-    .info-box {
-        min-height: 70px;
-        margin-bottom: 12px;
-        border: 1px solid #e3e6f0;
-        border-radius: 8px;
+    .rounded-xl { border-radius: 12px !important; }
+    .bg-emerald-soft { background: rgba(16, 185, 129, 0.08); }
+    .text-emerald { color: #10b981; }
+    .btn-emerald { background-color: #10b981; color: white; }
+    .btn-emerald:hover { background-color: #059669; color: white; }
+    .card-premium {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
-    .info-box .info-box-icon {
-        width: 60px;
-        height: 60px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 20px;
-        border-radius: 8px 0 0 8px;
-    }
-    .info-box .info-box-content {
-        padding: 8px 12px;
-    }
-    .info-box .info-box-text {
-        font-size: 13px;
-        font-weight: 600;
-        color: #6c757d;
-        margin-bottom: 2px;
-    }
-    .info-box .info-box-number {
-        font-size: 16px;
-        font-weight: 700;
-        color: #333;
-    }
-    .card-header {
-        background: #f8f9fc;
-        border-bottom: 1px solid #e3e6f0;
-    }
-    .card-title {
-        font-size: 16px;
-        font-weight: 700;
-        color: #4e73df;
-        margin-bottom: 0;
-    }
-    .table th {
-        font-size: 13px;
-        font-weight: 700;
-        background-color: #f8f9fc;
-        border-top: 1px solid #e3e6f0;
-    }
-    .table td {
-        font-size: 13px;
-        vertical-align: middle;
-    }
-    .badge {
-        font-size: 11px;
-        padding: 4px 8px;
-        font-weight: 600;
-    }
-    .user-avatar {
-        width: 28px;
-        height: 28px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .callout {
-        border-left: 4px solid;
-        padding: 12px;
-        margin-bottom: 8px;
-        border-radius: 4px;
-        background: #f8f9fc;
-    }
-    .list-group-item {
-        padding: 12px 16px;
-        border: 1px solid #e3e6f0;
-    }
-    .btn-group-sm > .btn {
-        padding: 4px 8px;
-        font-size: 12px;
-    }
-    /* Perbaikan spacing */
-    .card-body {
-        padding: 16px;
-    }
-    .modal-header {
-        padding: 12px 16px;
-    }
-    .modal-body {
-        padding: 16px;
-    }
-    /* Responsive improvements */
-    @media (max-width: 768px) {
-        .info-box .info-box-icon {
-            width: 50px;
-            height: 50px;
-            font-size: 18px;
-        }
-        .info-box .info-box-content {
-            padding: 6px 10px;
-        }
-        .card-body {
-            padding: 12px;
-        }
-    }
-    /* Style untuk indicator tugas */
-    .assigned-to-me {
-        background-color: #f0f8ff !important;
-        border-left: 3px solid #4e73df !important;
-    }
-    /* Style untuk participant badges */
-    .participants-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-        gap: 10px;
-    }
-    .participant-item {
-        position: relative;
-        transition: all 0.3s ease;
-    }
-    .participant-item:hover {
-        background-color: #f8f9fa;
+    .card-premium:hover {
         transform: translateY(-2px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
     }
-    .participant-avatar {
+    .badge-soft-success { background: #ecfdf5; color: #059669; border: 1px solid rgba(5, 150, 105, 0.1); }
+    .badge-soft-warning { background: #fffbeb; color: #d97706; border: 1px solid rgba(217, 119, 6, 0.1); }
+    .badge-soft-emerald { background: #ecfdf5; color: #10b981; border: 1px solid rgba(16, 185, 129, 0.1); }
+    .badge-soft-danger { background: #fef2f2; color: #dc2626; border: 1px solid rgba(220, 38, 38, 0.1); }
+    
+    .timeline-item {
         position: relative;
-        display: inline-block;
+        padding-left: 30px;
+        margin-bottom: 20px;
     }
-    .role-badge {
-        font-size: 0.6rem;
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: -20px;
+        width: 2px;
+        background: #f1f5f9;
     }
+    .timeline-dot {
+        position: absolute;
+        left: -4px;
+        top: 5px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #10b981;
+        border: 2px solid white;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    }
+    .avatar-stack .avatar {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        border: 2px solid white;
+        margin-left: -10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #f1f5f9;
+        font-size: 12px;
+        font-weight: bold;
+    }
+    .avatar-stack .avatar:first-child { margin-left: 0; }
 </style>
+@endpush
 
-<div class="row">
-    <div class="col-md-8">
-        <!-- Meeting Details -->
-        <div class="card shadow-sm mb-4">
-            <div class="card-header d-flex align-items-center justify-content-between py-3">
-                <h3 class="card-title m-0">
-                    <i class="fas fa-info-circle mr-2 text-primary"></i>Detail Meeting
-                    @if($meeting->status === 'ongoing')
-                    <span class="badge badge-warning ml-2">
-                        <i class="fas fa-running mr-1"></i> Sedang Berlangsung
-                    </span>
+
+    <!-- Breadcrumb & Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5">
+        <div class="mb-3 mb-md-0">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb bg-transparent p-0 mb-2">
+                    <li class="breadcrumb-item"><a href="{{ route('meetings.index') }}" class="text-emerald font-weight-bold">Rapat</a></li>
+                    <li class="breadcrumb-item active text-muted">Detail</li>
+                </ol>
+            </nav>
+            <h1 class="h2 font-weight-bold text-dark mb-1">{{ $meeting->title }}</h1>
+            <div class="d-flex align-items-center">
+                <span class="badge badge-soft-{{ $meeting->status === 'completed' ? 'success' : ($meeting->status === 'ongoing' ? 'warning' : 'indigo') }} px-3 py-2 rounded-pill font-weight-bold">
+                    <i class="fas {{ $meeting->status === 'completed' ? 'fa-check-circle' : ($meeting->status === 'ongoing' ? 'fa-running' : 'fa-calendar-check') }} mr-1"></i>
+                    {{ $meeting->status === 'completed' ? 'Selesai' : ($meeting->status === 'ongoing' ? 'Berlangsung' : 'Dijadwalkan') }}
+                </span>
+                <span class="mx-2 text-muted">•</span>
+                <span class="text-muted font-weight-medium">
+                    <i class="far fa-calendar-alt mr-1"></i> {{ $meeting->start_time->format('d M Y') }}
+                </span>
+            </div>
+        </div>
+        <div class="d-flex align-items-center">
+            @if(auth()->user()->canManageMeetings() || $meeting->organizer_id == auth()->id())
+                <a href="{{ route('meetings.edit', $meeting) }}" class="btn btn-light px-4 py-2 rounded-lg font-weight-bold mr-2 transition-all">
+                    <i class="fas fa-edit mr-2 text-emerald"></i> Edit
+                </a>
+                @if($meeting->status === 'scheduled')
+                    <form action="{{ route('meetings.start', $meeting) }}" method="POST" class="d-inline">
+                        @csrf
+                        <button type="submit" class="btn btn-emerald px-4 py-2 rounded-lg font-weight-bold shadow-sm transition-all hover-translate-y">
+                            <i class="fas fa-play mr-2"></i> Mulai Rapat
+                        </button>
+                    </form>
+                @endif
+            @endif
+            @if($meeting->status === 'ongoing' && ($meeting->organizer_id == auth()->id() || $meeting->assigned_action_taker_id == auth()->id() || $meeting->assigned_minute_taker_id == auth()->id()))
+                <a href="{{ route('meetings.running', $meeting) }}" class="btn btn-warning px-4 py-2 rounded-lg font-weight-bold shadow-sm transition-all hover-translate-y">
+                    <i class="fas fa-tasks mr-2"></i> Kelola
+                </a>
+            @endif
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Main Content Column -->
+        <div class="col-lg-8">
+            <!-- Overview Card -->
+            <div class="card card-premium mb-4">
+                <div class="card-body p-4">
+                    <h5 class="font-weight-bold text-dark mb-4">Ringkasan</h5>
+                    <div class="row g-4">
+                        <div class="col-md-6 mb-4">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-emerald-soft p-3 rounded-xl mr-3 text-emerald">
+                                    <i class="fas fa-tag fa-lg"></i>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-uppercase text-muted font-weight-bold mb-1 letter-spacing-1">Jenis Rapat</div>
+                                    <div class="font-weight-bold text-dark">{{ $meeting->meetingType->name }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-emerald-soft p-3 rounded-xl mr-3 text-emerald">
+                                    <i class="fas fa-user-circle fa-lg"></i>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-uppercase text-muted font-weight-bold mb-1 letter-spacing-1">Penyelenggara</div>
+                                    <div class="font-weight-bold text-dark">{{ $meeting->organizer->name }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-emerald-soft p-3 rounded-xl mr-3 text-emerald">
+                                    <i class="fas fa-map-marker-alt fa-lg"></i>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-uppercase text-muted font-weight-bold mb-1 letter-spacing-1">Lokasi</div>
+                                    <div class="font-weight-bold text-dark">
+                                        @if($meeting->is_online)
+                                            <span class="text-primary font-weight-bold">Rapat Online</span>
+                                        @else
+                                            {{ $meeting->location }}
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-emerald-soft p-3 rounded-xl mr-3 text-emerald">
+                                    <i class="fas fa-clock fa-lg"></i>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-uppercase text-muted font-weight-bold mb-1 letter-spacing-1">Rentang Waktu</div>
+                                    <div class="font-weight-bold text-dark">{{ $meeting->start_time->format('H:i') }} — {{ $meeting->end_time->format('H:i') }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if($meeting->description)
+                    <div class="mt-2 p-3 bg-light rounded-lg border-0">
+                        <div class="text-xs font-weight-bold text-uppercase text-muted mb-2 letter-spacing-1">Deskripsi</div>
+                        <p class="text-muted mb-0">{{ $meeting->description }}</p>
+                    </div>
                     @endif
-                </h3>
-                <div class="card-tools">
-                    <!-- Tombol utama untuk input tindak lanjut -->
-                    @if($meeting->status === 'ongoing' && ($meeting->organizer_id == auth()->id() || $meeting->assigned_action_taker_id == auth()->id()))
-                    <a href="{{ route('meetings.running', $meeting) }}" class="btn btn-success btn-sm mr-2">
-                        <i class="fas fa-tasks mr-1"></i> Input Tindak Lanjut
-                    </a>
-                    @endif
-                    
-                    <!-- Tombol kontrol meeting untuk organizer -->
-                    @if(auth()->user()->isAdmin() || $meeting->organizer_id == auth()->id())
-                        @if($meeting->status === 'scheduled')
-                            <form action="{{ route('meetings.start', $meeting) }}" method="POST" class="d-inline mr-2">
-                                @csrf
-                                <button type="submit" class="btn btn-success btn-sm">
-                                    <i class="fas fa-play mr-1"></i> Mulai Meeting
-                                </button>
-                            </form>
-                        @endif
-                        
-                        @if($meeting->status === 'ongoing')
-                            <a href="{{ route('meetings.running', $meeting) }}" class="btn btn-warning btn-sm mr-2">
-                                <i class="fas fa-running mr-1"></i> Kelola Meeting
+
+                    @if($meeting->is_online && $meeting->meeting_link)
+                    <div class="mt-4 pt-4 border-top">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h6 class="font-weight-bold text-dark mb-1">Masuk Rapat</h6>
+                                <p class="text-sm text-muted mb-0">Gunakan tautan di bawah untuk mengakses ruang rapat virtual.</p>
+                            </div>
+                            <a href="{{ $meeting->meeting_link }}" target="_blank" class="btn btn-emerald px-4 py-2 rounded-lg font-weight-bold shadow-sm">
+                                <i class="fas fa-video mr-2"></i> Gabung Sekarang
                             </a>
+                        </div>
+                        @if($meeting->meeting_id || $meeting->meeting_password)
+                        <div class="mt-3 p-3 bg-emerald-soft rounded-lg d-flex">
+                            @if($meeting->meeting_id)
+                            <div class="mr-4">
+                                <span class="text-xs text-muted font-weight-bold text-uppercase d-block mb-1">ID Rapat</span>
+                                <code class="text-emerald font-weight-bold">{{ $meeting->meeting_id }}</code>
+                            </div>
+                            @endif
+                            @if($meeting->meeting_password)
+                            <div>
+                                <span class="text-xs text-muted font-weight-bold text-uppercase d-block mb-1">Kode Akses</span>
+                                <code class="text-emerald font-weight-bold">{{ $meeting->meeting_password }}</code>
+                            </div>
+                            @endif
+                        </div>
                         @endif
-                        
-                        <a href="{{ route('meetings.edit', $meeting) }}" class="btn btn-primary btn-sm">
-                            <i class="fas fa-edit mr-1"></i> Edit
-                        </a>
+                    </div>
                     @endif
                 </div>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="info-box bg-white">
-                            <span class="info-box-icon bg-primary"><i class="fas fa-heading text-white"></i></span>
-                            <div class="info-box-content">
-                                <span class="info-box-text">Judul Meeting</span>
-                                <span class="info-box-number">{{ $meeting->title }}</span>
-                            </div>
-                        </div>
-                        
-                        <div class="info-box bg-white">
-                            <span class="info-box-icon bg-info"><i class="fas fa-list text-white"></i></span>
-                            <div class="info-box-content">
-                                <span class="info-box-text">Jenis Meeting</span>
-                                <span class="info-box-number">{{ $meeting->meetingType->name }}</span>
-                            </div>
-                        </div>
-                        
-                        <div class="info-box bg-white">
-                            <span class="info-box-icon bg-success"><i class="fas fa-user-tie text-white"></i></span>
-                            <div class="info-box-content">
-                                <span class="info-box-text">Organizer</span>
-                                <span class="info-box-number">{{ $meeting->organizer->name }}</span>
-                            </div>
-                        </div>
+            <div class="card card-premium mb-4">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="font-weight-bold text-dark mb-0">Tindak Lanjut</h5>
+                        @if($meeting->status === 'completed' && (auth()->user()->canManageMeetings() || $meeting->organizer_id == auth()->id()))
+                            <button type="button" class="btn btn-emerald btn-sm px-3 rounded-pill" data-toggle="modal" data-target="#addActionItemModal">
+                                <i class="fas fa-plus mr-1"></i> Tambah Item
+                            </button>
+                        @endif
                     </div>
-                    
-                    <div class="col-md-6">
-                        <div class="info-box bg-white">
-                            <span class="info-box-icon bg-warning"><i class="fas fa-building text-white"></i></span>
-                            <div class="info-box-content">
-                                <span class="info-box-text">Departemen</span>
-                                <span class="info-box-number">{{ $meeting->department->name }}</span>
-                            </div>
+
+                    @if($meeting->actionItems->count() > 0)
+                        <div class="table-responsive">
+                            <table class="table table-borderless align-middle">
+                                <thead class="text-xs text-uppercase text-muted font-weight-bold letter-spacing-1 bg-light">
+                                    <tr>
+                                        <th class="py-3 px-4 rounded-left">Tugas</th>
+                                        <th class="py-3">Penerima Tugas</th>
+                                        <th class="py-3">Batas Waktu</th>
+                                        <th class="py-3">Status</th>
+                                        <th class="py-3 px-4 rounded-right text-right">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($meeting->actionItems as $actionItem)
+                                        @php
+                                            $isAssignedToMe = $actionItem->assigned_to == auth()->id();
+                                            $canView = $isAssignedToMe || auth()->user()->canManageMeetings() || $meeting->organizer_id == auth()->id();
+                                        @endphp
+                                        @if($canView)
+                                            <tr class="border-bottom">
+                                                <td class="py-4 px-4">
+                                                    <div class="font-weight-bold text-dark mb-1">{{ Str::limit($actionItem->title, 40) }}</div>
+                                                    @if($isAssignedToMe)
+                                                        <span class="badge badge-soft-emerald text-xxs px-2 py-1 rounded">Tugas Anda</span>
+                                                    @endif
+                                                </td>
+                                                <td class="py-4">
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="bg-light rounded-circle px-2 py-1 mr-2 text-xs font-weight-bold text-emerald">
+                                                            {{ strtoupper(substr($actionItem->assignedTo->name ?? 'U', 0, 1)) }}
+                                                        </div>
+                                                        <span class="text-sm font-weight-medium text-dark">{{ $actionItem->assignedTo->name ?? 'Tidak Diketahui' }}</span>
+                                                    </div>
+                                                </td>
+                                                <td class="py-4">
+                                                    <div class="text-sm {{ $actionItem->isOverdue() ? 'text-danger font-weight-bold' : 'text-muted' }}">
+                                                        {{ $actionItem->due_date->format('d M Y') }}
+                                                    </div>
+                                                </td>
+                                                <td class="py-4">
+                                                    <span class="badge badge-soft-{{ $actionItem->status === 'completed' ? 'success' : ($actionItem->status === 'in_progress' ? 'warning' : 'danger') }} px-2 py-1 rounded-pill text-xs font-weight-bold">
+                                                        {{ $actionItem->status === 'completed' ? 'Selesai' : ($actionItem->status === 'in_progress' ? 'Sedang Berjalan' : ($actionItem->status === 'pending' ? 'Menunggu' : $actionItem->status)) }}
+                                                    </span>
+                                                </td>
+                                                <td class="py-4 px-4 text-right">
+                                                    <a href="{{ route('action-items.show', $actionItem) }}" class="btn btn-sm btn-light rounded-pill px-3 font-weight-bold text-emerald">Detail</a>
+                                                </td>
+                                            </tr>
+                                        @endif
+                                    @endforeach
+                                </tbody>
+                            </table>
                         </div>
-                        
-                        <div class="info-box bg-white">
-                            <span class="info-box-icon bg-secondary"><i class="fas fa-map-marker-alt text-white"></i></span>
-                            <div class="info-box-content">
-                                <span class="info-box-text">Lokasi</span>
-                                <span class="info-box-number">
-                                    @if($meeting->is_online)
-                                        <i class="fas fa-video text-info mr-1"></i> Online
-                                    @else
-                                        <i class="fas fa-building text-secondary mr-1"></i> {{ $meeting->location }}
+                    @else
+                        <div class="text-center py-5 bg-light rounded-xl">
+                            <div class="mb-3"><i class="fas fa-tasks fa-3x text-muted opacity-20"></i></div>
+                            <h6 class="font-weight-bold text-dark">Belum ada tindak lanjut</h6>
+                            <p class="text-muted text-sm px-5">Tugas akan muncul di sini setelah ditambahkan oleh penyelenggara atau notulis.</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            <!-- Documentation (Minutes) Card -->
+            <div class="card card-premium mb-4">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="font-weight-bold text-dark mb-0">Notulensi Rapat</h5>
+                        @if($meeting->minutes && $meeting->minutes->is_finalized)
+                            <span class="badge badge-soft-success px-3 py-1 rounded-pill font-weight-bold"><i class="fas fa-check-double mr-1"></i> Difinalisasi</span>
+                        @else
+                            <span class="badge badge-soft-warning px-3 py-1 rounded-pill font-weight-bold"><i class="fas fa-pencil-alt mr-1"></i> Draf</span>
+                        @endif
+                    </div>
+
+                    @if($meeting->minutes)
+                        <div class="p-4 bg-light rounded-xl border-0 mb-4" style="line-height: 1.7; color: #475569;">
+                            {!! nl2br(e($meeting->minutes->content)) !!}
+                        </div>
+
+                        @if($meeting->minutes->decisions && count($meeting->minutes->decisions) > 0)
+                            <h6 class="font-weight-bold text-dark mb-3">Keputusan Penting</h6>
+                            <div class="row g-3 mb-4">
+                                @foreach($meeting->minutes->decisions as $decision)
+                                    @if(!empty(trim($decision)))
+                                        <div class="col-12">
+                                            <div class="d-flex align-items-start p-3 bg-white border rounded-xl">
+                                                <div class="bg-success-soft p-2 rounded-lg mr-3 text-success">
+                                                    <i class="fas fa-check text-sm"></i>
+                                                </div>
+                                                <span class="text-dark font-weight-medium">{{ $decision }}</span>
+                                            </div>
+                                        </div>
                                     @endif
-                                </span>
+                                @endforeach
+                            </div>
+                        @endif
+
+                        <div class="d-flex justify-content-between align-items-center pt-4 border-top">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-light rounded-circle p-2 mr-3 font-weight-bold text-emerald" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                    {{ strtoupper(substr($meeting->assignedMinuteTaker->name ?? 'M', 0, 1)) }}
+                                </div>
+                                <div>
+                                    <div class="text-xs text-muted font-weight-bold text-uppercase letter-spacing-1">Notulis</div>
+                                    <div class="font-weight-bold text-dark text-sm">{{ $meeting->assignedMinuteTaker->name ?? 'Belum Ditunjuk' }}</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xs text-muted font-weight-bold text-uppercase letter-spacing-1">Diperbarui Pada</div>
+                                <div class="font-weight-bold text-dark text-sm">{{ $meeting->minutes->updated_at->format('d M Y, H:i') }}</div>
                             </div>
                         </div>
-                        
-                        <div class="info-box bg-white">
-                            <span class="info-box-icon bg-{{ $meeting->status === 'scheduled' ? 'primary' : ($meeting->status === 'ongoing' ? 'warning' : 'success') }}">
-                                <i class="fas fa-{{ $meeting->status === 'scheduled' ? 'clock' : ($meeting->status === 'ongoing' ? 'running' : 'check') }} text-white"></i>
-                            </span>
-                            <div class="info-box-content">
-                                <span class="info-box-text">Status</span>
-                                <span class="info-box-number">
-                                    <span class="badge badge-{{ $meeting->status === 'scheduled' ? 'primary' : ($meeting->status === 'ongoing' ? 'warning' : 'success') }}">
-                                        {{ $meeting->status === 'scheduled' ? 'Terjadwal' : ($meeting->status === 'ongoing' ? 'Berlangsung' : 'Selesai') }}
-                                    </span>
-                                </span>
-                            </div>
+                    @else
+                        <div class="text-center py-5 bg-light rounded-xl">
+                            <div class="mb-3 text-muted"><i class="far fa-sticky-note fa-4x opacity-20"></i></div>
+                            <h6 class="font-weight-bold text-dark">Belum ada notulensi</h6>
+                            <p class="text-muted text-sm mb-4">Dokumentasi resmi belum disiapkan.</p>
+                            @if(($meeting->assigned_minute_taker_id == auth()->id() || auth()->user()->canManageMeetings() || $meeting->organizer_id == auth()->id()) && in_array($meeting->status, ['scheduled', 'ongoing', 'completed']))
+                                <a href="{{ route('meetings.running', $meeting) }}#minuteTakerForm" class="btn btn-emerald px-4 py-2 rounded-lg font-weight-bold shadow-sm">
+                                    Mulai Dokumentasi
+                                </a>
+                            @endif
                         </div>
-                    </div>
+                    @endif
                 </div>
-
-                <!-- Waktu Meeting -->
-                <div class="row mt-3">
-                    <div class="col-md-6">
-                        <div class="callout callout-info border-left-info">
-                            <h6 class="mb-1"><i class="fas fa-play-circle mr-2 text-info"></i>Waktu Mulai</h6>
-                            <p class="mb-0 text-dark font-weight-semibold">{{ $meeting->start_time->format('l, d F Y H:i') }}</p>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="callout callout-info border-left-info">
-                            <h6 class="mb-1"><i class="fas fa-stop-circle mr-2 text-info"></i>Waktu Selesai</h6>
-                            <p class="mb-0 text-dark font-weight-semibold">{{ $meeting->end_time->format('l, d F Y H:i') }}</p>
-                        </div>
-                    </div>
-                </div>
-
-                @if($meeting->description)
-                <div class="mt-3">
-                    <h6 class="text-primary mb-2"><i class="fas fa-align-left mr-2"></i>Deskripsi Meeting</h6>
-                    <div class="border rounded p-3 bg-light">
-                        {{ $meeting->description }}
-                    </div>
-                </div>
-                @endif
-
-                @if($meeting->is_online && $meeting->meeting_link)
-                <div class="mt-3">
-                    <h6 class="text-primary mb-2"><i class="fas fa-link mr-2"></i>Link Meeting Online</h6>
-                    <a href="{{ $meeting->meeting_link }}" target="_blank" class="btn btn-outline-primary btn-sm">
-                        <i class="fas fa-external-link-alt mr-1"></i> Buka Link Meeting
-                    </a>
-                </div>
-                @endif
             </div>
         </div>
 
-        <!-- Action Items -->
-        <div class="card shadow-sm">
-            <div class="card-header d-flex align-items-center justify-content-between py-3">
-                <h3 class="card-title m-0">
-                    <i class="fas fa-tasks mr-2 text-primary"></i>Tindak Lanjut
-                    @if($meeting->actionItems->count() > 0)
-                    <span class="badge badge-primary badge-pill ml-1">{{ $meeting->actionItems->count() }}</span>
-                    @endif
-                </h3>
-                <div class="card-tools">
-                    <!-- Tombol untuk masuk ke halaman running meeting (jika meeting ongoing) -->
-                    @if($meeting->status === 'ongoing' && ($meeting->organizer_id == auth()->id() || $meeting->assigned_action_taker_id == auth()->id()))
-                    <a href="{{ route('meetings.running', $meeting) }}" class="btn btn-success btn-sm mr-2">
-                        <i class="fas fa-plus-circle mr-1"></i> Input Tindak Lanjut
-                    </a>
-                    @endif
-                    
-                    <!-- Tombol tambah tindak lanjut (jika meeting completed) -->
-                    @if($meeting->status === 'completed' && (auth()->user()->isAdmin() || $meeting->organizer_id == auth()->id()))
-                    <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#addActionItemModal">
-                        <i class="fas fa-plus mr-1"></i> Tambah
-                    </button>
-                    @endif
+        <div class="col-lg-4">
+            <!-- Quick Actions Card -->
+            <div class="card card-premium mb-4">
+                <div class="card-body p-4">
+                    <h6 class="text-xs text-uppercase text-muted font-weight-bold mb-3 letter-spacing-1">Aksi Cepat</h6>
+                    <div class="d-grid gap-2">
+                        @if(auth()->user()->canManageMeetings() || $meeting->organizer_id == auth()->id())
+                            <button type="button" class="btn btn-light btn-block text-left mb-2 py-2 px-3 rounded-lg font-weight-bold text-emerald transition-all" data-toggle="modal" data-target="#assignMinuteTakerModal">
+                                <i class="fas fa-user-edit mr-2 opacity-50"></i>{{ $meeting->assignedMinuteTaker ? 'Ubah' : 'Tunjuk' }} Notulis
+                            </button>
+                            
+                            @if(in_array($meeting->status, ['scheduled', 'ongoing', 'completed']))
+                                <a href="{{ route('meetings.running', $meeting) }}{{ $meeting->minutes ? '' : '#minuteTakerForm' }}" class="btn btn-light btn-block text-left mb-2 py-2 px-3 rounded-lg font-weight-bold text-emerald transition-all">
+                                    <i class="fas fa-file-alt mr-2 opacity-50"></i>{{ $meeting->minutes ? 'Edit' : 'Tulis' }} Notulensi
+                                </a>
+                            @endif
+
+                            <button type="button" class="btn btn-light btn-block text-left mb-2 py-2 px-3 rounded-lg font-weight-bold text-emerald transition-all" data-toggle="modal" data-target="#assignActionTakerModal">
+                                <i class="fas fa-user-plus mr-2 opacity-50"></i>{{ $meeting->assignedActionTaker ? 'Ubah' : 'Tunjuk' }} Action Taker
+                            </button>
+                        @endif
+                        
+                        @if((auth()->user()->canManageMeetings() || $meeting->organizer_id == auth()->id() || $meeting->assigned_action_taker_id == auth()->id()) && in_array($meeting->status, ['scheduled', 'ongoing', 'completed']))
+                            <button type="button" class="btn btn-light btn-block text-left mb-2 py-2 px-3 rounded-lg font-weight-bold text-emerald transition-all" data-toggle="modal" data-target="#addActionItemModal">
+                                <i class="fas fa-plus-circle mr-2 opacity-50"></i>Tambah Tindak Lanjut
+                            </button>
+                        @endif
+
+                        @php
+                            $isOrganizer = $meeting->organizer_id == auth()->id();
+                            $isAdmin = auth()->user()->isAdmin();
+                            $isParticipant = $meeting->participants->where('user_id', auth()->id())->first();
+                        @endphp
+
+                        @if(in_array($meeting->status, ['ongoing', 'completed']))
+                            @if($isOrganizer || $isAdmin)
+                                <button type="button" class="btn btn-emerald btn-block text-left mb-2 py-2 px-3 rounded-lg font-weight-bold shadow-sm transition-all" data-toggle="modal" data-target="#attendanceModal">
+                                    <i class="fas fa-list-check mr-2"></i>Daftar Kehadiran
+                                </button>
+                            @endif
+
+                            @if($isParticipant && !$isOrganizer && !$isAdmin)
+                                <button type="button" class="btn btn-emerald btn-block text-left mb-2 py-2 px-3 rounded-lg font-weight-bold shadow-sm transition-all" data-toggle="modal" data-target="#selfAttendanceModal">
+                                    <i class="fas fa-user-check mr-2"></i>Isi Kehadiran
+                                </button>
+                            @endif
+                        @endif
+
+                        @if(auth()->user()->canManageMeetings() || $meeting->organizer_id == auth()->id())
+                            <button type="button" class="btn btn-light btn-block text-left py-2 px-3 rounded-lg font-weight-bold text-emerald transition-all" data-toggle="modal" data-target="#uploadFileModal">
+                                <i class="fas fa-upload mr-2 opacity-50"></i>Unggah Dokumen
+                            </button>
+                        @endif
+                    </div>
                 </div>
             </div>
-            <div class="card-body p-0">
-                @if($meeting->actionItems->count() > 0)
-                <div class="table-responsive">
-                    <table class="table table-hover table-striped mb-0">
-                        <thead class="thead-light">
-                            <tr>
-                                <th>Judul</th>
-                                <th style="width: 150px">Ditugaskan ke</th>
-                                <th style="width: 100px">Batas Waktu</th>
-                                <th style="width: 90px">Status</th>
-                                <th style="width: 90px">Prioritas</th>
-                                <th style="width: 80px" class="text-center">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($meeting->actionItems as $actionItem)
-                            @php
-                                $isAssignedToMe = $actionItem->assigned_to == auth()->id();
-                                $canView = $isAssignedToMe || auth()->user()->canManageMeetings() || $meeting->organizer_id == auth()->id();
-                            @endphp
-                            
-                            @if($canView)
-                            <tr class="{{ $isAssignedToMe ? 'assigned-to-me' : '' }}">
-                                <td>
-                                    <div>
-                                        <strong class="text-dark">
-                                            <a href="{{ route('action-items.show', $actionItem) }}" class="text-dark text-decoration-none">
-                                                {{ Str::limit($actionItem->title, 40) }}
-                                                @if($isAssignedToMe)
-                                                <span class="badge badge-info badge-pill ml-1 small">Tugas Anda</span>
-                                                @endif
-                                            </a>
-                                        </strong>
-                                        @if($actionItem->description)
-                                        <br>
-                                        <small class="text-muted">{{ Str::limit($actionItem->description, 50) }}</small>
-                                        @endif
+
+            <!-- Attendance List Card -->
+            <div class="card card-premium mb-4 overflow-hidden">
+                <div class="card-body p-0">
+                    <div class="p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-0">
+                            <h6 class="text-xs text-uppercase text-muted font-weight-bold mb-0 letter-spacing-1">Kehadiran</h6>
+                            <span class="badge badge-soft-emerald rounded-pill px-2 py-1 text-xxs font-weight-bold">{{ $meeting->participants->count() }} Total</span>
+                        </div>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        @foreach($meeting->participants as $participant)
+                            <div class="list-group-item border-0 py-3 px-4 transition-all hover-bg-light">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-emerald-soft rounded-circle mr-3 d-flex align-items-center justify-content-center font-weight-bold text-emerald text-xs" style="width: 38px; height: 38px; min-width: 38px;">
+                                        {{ strtoupper(substr($participant->user->name, 0, 1)) }}
                                     </div>
-                                </td>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <div class="user-avatar mr-2">
-                                            <i class="fas fa-user-circle text-muted"></i>
+                                    <div class="flex-grow-1 min-width-0">
+                                        <div class="font-weight-bold text-dark text-sm text-truncate">
+                                            {{ $participant->user->name }}
+                                            @if($participant->user_id == auth()->id()) <span class="text-emerald text-xs ml-1">(Anda)</span> @endif
                                         </div>
-                                        <div>
-                                            <strong class="d-block small">{{ $actionItem->assignedTo->name }}</strong>
-                                            <small class="text-muted">{{ Str::limit($actionItem->assignedTo->position, 20) }}</small>
+                                        <div class="d-flex align-items-center mt-1">
+                                            @if($participant->attended === true)
+                                                <span class="badge badge-soft-success text-xxs mr-1" title="Hadir"><i class="fas fa-check mr-1"></i></span>
+                                            @elseif($participant->attended === false && $participant->excuse)
+                                                <span class="badge badge-soft-warning text-xxs mr-1" title="Izin: {{ $participant->excuse }}"><i class="fas fa-info-circle mr-1"></i></span>
+                                            @elseif($participant->attended === false)
+                                                <span class="badge badge-soft-danger text-xxs mr-1" title="Tidak Hadir"><i class="fas fa-times mr-1"></i></span>
+                                            @endif
+
+                                            @if($participant->user_id == $meeting->assigned_minute_taker_id)
+                                                <span class="badge badge-soft-warning px-1 py-0 mr-1" style="font-size: 0.6rem;">NOTULIS</span>
+                                            @elseif($participant->user_id == $meeting->assigned_action_taker_id)
+                                                <span class="badge badge-soft-success px-1 py-0 mr-1" style="font-size: 0.6rem;">ACTION TAKER</span>
+                                            @endif
+                                            <span class="text-xxs text-muted font-weight-bold px-1 py-0 border rounded">{{ $participant->role === 'chairperson' ? 'CHAIR' : 'MEMBER' }}</span>
                                         </div>
                                     </div>
-                                </td>
-                                <td>
-                                    <span class="badge badge-{{ $actionItem->isOverdue() ? 'danger' : 'secondary' }}">
-                                        {{ $actionItem->due_date->format('d M Y') }}
-                                    </span>
-                                    @if($actionItem->isOverdue())
-                                    <br>
-                                    <small class="text-danger small">
-                                        <i class="fas fa-exclamation-triangle"></i> Terlambat
-                                    </small>
+                                    @if($participant->score)
+                                        <div class="badge badge-soft-success text-xxs font-weight-bold ml-2" title="Skor Evaluasi">{{ $participant->score }}</div>
                                     @endif
-                                </td>
-                                <td>
-                                    <span class="badge badge-{{ $actionItem->status_badge }}">
-                                        {{ $actionItem->status_label }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="badge badge-{{ $actionItem->priority_badge }}">
-                                        {{ $actionItem->priority_label }}
-                                    </span>
-                                </td>
-                                <td class="text-center">
-                                    <div class="btn-group btn-group-sm">
-                                        <!-- Semua yang punya akses bisa melihat detail -->
-                                        <a href="{{ route('action-items.show', $actionItem) }}" class="btn btn-info" title="Lihat Detail">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        
-                                        <!-- Hanya bisa edit jika: -->
-                                        <!-- 1. Admin/Manager yang bisa manage meetings -->
-                                        <!-- 2. Organizer meeting -->
-                                        <!-- TIDAK termasuk user yang ditugaskan -->
-                                        @if($meeting->organizer_id == auth()->id() && !$isAssignedToMe)
-                                        <a href="{{ route('action-items.edit', $actionItem) }}" class="btn btn-primary" title="Edit">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
+
+                                    @if($participant->score_note)
+                                        <button type="button" class="btn btn-xs btn-soft-info ml-1 py-0 px-2 rounded-pill font-weight-bold" 
+                                                style="font-size: 0.65rem;"
+                                                data-toggle="popover" 
+                                                data-trigger="focus" 
+                                                data-placement="top"
+                                                title="Catatan Evaluasi" 
+                                                data-content="{{ $participant->score_note }}">
+                                            <i class="fas fa-comment-alt mr-1"></i> Catatan
+                                        </button>
+                                    @endif
+
+                                    @if($meeting->status === 'completed' && (auth()->id() == $meeting->organizer_id || auth()->user()->canManageMeetings()))
+                                        <button type="button" class="btn btn-xs btn-soft-primary ml-2 py-0 px-2 rounded-pill font-weight-bold" 
+                                                style="font-size: 0.65rem;"
+                                                data-toggle="modal" data-target="#rateModal-{{ $participant->id }}">
+                                            <i class="fas fa-star mr-1"></i> Nilai
+                                        </button>
+                                    @endif
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+
+            <!-- Files Card -->
+            <div class="card card-premium mb-4">
+                <div class="card-body p-4">
+                    <h6 class="text-xs text-uppercase text-muted font-weight-bold mb-3 letter-spacing-1">Sumber Daya & Berkas</h6>
+                    @if($meeting->files->count() > 0)
+                        <div class="list-group list-group-flush mx-n4">
+                            @foreach($meeting->files as $file)
+                                <div class="list-group-item border-0 px-4 py-3 d-flex align-items-center justify-content-between hover-bg-light transition-all rounded-pill mb-2 mx-3 border shadow-sm" style="background: white;">
+                                    <div class="d-flex align-items-center overflow-hidden">
+                                        <div class="bg-light p-2 rounded mr-3 text-emerald">
+                                            <i class="far fa-file-alt"></i>
+                                        </div>
+                                        <div class="overflow-hidden">
+                                            <div class="font-weight-bold text-dark text-sm text-truncate">{{ $file->file_name }}</div>
+                                            <div class="text-xxs text-muted">{{ $file->file_size_formatted }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center ml-2">
+                                        <a href="{{ route('meetings.files.download', [$meeting, $file]) }}" class="text-emerald mr-2 hover-translate-y d-inline-block"><i class="fas fa-download"></i></a>
+                                        @if(auth()->user()->canManageMeetings() || $meeting->organizer_id == auth()->id())
+                                            <form action="{{ route('meetings.files.delete', [$meeting, $file]) }}" method="POST" class="d-inline">
+                                                @csrf @method('DELETE')
+                                                <button type="submit" class="border-0 bg-transparent text-muted hover-text-danger transition-all p-0" onclick="return confirm('Delete this file?')">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </form>
                                         @endif
                                     </div>
-                                </td>
-                            </tr>
-                            @endif
+                                </div>
                             @endforeach
-                        </tbody>
-                    </table>
-                </div>
-                @else
-                <div class="text-center py-5">
-                    <i class="fas fa-tasks fa-3x text-muted mb-3"></i>
-                    
-                    @if(auth()->user()->isAdmin() || $meeting->organizer_id == auth()->id() || $meeting->assigned_action_taker_id == auth()->id())
-                    <h6 class="text-muted">Belum ada tindak lanjut</h6>
-                    <p class="text-muted small">
-                        @if($meeting->status === 'ongoing')
-                        Klik tombol "Input Tindak Lanjut" untuk menambahkan tindak lanjut pertama
-                        @elseif($meeting->status === 'completed')
-                        Tindak lanjut akan muncul setelah meeting selesai
-                        @endif
-                    </p>
-                    @if($meeting->status === 'ongoing' || $meeting->status === 'completed')
-                    @if(auth()->user()->canManageMeetings() || $meeting->organizer_id == auth()->id() || $meeting->assigned_action_taker_id == auth()->id())
-                    <button type="button" class="btn btn-success btn-sm mt-2" data-toggle="modal" data-target="#addActionItemModal">
-                        <i class="fas fa-plus-circle mr-1"></i> Input Tindak Lanjut
-                    </button>
-                    @endif
-                    @endif
+                        </div>
                     @else
-                    <h6 class="text-muted">Tidak ada tugas untuk Anda</h6>
-                    <p class="text-muted small">Anda tidak memiliki tugas dari meeting ini</p>
+                        <div class="text-center py-4 bg-light rounded-xl">
+                            <i class="far fa-folder-open text-muted opacity-30 fa-2x mb-2"></i>
+                            <p class="text-muted text-xs mb-0">Tidak ada dokumen yang dilampirkan.</p>
+                        </div>
                     @endif
                 </div>
-                @endif
             </div>
         </div>
     </div>
 
-    <div class="col-md-4">
-        <!-- Quick Actions -->
-        <div class="card shadow-sm mb-4">
-            <div class="card-header bg-info text-white py-3">
-                <h3 class="card-title m-0">
-                    <i class="fas fa-bolt mr-2"></i>Aksi Cepat
-                </h3>
-            </div>
-            <div class="card-body">
-                <div class="d-grid gap-2">
-                    <!-- Tombol Assign Minute Taker hanya untuk organizer/admin -->
-                    @if(auth()->user()->canManageMeetings() || $meeting->organizer_id == auth()->id())
-                    <button type="button" class="btn btn-outline-warning btn-sm text-left d-block w-100 mb-2" data-toggle="modal" data-target="#assignMinuteTakerModal">
-                        <i class="fas fa-user-edit mr-2"></i>@if($meeting->assignedMinuteTaker) Ganti @else Tunjuk @endif Penulis Notulensi
-                    </button>
-                    
-                    <!-- Tombol Assign Action Taker hanya untuk organizer/admin -->
-                    <button type="button" class="btn btn-outline-success btn-sm text-left d-block w-100 mb-2" data-toggle="modal" data-target="#assignActionTakerModal">
-                        <i class="fas fa-user-plus mr-2"></i>@if($meeting->assignedActionTaker) Ganti @else Tunjuk @endif Penulis Tindak Lanjut
-                    </button>
-                    @endif
-                    
-                    <!-- Tombol Tambah Tindak Lanjut untuk organizer, admin, dan assigned action taker -->
-                    @if((auth()->user()->canManageMeetings() || $meeting->organizer_id == auth()->id() || $meeting->assigned_action_taker_id == auth()->id()) && in_array($meeting->status, ['scheduled', 'ongoing', 'completed']))
-                        <button type="button" class="btn btn-outline-success btn-sm text-left d-block w-100 mb-2" data-toggle="modal" data-target="#addActionItemModal">
-                            <i class="fas fa-plus-circle mr-2"></i>Tambah Tindak Lanjut
-                        </button>
-                    @endif
-                    
-                    <!-- Tombol Buat/Edit Notulensi -->
-                    @if(in_array($meeting->status, ['scheduled', 'ongoing', 'completed']) && (!$meeting->minutes || !$meeting->minutes->is_finalized))
-                        @if($meeting->assigned_minute_taker_id == auth()->id() || auth()->user()->canManageMeetings() || $meeting->organizer_id == auth()->id())
-                        <a href="{{ route('meetings.running', $meeting) }}#minuteTakerForm" class="btn btn-outline-primary btn-sm text-left d-block w-100 mb-2">
-                            <i class="fas fa-edit mr-2"></i>{{ $meeting->minutes ? 'Edit Notulensi' : 'Buat Notulensi' }}
-                        </a>
-                        @endif
-                    @endif
-                    
-                    <!-- Tombol Upload File -->
-                    @if(in_array($meeting->status, ['scheduled', 'ongoing', 'completed']) && ($meeting->organizer_id == auth()->id() || auth()->user()->canManageMeetings()))
-                    <button type="button" class="btn btn-outline-primary btn-sm text-left d-block w-100" data-toggle="modal" data-target="#uploadFileModal">
-                        <i class="fas fa-upload mr-2"></i>Upload File Baru
-                    </button>
-                    @endif
-                </div>
-            </div>
-        </div>
-
-        <!-- Meeting Minutes -->
-        <div class="card shadow-sm mb-4">
-            <div class="card-header py-3">
-                <h3 class="card-title m-0">
-                    <i class="fas fa-clipboard mr-2 text-primary"></i>Notulensi Meeting
-                    @if($meeting->assignedMinuteTaker)
-                    <small class="float-right text-muted">
-                        <i class="fas fa-user-edit mr-1"></i>Penulis: {{ $meeting->assignedMinuteTaker->name }}
-                    </small>
-                    @endif
-                </h3>
-            </div>
-            <div class="card-body">
-                <!-- Info Action Taker -->
-                @if($meeting->assignedActionTaker)
-                <div class="alert alert-success alert-dismissible fade show mb-3 py-2" role="alert">
-                    <i class="fas fa-user-plus mr-2"></i>
-                    <strong>Penulis Tindak Lanjut:</strong> {{ $meeting->assignedActionTaker->name }}
-                    @if($meeting->assigned_action_taker_id == auth()->id())
-                    <span class="badge badge-success badge-pill ml-2">Anda</span>
-                    @endif
-                    <button type="button" class="close" data-dismiss="alert">
-                        <span>&times;</span>
-                    </button>
-                </div>
-                @endif
-                
-                @if($meeting->minutes)
-                    <div class="mb-3">
-                        <h6 class="text-primary mb-2">
-                            <i class="fas fa-file-alt mr-1"></i>Konten Notulensi
-                        </h6>
-                        <div class="border rounded p-3 bg-light">
-                            {!! nl2br(e($meeting->minutes->content)) !!}
-                        </div>
-                    </div>
-                    
-                    @if($meeting->minutes->decisions && count($meeting->minutes->decisions) > 0)
-                    <div class="mb-3">
-                        <h6 class="text-primary mb-2">
-                            <i class="fas fa-gavel mr-1"></i>Keputusan
-                        </h6>
-                        <ul class="list-group">
-                            @foreach($meeting->minutes->decisions as $decision)
-                                @if(!empty(trim($decision)))
-                                <li class="list-group-item d-flex align-items-center py-2">
-                                    <i class="fas fa-check text-success mr-2"></i>
-                                    {{ $decision }}
-                                </li>
-                                @endif
-                            @endforeach
-                        </ul>
-                    </div>
-                    @endif
-                    
-                    <div class="border-top pt-3">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <small class="text-muted d-block">
-                                    <i class="fas fa-user-edit mr-1"></i>
-                                    <strong>Dicatat oleh:</strong> {{ $meeting->minutes->minuteTaker->name }}
-                                </small>
-                                <small class="text-muted d-block mt-1">
-                                    <i class="fas fa-calendar mr-1"></i>
-                                    <strong>Dibuat:</strong> {{ $meeting->minutes->created_at->format('d M Y H:i') }}
-                                </small>
-                            </div>
-                            <div class="col-md-6">
-                                @if($meeting->minutes->is_finalized)
-                                <small class="text-muted d-block">
-                                    <i class="fas fa-check-circle mr-1"></i>
-                                    <strong>Difinalisasi:</strong> {{ $meeting->minutes->finalized_at->format('d M Y H:i') }}
-                                </small>
-                                <span class="badge badge-success mt-1">
-                                    <i class="fas fa-lock mr-1"></i> Terkunci
-                                </span>
-                                @else
-                                <span class="badge badge-warning">
-                                    <i class="fas fa-pencil-alt mr-1"></i> Draft
-                                </span>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                @else
-                    <div class="text-center py-4">
-                        <i class="fas fa-clipboard fa-3x text-muted mb-3"></i>
-                        
-                        @if($meeting->assignedMinuteTaker)
-                            @if($meeting->assigned_minute_taker_id == auth()->id())
-                            <h6 class="text-muted">Anda adalah Penulis Notulensi</h6>
-                            <p class="text-muted mb-3">Belum ada notulensi untuk meeting ini.</p>
-                            @if(in_array($meeting->status, ['scheduled', 'ongoing']))
-                            <a href="{{ route('meetings.running', $meeting) }}#minuteTakerForm" class="btn btn-primary btn-sm">
-                                <i class="fas fa-edit mr-1"></i> Buat Notulensi
-                            </a>
-                            @elseif($meeting->status === 'completed')
-                            <div class="alert alert-warning small">
-                                <i class="fas fa-exclamation-triangle mr-1"></i>
-                                Meeting sudah selesai. Notulensi belum dibuat.
-                            </div>
-                            @endif
-                            @else
-                            <h6 class="text-muted">Penulis Notulensi: {{ $meeting->assignedMinuteTaker->name }}</h6>
-                            <p class="text-muted mb-0">Belum ada notulensi untuk meeting ini.</p>
-                            <small class="text-muted">
-                                Menunggu {{ $meeting->assignedMinuteTaker->name }} membuat notulensi
-                            </small>
-                            @endif
-                        @else
-                        <h6 class="text-muted">Belum ada notulensi</h6>
-                        <p class="text-muted mb-0">Belum ada penulis notulensi yang ditunjuk untuk meeting ini.</p>
-                        @endif
-                    </div>
-                @endif
-                
-                <!-- Tombol Edit untuk Minute Taker yang Ditunjuk -->
-                @if($meeting->minutes && !$meeting->minutes->is_finalized)
-                    @if($meeting->assigned_minute_taker_id == auth()->id() || auth()->user()->canManageMeetings() || $meeting->organizer_id == auth()->id())
-                    <div class="mt-3">
-                        <a href="{{ route('meetings.running', $meeting) }}#minuteTakerForm" class="btn btn-primary btn-sm">
-                            <i class="fas fa-edit mr-1"></i> Edit Notulensi
-                        </a>
-                    </div>
-                    @endif
-                @endif
-            </div>
-        </div>
-
-        <!-- Files -->
-        <div class="card shadow-sm">
-            <div class="card-header d-flex align-items-center justify-content-between py-3">
-                <h3 class="card-title m-0">
-                    <i class="fas fa-file mr-2 text-primary"></i>File Meeting
-                    <span class="badge badge-info badge-pill ml-1">{{ $meeting->files->count() }}</span>
-                </h3>
-                @if(auth()->user()->isAdmin() || $meeting->organizer_id == auth()->id())
-                <div class="card-tools">
-                    <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#uploadFileModal">
-                        <i class="fas fa-upload mr-1"></i> Upload
-                    </button>
-                </div>
-                @endif
-            </div>
-            <div class="card-body p-0">
-                @if($meeting->files->count() > 0)
-                <div class="list-group list-group-flush">
-                    @foreach($meeting->files as $file)
-                    <div class="list-group-item">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div class="flex-grow-1">
-                                <div class="d-flex align-items-center mb-1">
-                                    <i class="fas fa-file text-primary mr-2"></i>
-                                    <strong class="text-truncate small">{{ $file->file_name }}</strong>
-                                </div>
-                                <div class="ml-4">
-                                    <small class="text-muted d-block">
-                                        <i class="fas fa-hdd mr-1"></i>{{ $file->file_size_formatted }}
-                                    </small>
-                                    <small class="text-muted d-block">
-                                        <i class="fas fa-user mr-1"></i>{{ $file->uploader->name }}
-                                    </small>
-                                    @if($file->description)
-                                    <small class="text-muted d-block">
-                                        <i class="fas fa-align-left mr-1"></i>{{ Str::limit($file->description, 40) }}
-                                    </small>
-                                    @endif
-                                </div>
-                            </div>
-                            <div class="ml-2" style="white-space: nowrap;">
-                                <a href="{{ route('meetings.files.preview', [$meeting, $file]) }}" target="_blank"
-                                   class="btn btn-info btn-sm mr-1" title="Lihat/Preview">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                <a href="{{ route('meetings.files.download', [$meeting, $file]) }}" 
-                                   class="btn btn-success btn-sm mr-1" title="Download">
-                                    <i class="fas fa-download"></i>
-                                </a>
-                                
-                                @if(auth()->user()->isAdmin() || $meeting->organizer_id == auth()->id())
-                                <form action="{{ route('meetings.files.delete', [$meeting, $file]) }}" 
-                                      method="POST" class="d-inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-danger btn-sm" 
-                                            onclick="return confirm('Hapus file ini?')" title="Hapus">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                    @endforeach
-                </div>
-                @else
-                <div class="text-center py-4">
-                    <i class="fas fa-file fa-2x text-muted mb-2"></i>
-                    <p class="text-muted mb-0 small">Belum ada file untuk meeting ini.</p>
-                </div>
-                @endif
-            </div>
-        </div>
-
-        <!-- Participants - Grid Layout -->
-        <div class="card shadow-sm mb-4">
-            <div class="card-header py-3">
-                <h3 class="card-title m-0">
-                    <i class="fas fa-users mr-2 text-primary"></i>Peserta
-                    <span class="badge badge-primary badge-pill ml-1">{{ $meeting->participants->count() }}</span>
-                </h3>
-            </div>
-            <div class="card-body">
-                <div class="participants-grid">
-                    @foreach($meeting->participants as $participant)
-                    <div class="participant-item text-center p-2 border rounded">
-                        <div class="participant-avatar mb-2 position-relative">
-                            <i class="fas fa-user-circle fa-2x 
-                                {{ $participant->role === 'chairperson' ? 'text-success' : 'text-muted' }}
-                                {{ $participant->user_id == $meeting->assigned_minute_taker_id ? 'text-warning' : '' }}
-                                {{ $participant->user_id == $meeting->assigned_action_taker_id ? 'text-success' : '' }}">
-                            </i>
-                            
-                            <!-- Badge Minute Taker -->
-                            @if($participant->user_id == $meeting->assigned_minute_taker_id)
-                            <span class="position-absolute top-0 start-100 translate-middle p-1 bg-warning border border-light rounded-circle" title="Penulis Notulensi">
-                                <i class="fas fa-user-edit text-white" style="font-size: 0.5rem;"></i>
-                            </span>
-                            @endif
-                            
-                            <!-- Badge Action Taker -->
-                            @if($participant->user_id == $meeting->assigned_action_taker_id)
-                            <span class="position-absolute top-0 start-0 translate-middle p-1 bg-success border border-light rounded-circle" title="Penulis Tindak Lanjut">
-                                <i class="fas fa-tasks text-white" style="font-size: 0.5rem;"></i>
-                            </span>
-                            @endif
-                        </div>
-                        
-                        <div class="participant-name small font-weight-medium">
-                            {{ Str::limit($participant->user->name, 15) }}
-                            @if($participant->user_id == auth()->id())
-                            <span class="badge badge-info badge-pill ml-1" style="font-size: 0.6rem;">Anda</span>
-                            @endif
-                        </div>
-                        
-                        <div class="participant-role">
-                            @if($participant->user_id == $meeting->assigned_minute_taker_id)
-                            <span class="badge badge-warning mt-1 role-badge">
-                                <i class="fas fa-user-edit"></i> Notulis
-                            </span>
-                            @elseif($participant->user_id == $meeting->assigned_action_taker_id)
-                            <span class="badge badge-success mt-1 role-badge">
-                                <i class="fas fa-tasks"></i> Action
-                            </span>
-                            @else
-                            <span class="badge badge-{{ $participant->role === 'chairperson' ? 'success' : 'secondary' }} mt-1 role-badge">
-                                {{ $participant->role === 'chairperson' ? 'Ketua' : 'Peserta' }}
-                            </span>
-                            @endif
-                        </div>
-
-                        {{-- Tampilkan score jika sudah dinilai --}}
-                        @if($participant->score)
-                        <div class="participant-score mt-2 mb-1">
-                            <span class="badge badge-success px-2 py-1" style="font-size:0.7rem;">
-                                Nilai: {{ $participant->score }}<small class="text-white-50">/100</small>
-                            </span>
-                            @if($participant->score_note)
-                            <div class="text-muted mt-1" style="font-size:0.58rem; line-height:1.2;" title="{{ $participant->score_note }}">
-                                "{{ Str::limit($participant->score_note, 30) }}"
-                            </div>
-                            @endif
-                        </div>
-                        @else
-                        @if($meeting->organizer_id == auth()->id() && $meeting->status === 'completed')
-                        <div class="mt-1"><small class="text-muted" style="font-size:0.6rem;">Belum dinilai</small></div>
-                        @endif
-                        @endif
-
-                        {{-- Tombol Beri Nilai: hanya untuk organizer, meeting completed --}}
-                        @if($meeting->organizer_id == auth()->id() && $meeting->status === 'completed')
-                        <button type="button"
-                            class="btn btn-xs btn-outline-warning mt-1 py-0 px-1"
-                            style="font-size: 0.65rem;"
-                            data-toggle="modal"
-                            data-target="#rateModal-{{ $participant->id }}">
-                            <i class="fas fa-star"></i> {{ $participant->score ? 'Edit Nilai' : 'Beri Nilai' }}
-                        </button>
-                        @endif
-                    </div>
-                    @endforeach
-                </div>
-            </div>
-        </div>
-
-        {{-- Rating Modals (satu per peserta, hanya untuk organizer) --}}
-        @if($meeting->organizer_id == auth()->id() && $meeting->status === 'completed')
+{{-- Rating Modals --}}
+        @if(($meeting->organizer_id == auth()->id() || auth()->user()->canManageMeetings()) && $meeting->status === 'completed')
             @foreach($meeting->participants as $participant)
-            <div class="modal fade" id="rateModal-{{ $participant->id }}" tabindex="-1" role="dialog" aria-labelledby="rateModalLabel-{{ $participant->id }}" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 400px;">
-                    <div class="modal-content border-0 shadow-lg rounded-lg">
-                        <div class="modal-header border-0 pb-0 justify-content-end">
-                            <button type="button" class="close text-muted" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        <form action="{{ route('meetings.participants.rate', [$meeting, $participant]) }}" method="POST">
-                            @csrf
-                            <div class="modal-body pt-0 px-4 pb-4">
-                                <!-- User Info Section -->
-                                <div class="text-center mb-4">
-                                    <div class="d-inline-block position-relative mb-3">
-                                        <div class="d-flex align-items-center justify-content-center bg-light rounded-circle shadow-sm" style="width: 70px; height: 70px; margin: 0 auto;">
-                                            <i class="fas fa-user text-primary" style="font-size: 2rem;"></i>
+                <div class="modal fade" id="rateModal-{{ $participant->id }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+                        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+                            <div class="modal-header border-0 pb-0 pt-4 px-4">
+                                <h5 class="font-weight-bold text-dark mb-0">Beri Nilai Performa</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <form action="{{ route('meetings.participants.rate', [$meeting, $participant]) }}" method="POST">
+                                @csrf
+                                <div class="modal-body p-4">
+                                    <div class="text-center mb-4">
+                                        <div class="bg-emerald-soft rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                                            <i class="fas fa-user text-emerald fa-lg"></i>
                                         </div>
+                                        <h6 class="font-weight-bold text-dark mb-1">{{ $participant->user->name }}</h6>
+                                        <span class="text-xs text-muted">{{ $participant->role_label }}</span>
                                     </div>
-                                    <h5 class="font-weight-bold text-dark mb-1">{{ $participant->user->name }}</h5>
-                                    <span class="badge badge-light text-muted px-3 py-1 font-weight-normal border">
-                                        {{ $participant->role_label }}
-                                    </span>
-                                </div>
 
-                                <!-- Rating Score Section -->
-                                <div class="form-group text-center mb-4 bg-light rounded pt-3 pb-3 px-3 border border-light">
-                                    <label class="d-block mb-2 text-dark font-weight-semibold">Beri Penilaian (1-100)</label>
-                                    
-                                    <div class="d-flex align-items-center justify-content-center mb-3">
-                                        <div class="position-relative" style="width: 100px;">
+                                    <div class="form-group mb-4 text-center bg-light p-3 rounded-xl border">
+                                        <label class="font-weight-bold text-dark mb-2">Skor (1-100)</label>
+                                        <div class="d-flex align-items-center justify-content-center mb-3">
                                             <input type="number" name="score" id="score-{{ $participant->id }}" 
-                                                   class="form-control text-center font-weight-bold score-number-input" 
+                                                   class="form-control text-center font-weight-bold border-0 bg-white shadow-sm score-number-input" 
                                                    value="{{ $participant->score ?? '' }}" 
-                                                   min="1" max="100" required placeholder="0"
-                                                   style="font-size: 1.8rem; height: 60px; border-radius: 12px; color: #4e73df; border: 2px solid #e3e6f0; background-color: #fff;"
+                                                   min="1" max="100" required
+                                                   style="font-size: 1.5rem; height: 50px; width: 80px; border-radius: 12px; color: #10b981;"
                                                    data-slider-target="slider-{{ $participant->id }}">
                                         </div>
-                                    </div>
-                                    
-                                    <div class="px-3">
-                                        <input type="range" class="custom-range score-slider" 
-                                               id="slider-{{ $participant->id }}" 
-                                               min="1" max="100" 
-                                               value="{{ $participant->score ?? 1 }}"
-                                               data-input-target="score-{{ $participant->id }}">
-                                        <div class="d-flex justify-content-between text-muted mt-1 small">
-                                            <span>1</span>
-                                            <span>100</span>
+                                        <div class="px-2">
+                                            <input type="range" class="custom-range score-slider" 
+                                                   id="slider-{{ $participant->id }}" 
+                                                   min="1" max="100" 
+                                                   value="{{ $participant->score ?? 1 }}"
+                                                   data-input-target="score-{{ $participant->id }}">
                                         </div>
                                     </div>
-                                </div>
 
-                                <!-- Notes Section -->
-                                <div class="form-group mb-4">
-                                    <label class="text-dark font-weight-semibold mb-2">Evaluasi Singkat <span class="text-muted font-weight-normal small">(Opsional)</span></label>
-                                    <textarea name="score_note" class="form-control bg-light border-0" rows="3" maxlength="500" placeholder="Tuliskan umpan balik untuk peserta ini... (mis: Sangat proaktif dalam diskusi)" style="resize: none;">{{ $participant->score_note }}</textarea>
-                                </div>
-                                
-                                <!-- Action Buttons -->
-                                <div class="d-flex justify-content-between">
-                                    <button type="button" class="btn btn-light px-4 font-weight-semibold text-muted" data-dismiss="modal">Batal</button>
-                                    <button type="submit" class="btn btn-primary px-4 font-weight-semibold shadow-sm">
-                                        <i class="fas fa-paper-plane mr-2"></i>Kirim Penilaian
+                                    <div class="form-group mb-4">
+                                        <label class="font-weight-bold text-dark mb-2 text-sm">Catatan Evaluasi</label>
+                                        <textarea name="score_note" class="form-control border-0 bg-light rounded-xl p-3" rows="3" placeholder="Umpan balik (opsional)..." style="resize: none;">{{ $participant->score_note }}</textarea>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-emerald btn-block py-3 rounded-xl font-weight-bold shadow-sm transition-all hover-translate-y">
+                                        Simpan Nilai
                                     </button>
                                 </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        @endif
+
+        {{-- Add Action Item Modal --}}
+        <div class="modal fade" id="addActionItemModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+                    <div class="modal-header border-0 bg-emerald-soft p-4">
+                        <h5 class="modal-title font-weight-bold text-emerald"><i class="fas fa-plus-circle mr-2"></i>Tindak Lanjut Baru</h5>
+                        <button type="button" class="close text-emerald" data-dismiss="modal"><span>&times;</span></button>
+                    </div>
+                    <form action="{{ route('meetings.action-items.store', $meeting) }}" method="POST">
+                        @csrf
+                        <div class="modal-body p-4">
+                            <div class="row g-3">
+                                <div class="col-12 mb-3">
+                                    <label class="font-weight-bold text-dark text-sm mb-1">Judul Tugas <span class="text-danger">*</span></label>
+                                    <input type="text" name="title" class="form-control border-0 bg-light rounded-lg p-3" placeholder="Apa yang perlu dilakukan?" required>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="font-weight-bold text-dark text-sm mb-1">Deskripsi <span class="text-danger">*</span></label>
+                                    <textarea name="description" class="form-control border-0 bg-light rounded-lg p-3" rows="3" placeholder="Berikan deskripsi lebih detail..." required></textarea>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="font-weight-bold text-dark text-sm mb-1">Ditugaskan Ke <span class="text-danger">*</span></label>
+                                    <select name="assigned_to" class="form-control select2" required>
+                                        <option value="">Pilih Pengguna</option>
+                                        @foreach($users as $user)
+                                            <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->department->name ?? 'No Dept' }})</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="font-weight-bold text-dark text-sm mb-1">Departemen <span class="text-danger">*</span></label>
+                                    <select name="department_id" class="form-control border-0 bg-light rounded-lg" required>
+                                        <option value="">Pilih Departemen</option>
+                                        @foreach($departments as $department)
+                                            <option value="{{ $department->id }}">{{ $department->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="font-weight-bold text-dark text-sm mb-1">Batas Waktu <span class="text-danger">*</span></label>
+                                    <input type="date" name="due_date" class="form-control border-0 bg-light rounded-lg p-3" min="{{ date('Y-m-d') }}" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="font-weight-bold text-dark text-sm mb-1">Prioritas <span class="text-danger">*</span></label>
+                                    <select name="priority" class="form-control border-0 bg-light rounded-lg" required>
+                                        <option value="1">🔴 Prioritas Tinggi</option>
+                                        <option value="2" selected>🟡 Prioritas Sedang</option>
+                                        <option value="3">🟢 Prioritas Rendah</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-0 p-4 pt-0">
+                            <button type="button" class="btn btn-light px-4 rounded-lg font-weight-bold" data-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-emerald px-4 rounded-lg font-weight-bold shadow-sm">Buat Tugas</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {{-- Upload File Modal --}}
+        <div class="modal fade" id="uploadFileModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+                    <div class="modal-header border-0 bg-emerald-soft p-4">
+                        <h5 class="modal-title font-weight-bold text-emerald"><i class="fas fa-upload mr-2"></i>Unggah Berkas</h5>
+                        <button type="button" class="close text-emerald" data-dismiss="modal"><span>&times;</span></button>
+                    </div>
+                    <form action="{{ route('meetings.files.upload', $meeting) }}" method="POST" enctype="multipart/form-data">
+                        @csrf
+                        <div class="modal-body p-4">
+                            <div class="form-group mb-4">
+                                <label class="font-weight-bold text-dark text-sm mb-2 d-block">File <span class="text-danger">*</span></label>
+                                <div class="p-4 border-2 border-dashed rounded-xl text-center bg-light transition-all hover-translate-y" style="border-color: #cbd5e1;">
+                                    <input type="file" name="file" id="file" class="d-none" required>
+                                    <label for="file" class="mb-0 cursor-pointer w-100">
+                                        <i class="fas fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
+                                        <div class="font-weight-bold text-dark" id="fileNameDisplay">Pilih berkas atau seret ke sini</div>
+                                        <div class="text-xxs text-muted">Mendukung PDF, DOC, XLS, PPT (Maks. 10MB)</div>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="font-weight-bold text-dark text-sm mb-2">Deskripsi</label>
+                                <textarea name="description" class="form-control border-0 bg-light rounded-lg p-3" rows="2" placeholder="Deskripsi singkat..."></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-0 p-4 pt-0">
+                            <button type="button" class="btn btn-light px-4 rounded-lg font-weight-bold" data-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-emerald px-4 rounded-lg font-weight-bold shadow-sm">Unggah Berkas</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {{-- Special Modals for Assignment --}}
+        @foreach(['Notulis' => 'assignMinuteTakerModal', 'Action Taker' => 'assignActionTakerModal'] as $label => $modalId)
+            <div class="modal fade" id="{{ $modalId }}" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+                        <div class="modal-header border-0 bg-emerald-soft p-4">
+                            <h5 class="modal-title font-weight-bold text-emerald"><i class="fas fa-user-check mr-2"></i>Tunjuk {{ $label }}</h5>
+                            <button type="button" class="close text-emerald" data-dismiss="modal"><span>&times;</span></button>
+                        </div>
+                        <form action="{{ route('meetings.' . ($modalId === 'assignMinuteTakerModal' ? 'assign-minute-taker' : 'assign-action-taker'), $meeting) }}" method="POST">
+                            @csrf
+                            <div class="modal-body p-4">
+                                <div class="form-group">
+                                    <label class="font-weight-bold text-dark text-sm mb-2 d-block">Pilih Pengguna <span class="text-danger">*</span></label>
+                                    <select name="{{ $modalId === 'assignMinuteTakerModal' ? 'minute_taker_id' : 'action_taker_id' }}" class="form-control select2" required>
+                                        <option value="">Pilih Pengguna</option>
+                                        @foreach($users as $user)
+                                            <option value="{{ $user->id }}" 
+                                                {{ ($modalId === 'assignMinuteTakerModal' ? $meeting->assigned_minute_taker_id : $meeting->assigned_action_taker_id) == $user->id ? 'selected' : '' }}>
+                                                {{ $user->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <p class="text-xxs text-muted mt-2 px-1">Pengguna yang ditunjuk akan memiliki izin khusus untuk mengelola {{ strtolower($label) }} dalam rapat ini.</p>
+                                </div>
+                                
+                                @php
+                                    $current = ($modalId === 'assignMinuteTakerModal' ? $meeting->assignedMinuteTaker : $meeting->assignedActionTaker);
+                                @endphp
+                                @if($current)
+                                    <div class="mt-3 p-3 bg-light rounded-lg border d-flex align-items-center">
+                                        <div class="bg-indigo text-white rounded-circle mr-3 d-flex align-items-center justify-content-center font-weight-bold" style="width: 32px; height: 32px; min-width: 32px; font-size: 10px;">
+                                            {{ strtoupper(substr($current->name, 0, 1)) }}
+                                        </div>
+                                        <div>
+                                            <div class="text-xxs text-muted font-weight-bold text-uppercase">Saat Ini Ditunjuk</div>
+                                            <div class="font-weight-bold text-dark text-sm">{{ $current->name }}</div>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+                            <div class="modal-footer border-0 p-4 pt-0">
+                                <button type="button" class="btn btn-light px-4 rounded-lg font-weight-bold" data-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-emerald px-4 rounded-lg font-weight-bold shadow-sm">Simpan Penugasan</button>
                             </div>
                         </form>
                     </div>
                 </div>
             </div>
-            @endforeach
-        @endif
-        <!-- Info Hak Akses untuk Partisipan -->
-        @if($meeting->participants->contains('user_id', auth()->id()) && !auth()->user()->canManageMeetings() && $meeting->organizer_id != auth()->id())
-        <div class="card shadow-sm mt-3 border-info">
-            <div class="card-header bg-info text-white py-2">
-                <h6 class="card-title m-0 small">
-                    <i class="fas fa-info-circle mr-1"></i>Info Hak Akses Anda
-                </h6>
-            </div>
-            <div class="card-body py-2">
-                <small class="text-muted">
-                    <i class="fas fa-check text-success mr-1"></i> Anda dapat melihat semua detail meeting<br>
-                    <i class="fas fa-check text-success mr-1"></i> Anda dapat melihat semua tindak lanjut<br>
-                    <i class="fas fa-times text-danger mr-1"></i> Anda <strong>tidak dapat</strong> mengubah tindak lanjut yang ditugaskan kepada Anda<br>
-                    <i class="fas fa-times text-danger mr-1"></i> Anda tidak dapat mengubah meeting<br>
-                    <i class="fas fa-times text-danger mr-1"></i> Anda tidak dapat menambah/menghapus file
-                </small>
-            </div>
-        </div>
-        @endif
-    </div>
-</div>
-
-<!-- Modals -->
-@if($meeting->status === 'completed' && $meeting->organizer_id == auth()->id())
-<!-- Add Action Item Modal -->
-<div class="modal fade" id="addActionItemModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white py-3">
-                <h5 class="modal-title m-0">
-                    <i class="fas fa-plus-circle mr-2"></i>Tambah Tindak Lanjut
+        @endforeach
+@if(auth()->user()->canManageMeetings() || $meeting->organizer_id == auth()->id())
+<div class="modal fade" id="attendanceModal" tabindex="-1">
+    <div class="modal-dialog modal-lg border-0 shadow-lg">
+        <div class="modal-content border-0" style="border-radius: 20px;">
+            <div class="modal-header border-0 pb-0 pt-4 px-4">
+                <h5 class="font-weight-bold text-dark mb-0">
+                    <i class="fas fa-check-double mr-2 text-emerald"></i>Daftar Kehadiran
                 </h5>
-                <button type="button" class="close text-white" data-dismiss="modal">
+                <button type="button" class="close" data-dismiss="modal">
                     <span>&times;</span>
                 </button>
             </div>
-            <form action="{{ route('meetings.action-items.store', $meeting) }}" method="POST">
-                @csrf
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="form-group">
-                                <label for="title" class="font-weight-bold small">Judul Tindak Lanjut *</label>
-                                <input type="text" class="form-control form-control-sm" id="title" name="title" 
-                                       placeholder="Masukkan judul tindak lanjut" required>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="description" class="font-weight-bold small">Deskripsi *</label>
-                        <textarea class="form-control form-control-sm" id="description" name="description" rows="3" 
-                                  placeholder="Jelaskan detail tindak lanjut yang harus dilakukan" required></textarea>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="assigned_to" class="font-weight-bold small">Ditugaskan ke *</label>
-                                <select class="form-control form-control-sm select2" id="assigned_to" name="assigned_to" required>
-                                    <option value="">Pilih User</option>
-                                    @foreach($users as $user)
-                                        <option value="{{ $user->id }}">
-                                            {{ $user->name }} - {{ $user->position ?? 'No Position' }} ({{ $user->department->name ?? 'No Department' }})
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="department_id" class="font-weight-bold small">Departemen *</label>
-                                <select class="form-control form-control-sm" id="department_id" name="department_id" required>
-                                    <option value="">Pilih Departemen</option>
-                                    @foreach($departments as $department)
-                                        <option value="{{ $department->id }}">{{ $department->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="due_date" class="font-weight-bold small">Batas Waktu *</label>
-                                <input type="date" class="form-control form-control-sm" id="due_date" name="due_date" 
-                                       min="{{ date('Y-m-d') }}" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="priority" class="font-weight-bold small">Prioritas *</label>
-                                <select class="form-control form-control-sm" id="priority" name="priority" required>
-                                    <!-- PERBAIKAN: Urutan berdasarkan prioritas -->
-                                    <option value="1">🔴 Tinggi</option>
-                                    <option value="2" selected>🟡 Sedang</option>
-                                    <option value="3">🟢 Rendah</option>
-                                </select>
-                                <small class="form-text text-muted">
-                                    🔴 Tinggi = Sangat penting & mendesak<br>
-                                    🟡 Sedang = Penting tapi tidak mendesak<br>
-                                    🟢 Rendah = Biasa, bisa dikerjakan belakangan
-                                </small>
-                            </div>
-                        </div>
-                    </div>
+            <div class="modal-body p-4">
+                <div class="table-responsive">
+                    <table class="table table-hover border-0">
+                        <thead>
+                            <tr class="text-xxs text-muted text-uppercase font-weight-bold letter-spacing-1">
+                                <th class="border-0 px-0">Peserta</th>
+                                <th class="border-0 text-center">Status</th>
+                                <th class="border-0">Keterangan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($meeting->participants as $participant)
+                            <tr class="border-bottom">
+                                <td class="border-0 px-0 py-3">
+                                    <div class="font-weight-bold text-dark">{{ $participant->user->name }}</div>
+                                    <div class="text-xxs text-muted">{{ $participant->user->department->name }}</div>
+                                </td>
+                                <td class="border-0 text-center py-3">
+                                    @if($participant->attended === true)
+                                        <span class="badge badge-soft-success rounded-pill px-3">Hadir</span>
+                                    @elseif($participant->attended === false && $participant->excuse)
+                                        <span class="badge badge-soft-warning rounded-pill px-3">Izin</span>
+                                    @elseif($participant->attended === false)
+                                        <span class="badge badge-soft-danger rounded-pill px-3">Alfa</span>
+                                    @else
+                                        <span class="badge badge-soft-secondary rounded-pill px-3">Belum Isi</span>
+                                    @endif
+                                </td>
+                                <td class="border-0 py-3">
+                                    <span class="text-sm text-muted italic">{{ $participant->excuse ?? '-' }}</span>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
-                <div class="modal-footer py-2">
-                    <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">
-                        <i class="fas fa-times mr-1"></i>Batal
-                    </button>
-                    <button type="submit" class="btn btn-primary btn-sm">
-                        <i class="fas fa-save mr-1"></i>Simpan
-                    </button>
-                </div>
-            </form>
+            </div>
+            <div class="modal-footer border-0 p-4 pt-0">
+                <button type="button" class="btn btn-light btn-block py-2 rounded-xl font-weight-bold" data-dismiss="modal">Tutup</button>
+            </div>
         </div>
     </div>
 </div>
 @endif
 
-@if(auth()->user()->isAdmin() || $meeting->organizer_id == auth()->id())
-<!-- Upload File Modal -->
-<div class="modal fade" id="uploadFileModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-info text-white py-3">
-                <h5 class="modal-title m-0">
-                    <i class="fas fa-upload mr-2"></i>Upload File Meeting
-                </h5>
-                <button type="button" class="close text-white" data-dismiss="modal">
+{{-- Modal Absensi Mandiri untuk Peserta --}}
+@php
+    $myAttendance = $meeting->participants->where('user_id', auth()->id())->first();
+@endphp
+<div class="modal fade" id="selfAttendanceModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+            <div class="modal-header border-0 pb-0 pt-4 px-4">
+                <h5 class="font-weight-bold text-dark mb-0">Isi Kehadiran</h5>
+                <button type="button" class="close" data-dismiss="modal">
                     <span>&times;</span>
                 </button>
             </div>
-            <form action="{{ route('meetings.files.upload', $meeting) }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('meetings.attendance.self', $meeting) }}" method="POST" id="selfAttendanceForm">
                 @csrf
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="file" class="font-weight-bold small">File *</label>
-                        <div class="custom-file">
-                            <input type="file" class="custom-file-input" id="file" name="file" required>
-                            <label class="custom-file-label" for="file">Pilih file...</label>
+                <div class="modal-body p-4">
+                    <div class="text-center mb-4">
+                        <div class="bg-emerald-soft rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                            <i class="fas fa-user-check text-emerald fa-lg"></i>
                         </div>
-                        <small class="form-text text-muted">
-                            <i class="fas fa-info-circle mr-1"></i>Maksimal 10MB. Format: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX
-                        </small>
+                        <h6 class="font-weight-bold text-dark mb-1">Halo, {{ auth()->user()->name }}!</h6>
+                        <p class="text-xs text-muted">Silakan konfirmasi kehadiran Anda untuk rapat ini.</p>
                     </div>
-                    <div class="form-group">
-                        <label for="description" class="font-weight-bold small">Deskripsi File</label>
-                        <textarea class="form-control form-control-sm" id="description" name="description" rows="2" 
-                                  placeholder="Deskripsi singkat tentang file ini"></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer py-2">
-                    <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">
-                        <i class="fas fa-times mr-1"></i>Batal
-                    </button>
-                    <button type="submit" class="btn btn-info btn-sm">
-                        <i class="fas fa-upload mr-1"></i>Upload
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 
-<!-- Assign Minute Taker Modal -->
-<div class="modal fade" id="assignMinuteTakerModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-warning text-white py-3">
-                <h5 class="modal-title m-0">
-                    <i class="fas fa-user-edit mr-2"></i>Tunjuk Penulis Notulensi
-                </h5>
-                <button type="button" class="close text-white" data-dismiss="modal">
-                    <span>&times;</span>
-                </button>
-            </div>
-            <form action="{{ route('meetings.assign-minute-taker', $meeting) }}" method="POST">
-                @csrf
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="minute_taker_id" class="font-weight-bold small">Pilih Penulis Notulensi *</label>
-                        <select class="form-control form-control-sm select2" id="minute_taker_id" name="minute_taker_id" required>
-                            <option value="">Pilih User</option>
-                            @foreach($users as $user)
-                                <option value="{{ $user->id }}" 
-                                    {{ $meeting->assigned_minute_taker_id == $user->id ? 'selected' : '' }}>
-                                    {{ $user->name }} - {{ $user->position ?? 'No Position' }} ({{ $user->department->name ?? 'No Department' }})
-                                </option>
-                            @endforeach
-                        </select>
-                        <small class="form-text text-muted">
-                            Penulis notulensi yang ditunjuk akan memiliki akses untuk membuat dan mengedit notulensi meeting ini.
-                        </small>
+                    <div class="form-group mb-4">
+                        <label class="font-weight-bold text-dark mb-3 d-block text-center text-sm">Status Kehadiran</label>
+                        <div class="d-flex justify-content-center gap-3">
+                            <label class="attendance-option cursor-pointer">
+                                <input type="radio" name="attended" value="1" class="d-none" id="radioHadir" {{ $myAttendance && $myAttendance->attended === true ? 'checked' : '' }} required>
+                                <div class="attendance-box py-3 px-4 rounded-xl border text-center transition-all">
+                                    <i class="fas fa-check-circle mb-2 fa-lg text-emerald"></i>
+                                    <div class="font-weight-bold text-dark text-xs">Hadir</div>
+                                </div>
+                            </label>
+                            <label class="attendance-option cursor-pointer ml-3">
+                                <input type="radio" name="attended" value="0" class="d-none" id="radioIzin" {{ $myAttendance && $myAttendance->attended === false ? 'checked' : '' }}>
+                                <div class="attendance-box py-3 px-4 rounded-xl border text-center transition-all">
+                                    <i class="fas fa-clock mb-2 fa-lg text-warning"></i>
+                                    <div class="font-weight-bold text-dark text-xs">Izin</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="excuseField" class="form-group mb-4 {{ $myAttendance && $myAttendance->attended === false ? '' : 'd-none' }}">
+                        <label class="font-weight-bold text-dark mb-2 text-sm">Alasan / Keterangan</label>
+                        <textarea name="excuse" class="form-control border-0 bg-light rounded-xl p-3" rows="3" placeholder="Contoh: Sakit, dinas luar..." style="resize: none;">{{ $myAttendance->excuse ?? '' }}</textarea>
                     </div>
                     
-                    @if($meeting->assignedMinuteTaker)
-                    <div class="alert alert-info small">
-                        <i class="fas fa-info-circle mr-1"></i>
-                        Saat ini: <strong>{{ $meeting->assignedMinuteTaker->name }}</strong>
-                    </div>
-                    @endif
-                </div>
-                <div class="modal-footer py-2">
-                    <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">
-                        <i class="fas fa-times mr-1"></i>Batal
-                    </button>
-                    <button type="submit" class="btn btn-warning btn-sm">
-                        <i class="fas fa-save mr-1"></i>Simpan
+                    <button type="submit" class="btn btn-emerald btn-block py-3 rounded-xl font-weight-bold shadow-sm transition-all hover-translate-y">
+                        Simpan Kehadiran
                     </button>
                 </div>
             </form>
@@ -1088,118 +855,88 @@
     </div>
 </div>
 
-<!-- Assign Action Taker Modal -->
-<div class="modal fade" id="assignActionTakerModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-success text-white py-3">
-                <h5 class="modal-title m-0">
-                    <i class="fas fa-user-plus mr-2"></i>Tunjuk Penulis Tindak Lanjut
-                </h5>
-                <button type="button" class="close text-white" data-dismiss="modal">
-                    <span>&times;</span>
-                </button>
-            </div>
-            <form action="{{ route('meetings.assign-action-taker', $meeting) }}" method="POST">
-                @csrf
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="action_taker_id" class="font-weight-bold small">Pilih Penulis Tindak Lanjut *</label>
-                        <select class="form-control form-control-sm select2" id="action_taker_id" name="action_taker_id" required>
-                            <option value="">Pilih User</option>
-                            @foreach($users as $user)
-                                <option value="{{ $user->id }}" 
-                                    {{ $meeting->assigned_action_taker_id == $user->id ? 'selected' : '' }}>
-                                    {{ $user->name }} - {{ $user->position ?? 'No Position' }} ({{ $user->department->name ?? 'No Department' }})
-                                </option>
-                            @endforeach
-                        </select>
-                        <small class="form-text text-muted">
-                            User yang ditunjuk akan memiliki akses untuk menambah tindak lanjut.
-                        </small>
-                    </div>
-                    
-                    @if($meeting->assignedActionTaker)
-                    <div class="alert alert-info small">
-                        <i class="fas fa-info-circle mr-1"></i>
-                        Saat ini: <strong>{{ $meeting->assignedActionTaker->name }}</strong>
-                    </div>
-                    @endif
-                </div>
-                <div class="modal-footer py-2">
-                    <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">
-                        <i class="fas fa-times mr-1"></i>Batal
-                    </button>
-                    <button type="submit" class="btn btn-success btn-sm">
-                        <i class="fas fa-save mr-1"></i>Simpan
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-@endif
-@endsection
-
-@push('scripts')
-<script>
-// Custom file input
-document.querySelector('.custom-file-input')?.addEventListener('change', function(e) {
-    var fileName = document.getElementById("file").files[0].name;
-    var nextSibling = e.target.nextElementSibling;
-    nextSibling.innerText = fileName;
-});
-
-// Initialize Select2 if available
-if (typeof $.fn.select2 !== 'undefined') {
-    $('.select2').select2({
-        placeholder: 'Pilih user',
-        allowClear: true,
-        width: '100%'
-    });
+<style>
+.attendance-option input:checked + .attendance-box {
+    background-color: #f0fdf4;
+    border-color: #10b981;
+    box-shadow: 0 0 0 2px #10b981;
 }
+.attendance-box:hover {
+    background-color: #f8fafc;
+}
+.cursor-pointer { cursor: pointer; }
+.rounded-xl { border-radius: 12px; }
+.attendance-box { border-radius: 12px; }
+.bg-emerald-soft { background-color: #ecfdf5; }
+</style>
 
-// ── Score Rating Interactive ─────────────────────────────────
-document.querySelectorAll('.score-slider').forEach(function(slider) {
-    slider.addEventListener('input', function() {
-        var inputId = this.dataset.inputTarget;
-        var numberInput = document.getElementById(inputId);
-        if (numberInput) {
-            numberInput.value = this.value;
-        }
-    });
-});
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const radioHadir = document.getElementById('radioHadir');
+    const radioIzin = document.getElementById('radioIzin');
+    const excuseField = document.getElementById('excuseField');
 
-document.querySelectorAll('.score-number-input').forEach(function(input) {
-    input.addEventListener('input', function() {
-        var sliderId = this.dataset.sliderTarget;
-        var slider = document.getElementById(sliderId);
-        
-        // Enforce min/max
-        var val = parseInt(this.value);
-        if (isNaN(val)) val = 0;
-        if (val < 1 && this.value !== "") val = 1;
-        if (val > 100) val = 100;
-        
-        // Only update value if it's out of bounds, let user type empty string temporarily
-        if (this.value !== "" && parseInt(this.value) !== val) {
-            this.value = val;
-        }
-
-        if (slider && val >= 1 && val <= 100) {
-            slider.value = val;
-        }
-    });
-    
-    // Ensure value is set to at least 1 when leaving focus if empty
-    input.addEventListener('blur', function() {
-        if (!this.value || parseInt(this.value) < 1) {
-            this.value = 1;
-            var sliderId = this.dataset.sliderTarget;
-            var slider = document.getElementById(sliderId);
-            if (slider) slider.value = 1;
-        }
-    });
+    if (radioHadir && radioIzin && excuseField) {
+        radioHadir.addEventListener('change', function() {
+            if (this.checked) excuseField.classList.add('d-none');
+        });
+        radioIzin.addEventListener('change', function() {
+            if (this.checked) excuseField.classList.remove('d-none');
+        });
+    }
 });
 </script>
-@endpush
+@endsection
+
+    @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Custom file input display
+        document.getElementById('file')?.addEventListener('change', function(e) {
+            const fileName = e.target.files[0]?.name || "Choose file or drag here";
+            const display = document.getElementById('fileNameDisplay');
+            if (display) display.innerText = fileName;
+        });
+
+        // Initialize Select2 if available
+        if ($.fn.select2) {
+            $('.select2').select2({
+                placeholder: 'Pilih Pengguna',
+                allowClear: true,
+                width: '100%',
+                dropdownParent: $('.modal') // Fix select2 in bootstrap modal
+            });
+        }
+
+        // Score Rating Logic
+        document.querySelectorAll('.score-slider').forEach(function(slider) {
+            slider.addEventListener('input', function() {
+                const numberInput = document.getElementById(this.dataset.inputTarget);
+                if (numberInput) numberInput.value = this.value;
+            });
+        });
+
+        document.querySelectorAll('.score-number-input').forEach(function(input) {
+            input.addEventListener('input', function() {
+                const slider = document.getElementById(this.dataset.sliderTarget);
+                let val = parseInt(this.value);
+                if (isNaN(val)) return;
+                if (val < 1) val = 1; else if (val > 100) val = 100;
+                if (slider) slider.value = val;
+                this.value = val;
+            });
+            input.addEventListener('blur', function() {
+                if (!this.value || parseInt(this.value) < 1) {
+                    this.value = 1;
+                    const slider = document.getElementById(this.dataset.sliderTarget);
+                    if (slider) slider.value = 1;
+                }
+            });
+        });
+
+        // Initialize Popovers
+        $('[data-toggle="popover"]').popover();
+    });
+</script>
+    @endpush

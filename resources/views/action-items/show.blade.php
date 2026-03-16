@@ -2,10 +2,7 @@
 
 @section('title', 'Detail Tindak Lanjut - ' . $actionItem->title)
 
-@section('breadcrumb')
-    <li class="breadcrumb-item"><a href="{{ route('action-items.index') }}">Tindak Lanjut</a></li>
-    <li class="breadcrumb-item active">Detail</li>
-@endsection
+@section('hide_header', true)
 
 @section('content')
 <div class="row">

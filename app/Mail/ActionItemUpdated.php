@@ -2,7 +2,7 @@
 
 namespace App\Mail;
 
-use App\Models\Meeting;
+use App\Models\ActionItem;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -12,18 +12,18 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class ActionTakerAssigned extends Mailable implements ShouldQueue
+class ActionItemUpdated extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
-    public $meeting;
+    public $actionItem;
     public $participant;
     public $senderName;
     public $senderEmail;
 
-    public function __construct(Meeting $meeting, User $participant, $senderName = null, $senderEmail = null)
+    public function __construct(ActionItem $actionItem, User $participant, $senderName = null, $senderEmail = null)
     {
-        $this->meeting = $meeting;
+        $this->actionItem = $actionItem;
         $this->participant = $participant;
         $this->senderName = $senderName;
         $this->senderEmail = $senderEmail;
@@ -35,14 +35,14 @@ class ActionTakerAssigned extends Mailable implements ShouldQueue
 
         return new Envelope(
             from: $from,
-            subject: 'Penugasan Tindak Lanjut Meeting: ' . $this->meeting->title,
+            subject: '[Pembaruan] ' . $this->actionItem->title,
         );
     }
 
     public function content(): Content
     {
         return new Content(
-            markdown: 'emails.meetings.action_taker_assigned',
+            view: 'emails.meetings.action_item_updated',
         );
     }
 }

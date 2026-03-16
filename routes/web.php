@@ -36,7 +36,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/meetings/{meeting}/start', [MeetingController::class, 'startMeeting'])->name('meetings.start');
     Route::get('/meetings/{meeting}/running', [MeetingController::class, 'runningMeeting'])->name('meetings.running');
     Route::post('/meetings/{meeting}/complete', [MeetingController::class, 'completeMeeting'])->name('meetings.complete');
-    Route::post('/meetings/{meeting}/attendance', [MeetingController::class, 'updateAttendance'])->name('meetings.attendance');
+    Route::post('/meetings/{meeting}/attendance', [MeetingController::class, 'updateAttendance'])->name('meetings.attendance.update');
+    Route::post('/meetings/{meeting}/attendance/self', [MeetingController::class, 'selfAttendance'])->name('meetings.attendance.self');
+    Route::get('/api/meetings/booked-slots', [MeetingController::class, 'getBookedSlots'])->name('meetings.booked-slots');
     
     // TAMBAHAN ROUTES UNTUK NOTULENSI
 

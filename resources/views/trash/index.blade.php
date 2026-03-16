@@ -3,10 +3,7 @@
 
 @section('title', 'Tempat Sampah - Meeting')
 
-@section('breadcrumb')
-<li class="breadcrumb-item"><a href="{{ route('meetings.index') }}">Meeting</a></li>
-<li class="breadcrumb-item active">Tempat Sampah</li>
-@endsection
+@section('hide_header', true)
 
 @section('content')
 <div class="card">
@@ -30,8 +27,10 @@
         @if($deletedMeetings->total() > 0)
         <div class="table-responsive">
             <table class="table table-bordered table-hover">
-                <thead style="background-color: #2c3e50;">
+                <thead class="text-center" style="background-color: #2c3e50; color: white !important;">
                     <tr>
+
+
                         <th class="table-header-custom">Judul</th>
                         <th class="table-header-custom">Jenis</th>
                         <th class="table-header-custom">Organizer</th>
