@@ -232,7 +232,7 @@
     .transition-all { transition: all 0.3s ease; }
     .hover-translate-y:hover { transform: translateY(-3px); }
 
-    /* Booked slot highlighting */
+    /* Booked slot-highlighting */
     .booked-date-highlight {
         background-color: #fee2e2 !important;
         color: #ef4444 !important;
