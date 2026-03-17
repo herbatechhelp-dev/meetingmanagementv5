@@ -218,16 +218,28 @@
         border: none;
         color: white;
         border-radius: 6px;
-        padding: 2px 8px;
-        margin-top: 4px;
+        padding: 4px 10px;
+        margin-top: 6px;
+        margin-bottom: 2px;
+        display: inline-flex;
+        flex-direction: row-reverse;
+        align-items: center;
+        gap: 6px;
     }
     .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
-        color: white;
-        margin-right: 5px;
+        color: #ff4d4d;
+        border: none;
+        padding: 0;
+        margin: 0;
+        transition: all 0.2s;
+        font-size: 1.1rem;
+        line-height: 1;
+        font-weight: bold;
     }
     .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
         background: transparent;
-        color: #ef4444;
+        color: #e60000;
+        transform: scale(1.2);
     }
     .transition-all { transition: all 0.3s ease; }
     .hover-translate-y:hover { transform: translateY(-3px); }
