@@ -20,7 +20,7 @@
     <form action="{{ route('meetings.store') }}" method="POST" id="meetingForm">
         @csrf
         <div class="row gx-5">
-            <!-- Left Column: Primary Details -->
+            <!-- Left Column: Primary Details- -->
             <div class="col-lg-8">
                 <div class="card shadow-sm border-0 mb-4 rounded-xl">
                     <div class="card-body p-4">
