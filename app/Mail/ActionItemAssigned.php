@@ -7,7 +7,6 @@ use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -33,10 +32,8 @@ class ActionItemAssigned extends Mailable implements ShouldQueue
 
     public function envelope(): Envelope
     {
-        $from = $this->senderEmail ? new Address($this->senderEmail, $this->senderName) : null;
-
         return new Envelope(
-            from: new Address($this->senderEmail, $this->senderName),
+            from: new \Illuminate\Mail\Mailables\Address($this->senderEmail, $this->senderName),
             subject: 'Tugas Baru: ' . $this->actionItem->title,
         );
     }
