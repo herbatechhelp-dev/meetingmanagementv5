@@ -2,6 +2,8 @@
 
 @section('title', 'Pengaturan Notifikasi')
 
+@section('hide_header', true)
+
 @section('content')
 <div class="content-header">
     <div class="container-fluid">

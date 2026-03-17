@@ -101,52 +101,52 @@
         <!-- Summary Cards -->
     <div class="row gx-4 mb-5">
         <div class="col-lg-3 col-md-6 mb-4">
-            <div class="card h-100 shadow-sm border-0 bg-white shadow-hover transition-all">
-                <div class="card-body p-4">
+            <div class="card h-100 border-0 stats-card" style="background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);">
+                <div class="card-body p-4 text-white">
                     <div class="d-flex align-items-center mb-3">
-                        <div class="bg-indigo-soft p-2 rounded-lg mr-3">
-                            <i class="fas fa-calendar-alt text-primary"></i>
+                        <div class="glass-icon-wrapper mr-3">
+                            <i class="fas fa-calendar-alt"></i>
                         </div>
-                        <span class="text-xs font-weight-bold text-uppercase text-muted letter-spacing-1">Total</span>
+                        <span class="text-xs font-weight-bold text-uppercase opacity-75 letter-spacing-1">TOTAL</span>
                     </div>
                     <div class="h3 font-weight-bold mb-0">{{ $meetings->total() }}</div>
                 </div>
             </div>
         </div>
         <div class="col-lg-3 col-md-6 mb-4">
-            <div class="card h-100 shadow-sm border-0 bg-white shadow-hover transition-all">
-                <div class="card-body p-4">
+            <div class="card h-100 border-0 stats-card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                <div class="card-body p-4 text-white">
                     <div class="d-flex align-items-center mb-3">
-                        <div class="bg-blue-soft p-2 rounded-lg mr-3">
-                            <i class="far fa-clock text-info"></i>
+                        <div class="glass-icon-wrapper mr-3">
+                            <i class="far fa-clock"></i>
                         </div>
-                        <span class="text-xs font-weight-bold text-uppercase text-muted letter-spacing-1">Dijadwalkan</span>
+                        <span class="text-xs font-weight-bold text-uppercase opacity-75 letter-spacing-1">DIJADWALKAN</span>
                     </div>
                     <div class="h3 font-weight-bold mb-0">{{ $statusCounts['scheduled'] ?? 0 }}</div>
                 </div>
             </div>
         </div>
         <div class="col-lg-3 col-md-6 mb-4">
-            <div class="card h-100 shadow-sm border-0 bg-white shadow-hover transition-all">
-                <div class="card-body p-4">
+            <div class="card h-100 border-0 stats-card" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
+                <div class="card-body p-4 text-white">
                     <div class="d-flex align-items-center mb-3">
-                        <div class="bg-amber-soft p-2 rounded-lg mr-3">
-                            <i class="fas fa-running text-warning"></i>
+                        <div class="glass-icon-wrapper mr-3">
+                            <i class="fas fa-running"></i>
                         </div>
-                        <span class="text-xs font-weight-bold text-uppercase text-muted letter-spacing-1">Berjalan</span>
+                        <span class="text-xs font-weight-bold text-uppercase opacity-75 letter-spacing-1">BERJALAN</span>
                     </div>
                     <div class="h3 font-weight-bold mb-0">{{ $statusCounts['ongoing'] ?? 0 }}</div>
                 </div>
             </div>
         </div>
         <div class="col-lg-3 col-md-6 mb-4">
-            <div class="card h-100 shadow-sm border-0 bg-white shadow-hover transition-all">
-                <div class="card-body p-4">
+            <div class="card h-100 border-0 stats-card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                <div class="card-body p-4 text-white">
                     <div class="d-flex align-items-center mb-3">
-                        <div class="bg-emerald-soft p-2 rounded-lg mr-3">
-                            <i class="far fa-check-circle text-success"></i>
+                        <div class="glass-icon-wrapper mr-3">
+                            <i class="far fa-check-circle"></i>
                         </div>
-                        <span class="text-xs font-weight-bold text-uppercase text-muted letter-spacing-1">Selesai</span>
+                        <span class="text-xs font-weight-bold text-uppercase opacity-75 letter-spacing-1">SELESAI</span>
                     </div>
                     <div class="h3 font-weight-bold mb-0">{{ $statusCounts['completed'] ?? 0 }}</div>
                 </div>
