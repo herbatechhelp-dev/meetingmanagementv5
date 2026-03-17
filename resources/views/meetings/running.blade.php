@@ -39,7 +39,20 @@
     .hover-bg-light:hover { background-color: #f8fafc; }
     .auto-resize { min-height: 120px; resize: none; border-radius: 12px; border: 1px solid #e2e8f0; }
     .auto-resize:focus { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1); }
+    
+    /* Quill Editor Adjustments */
+    .ql-container { border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; font-family: inherit; font-size: 0.95rem; }
+    .ql-container.ql-snow { border-color: #e2e8f0 !important; min-height: 200px; background: #ffffff; }
+    .ql-toolbar.ql-snow { border-color: #e2e8f0 !important; background: #f8fafc; border-top-left-radius: 12px; border-top-right-radius: 12px; }
+    .editor-wrapper { position: relative; }
+    .ql-editor { min-height: 200px; }
+    .ql-editor.ql-blank::before { color: #94a3b8; font-style: normal; }
 </style>
+
+@push('styles')
+<!-- Quill Assets -->
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+@endpush
 
 <div class="container-fluid">
     <div class="row">
@@ -141,14 +154,12 @@
                             <label for="content" class="font-weight-bold">
                                 <i class="fas fa-align-left mr-1"></i>Isi Notulensi *
                             </label>
-                            <textarea class="form-control auto-resize @error('content') is-invalid @enderror" 
-                                      id="content" 
-                                      name="content" 
-                                      rows="8" 
-                                      placeholder="Tuliskan rangkuman dan poin-poin penting dari meeting ini..."
-                                      {{ $meeting->minutes && $meeting->minutes->is_finalized ? 'disabled' : '' }}>{{ old('content', $meeting->minutes->content ?? '') }}</textarea>
+                            <div class="editor-wrapper">
+                                <div id="content-editor" style="height: 300px;">{!! old('content', $meeting->minutes->content ?? '') !!}</div>
+                                <textarea name="content" id="content-hidden" style="display:none;">{{ old('content', $meeting->minutes->content ?? '') }}</textarea>
+                            </div>
                             @error('content')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
                             <small class="form-text text-muted">
                                 Jelaskan secara detail apa yang dibahas dalam meeting, keputusan yang diambil, dan hal penting lainnya.
@@ -159,20 +170,15 @@
                             <label for="decisions" class="font-weight-bold">
                                 <i class="fas fa-gavel mr-1"></i>Keputusan Meeting
                             </label>
-                            <textarea class="form-control auto-resize @error('decisions') is-invalid @enderror" 
-                                      id="decisions" 
-                                      name="decisions" 
-                                      rows="4" 
-                                      placeholder="Tuliskan setiap keputusan dalam baris terpisah..."
-                                      {{ $meeting->minutes && $meeting->minutes->is_finalized ? 'disabled' : '' }}>{{ old('decisions', $meeting->minutes ? implode("\n", $meeting->minutes->decisions ?? []) : '') }}</textarea>
+                            <div class="editor-wrapper">
+                                <div id="decisions-editor" style="height: 200px;">{!! old('decisions_html', $meeting->minutes ? implode("<br>", array_map(fn($d) => "- $d", $meeting->minutes->decisions ?? [])) : '') !!}</div>
+                                <textarea name="decisions" id="decisions-hidden" style="display:none;">{{ old('decisions', $meeting->minutes ? implode("\n", $meeting->minutes->decisions ?? []) : '') }}</textarea>
+                            </div>
                             @error('decisions')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
                             <small class="form-text text-muted">
-                                Masukkan setiap keputusan dalam baris terpisah. Contoh:<br>
-                                - Disetujui pembelian software baru<br>
-                                - Deadline project diperpanjang 1 minggu<br>
-                                - Budget tambahan disetujui sebesar Rp 50 juta
+                                Masukkan setiap keputusan yang diambil selama rapat berlangsung.
                             </small>
                         </div>
 
@@ -225,52 +231,28 @@
                 </div>
             </div>
             @else
-            <!-- Info untuk user yang tidak ditunjuk -->
-            @if($meeting->assignedMinuteTaker)
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-light py-3">
-                    <h3 class="card-title m-0 text-muted">
-                        <i class="fas fa-user-edit mr-2"></i>Informasi Notulensi
-                    </h3>
-                </div>
-                <div class="card-body text-center py-4">
-                    <i class="fas fa-user-edit fa-3x text-muted mb-3"></i>
-                    <h5 class="text-muted">Penulis Notulensi</h5>
-                    <p class="lead">{{ $meeting->assignedMinuteTaker->name }}</p>
-                    <small class="text-muted">
-                        {{ $meeting->assignedMinuteTaker->position }} - {{ $meeting->assignedMinuteTaker->department->name }}
-                    </small>
-                    
-                    @if($meeting->minutes)
-                    <div class="mt-3">
-                        <a href="#minutesPreview" class="btn btn-outline-primary btn-sm">
-                            <i class="fas fa-eye mr-1"></i>Lihat Notulensi
+            <!-- Info untuk user yang tidak memiliki akses edit -->
+            <div class="card card-premium mb-4 shadow-sm border-0" id="minuteTakerForm">
+                <div class="card-body p-5 text-center">
+                    <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style="width: 80px; height: 80px;">
+                        <i class="fas fa-file-signature text-muted fa-2x"></i>
+                    </div>
+                    <h5 class="font-weight-bold text-dark mb-2">Notulensi Meeting</h5>
+                    @if($meeting->assignedMinuteTaker)
+                        <p class="text-muted">Notulensi sedang dikerjakan oleh <strong>{{ $meeting->assignedMinuteTaker->name }}</strong>.</p>
+                        <a href="#minutesPreview" class="btn btn-outline-primary rounded-pill px-4 mt-2">
+                            <i class="fas fa-eye mr-2"></i>Lihat Preview
                         </a>
-                    </div>
                     @else
-                    <div class="alert alert-warning mt-3 small">
-                        <i class="fas fa-clock mr-1"></i>
-                        Notulensi belum dibuat
-                    </div>
+                        <p class="text-muted">Belum ada penulis notulensi yang ditunjuk.</p>
+                        @if(auth()->user()->canManageMeetings() || $meeting->organizer_id == auth()->id())
+                            <button type="button" class="btn btn-primary rounded-pill px-4 mt-2" data-toggle="modal" data-target="#assignMinuteTakerModal">
+                                <i class="fas fa-user-plus mr-2"></i>Tunjuk Penulis
+                            </button>
+                        @endif
                     @endif
                 </div>
             </div>
-            @else
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-light py-3">
-                    <h3 class="card-title m-0 text-muted">
-                        <i class="fas fa-clipboard mr-2"></i>Notulensi Meeting
-                    </h3>
-                </div>
-                <div class="card-body text-center py-4">
-                    <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
-                    <h5 class="text-muted">Belum Ada Penulis Notulensi</h5>
-                    <p class="text-muted small">
-                        Organizer meeting belum menunjuk penulis notulensi untuk meeting ini.
-                    </p>
-                </div>
-            </div>
-            @endif
             @endif
 
             <!-- Tindak Lanjut Section -->
@@ -563,8 +545,8 @@
                     @if($meeting->minutes)
                         <div class="minutes-content mb-3 minutes-preview">
                             <h6>Isi Notulensi:</h6>
-                            <div class="border rounded p-3 bg-light small">
-                                {{ $meeting->minutes->content }}
+                            <div class="border rounded p-3 bg-light small ql-editor">
+                                {!! html_entity_decode($meeting->minutes->content) ?: '<em class="text-muted">Belum ada isi notulensi.</em>' !!}
                             </div>
                             
                             <!-- Handle decisions -->
@@ -573,9 +555,8 @@
                             <ul class="list-group small">
                                 @foreach($meeting->minutes->decisions as $decision)
                                     @if(!empty(trim($decision)))
-                                    <li class="list-group-item d-flex align-items-center py-2">
-                                        <i class="fas fa-check text-success mr-2"></i>
-                                        {{ $decision }}
+                                    <li class="list-group-item py-2 ql-editor">
+                                        {!! html_entity_decode($decision) !!}
                                     </li>
                                     @endif
                                 @endforeach
@@ -1432,22 +1413,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
 @if(session('error'))
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    showToast('{{ session('error') }}', 'danger');
-});
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof showToast === 'function') {
+            showToast('{{ session('error') }}', 'danger');
+        }
+    });
 </script>
 @endif
 
+@push('scripts')
+<!-- Quill Library -->
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Auto-scroll to hash if present in URL
+    console.log('Meeting Running Page Loaded');
+
+    // --- Auto-scroll logic ---
     if (window.location.hash) {
         const targetElement = document.querySelector(window.location.hash);
         if (targetElement) {
-            // Add a slight delay to ensure the page has completely rendered
             setTimeout(() => {
                 targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                // Optional: add a highlight effect to draw attention
                 targetElement.classList.add('border-primary', 'shadow');
                 setTimeout(() => {
                     targetElement.classList.remove('border-primary', 'shadow');
@@ -1455,8 +1442,66 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 300);
         }
     }
+
+    // --- Quill Editor Initialization ---
+    // Safely check for elements before initializing
+    const contentContainer = document.querySelector('#content-editor');
+    const decisionsContainer = document.querySelector('#decisions-editor');
+
+    if (contentContainer && decisionsContainer && typeof Quill !== 'undefined') {
+        const isFinalized = @json($meeting->minutes?->is_finalized ?? false);
+        
+        const toolbarOptions = [
+            ['bold', 'italic', 'underline', 'strike', 'link'],
+            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+            [{ 'align': [] }],
+            [{ 'header': [1, 2, 3, false] }],
+            ['clean']
+        ];
+
+        // Initialize Content Editor
+        const contentEditor = new Quill('#content-editor', {
+            modules: { toolbar: isFinalized ? false : toolbarOptions },
+            theme: 'snow',
+            placeholder: 'Tuliskan rangkuman dan poin-poin penting dari meeting ini...',
+            readOnly: isFinalized
+        });
+
+        // Initialize Decisions Editor
+        const decisionsEditor = new Quill('#decisions-editor', {
+            modules: { toolbar: isFinalized ? false : toolbarOptions },
+            theme: 'snow',
+            placeholder: 'Tuliskan setiap keputusan yang diambil selama rapat berlangsung...',
+            readOnly: isFinalized
+        });
+
+        // Sync Quill content to hidden textareas on form submission
+        const minuteForm = document.querySelector('#minuteTakerForm form');
+        if (minuteForm && !isFinalized) {
+            minuteForm.addEventListener('submit', function(e) {
+                const contentHtml = contentEditor.root.innerHTML;
+                const decisionsHtml = decisionsEditor.root.innerHTML;
+
+                // Strip HTML to check if really empty
+                const contentText = contentEditor.getText().trim();
+                if (contentText.length === 0) {
+                    e.preventDefault();
+                    alert('Isi notulensi tidak boleh kosong.');
+                    return;
+                }
+
+                document.querySelector('#content-hidden').value = contentHtml;
+                document.querySelector('#decisions-hidden').value = decisionsHtml;
+            });
+        }
+        
+        console.log('Quill successfully initialized.');
+    } else {
+        console.warn('Quill or editor containers not found.');
+    }
 });
 </script>
+@endpush
 
 {{-- Rating Modals --}}
 @if(($meeting->organizer_id == auth()->id() || auth()->user()->canManageMeetings()) && $meeting->status === 'completed')
