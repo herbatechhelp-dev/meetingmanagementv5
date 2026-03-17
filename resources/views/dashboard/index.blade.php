@@ -13,68 +13,76 @@
     <!-- Redesigned Stats Cards -->
     <div class="row mb-5">
         <div class="col-lg-3 col-md-6 mb-4">
-            <div class="card h-100 border-0 stats-card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
-                <div class="card-body p-4 text-white">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="glass-icon-wrapper mr-3">
-                            <i class="fas fa-tasks"></i>
+            <a href="{{ route('action-items.index') }}" class="text-decoration-none">
+                <div class="card h-100 border-0 stats-card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                    <div class="card-body p-4 text-white">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="glass-icon-wrapper mr-3">
+                                <i class="fas fa-tasks"></i>
+                            </div>
+                            <span class="text-xs font-weight-bold text-uppercase opacity-75 letter-spacing-1">Tugas</span>
                         </div>
-                        <span class="text-xs font-weight-bold text-uppercase opacity-75 letter-spacing-1">Tugas</span>
-                    </div>
-                    <div class="d-flex align-items-baseline">
-                        <h2 class="font-weight-bold mb-0 mr-2 display-4">{{ $totalActions }}</h2>
-                        <span class="text-xs opacity-75">Total item</span>
+                        <div class="d-flex align-items-baseline">
+                            <h2 class="font-weight-bold mb-0 mr-2 display-4">{{ $totalActions }}</h2>
+                            <span class="text-xs opacity-75">Total item</span>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </a>
         </div>
         <div class="col-lg-3 col-md-6 mb-4">
-            <div class="card h-100 border-0 stats-card" style="background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);">
-                <div class="card-body p-4 text-white">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="glass-icon-wrapper mr-3">
-                            <i class="fas fa-calendar-alt"></i>
+            <a href="{{ route('meetings.index') }}" class="text-decoration-none">
+                <div class="card h-100 border-0 stats-card" style="background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);">
+                    <div class="card-body p-4 text-white">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="glass-icon-wrapper mr-3">
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                            <span class="text-xs font-weight-bold text-uppercase opacity-75 letter-spacing-1">Rapat</span>
                         </div>
-                        <span class="text-xs font-weight-bold text-uppercase opacity-75 letter-spacing-1">Rapat</span>
-                    </div>
-                    <div class="d-flex align-items-baseline">
-                        <h2 class="font-weight-bold mb-0 mr-2 display-4">{{ $totalMeetings }}</h2>
-                        <span class="text-xs opacity-75">Dilaksanakan</span>
+                        <div class="d-flex align-items-baseline">
+                            <h2 class="font-weight-bold mb-0 mr-2 display-4">{{ $totalMeetings }}</h2>
+                            <span class="text-xs opacity-75">Dilaksanakan</span>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </a>
         </div>
         <div class="col-lg-3 col-md-6 mb-4">
-            <div class="card h-100 border-0 stats-card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
-                <div class="card-body p-4 text-white">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="glass-icon-wrapper mr-3">
-                            <i class="fas fa-clock"></i>
+            <a href="{{ route('meetings.index') }}" class="text-decoration-none">
+                <div class="card h-100 border-0 stats-card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                    <div class="card-body p-4 text-white">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="glass-icon-wrapper mr-3">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <span class="text-xs font-weight-bold text-uppercase opacity-75 letter-spacing-1">Dijadwalkan</span>
                         </div>
-                        <span class="text-xs font-weight-bold text-uppercase opacity-75 letter-spacing-1">Dijadwalkan</span>
-                    </div>
-                    <div class="d-flex align-items-baseline">
-                        <h2 class="font-weight-bold mb-0 mr-2 display-4">{{ $scheduledMeetings }}</h2>
-                        <span class="text-xs opacity-75">Mendatang</span>
+                        <div class="d-flex align-items-baseline">
+                            <h2 class="font-weight-bold mb-0 mr-2 display-4">{{ $scheduledMeetings }}</h2>
+                            <span class="text-xs opacity-75">Mendatang</span>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </a>
         </div>
         <div class="col-lg-3 col-md-6 mb-4">
-            <div class="card h-100 border-0 stats-card" style="background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);">
-                <div class="card-body p-4 text-white">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="glass-icon-wrapper mr-3">
-                            <i class="fas fa-exclamation-triangle"></i>
+            <a href="{{ route('action-items.index') }}" class="text-decoration-none">
+                <div class="card h-100 border-0 stats-card" style="background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);">
+                    <div class="card-body p-4 text-white">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="glass-icon-wrapper mr-3">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <span class="text-xs font-weight-bold text-uppercase opacity-75 letter-spacing-1">Terlambat</span>
                         </div>
-                        <span class="text-xs font-weight-bold text-uppercase opacity-75 letter-spacing-1">Terlambat</span>
-                    </div>
-                    <div class="d-flex align-items-baseline">
-                        <h2 class="font-weight-bold mb-0 mr-2 display-4">{{ $overdueActions }}</h2>
-                        <span class="text-xs opacity-75">Perlu tindakan</span>
+                        <div class="d-flex align-items-baseline">
+                            <h2 class="font-weight-bold mb-0 mr-2 display-4">{{ $overdueActions }}</h2>
+                            <span class="text-xs opacity-75">Perlu tindakan</span>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </a>
         </div>
     </div>
 

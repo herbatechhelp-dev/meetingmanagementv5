@@ -8,6 +8,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ActionItemController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TrashMeetingController;
+use App\Http\Controllers\NotificationSettingsController;
 use Illuminate\Support\Facades\Route;
 
 // Public Routes
@@ -144,6 +145,8 @@ Route::get('/test-agenda', function() {
     Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
     Route::get('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::post('/notifications/mark-all-read', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::get('/notifications/settings', [NotificationSettingsController::class, 'index'])->name('notifications.settings');
+    Route::post('/notifications/settings', [NotificationSettingsController::class, 'update'])->name('notifications.settings.update');
 
     // Admin only routes
     Route::middleware(['role:admin'])->group(function () {

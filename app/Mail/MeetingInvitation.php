@@ -38,12 +38,6 @@ class MeetingInvitation extends Mailable implements ShouldQueue
 
     public function content(): Content
     {
-        // Enforce a hard sleep to respect Mailtrap's strict free tier limit (2 emails / 10 sec)
-        // This will physically delay the queue worker.
-        if (app()->environment('local')) {
-            sleep(5);
-        }
-
         return new Content(
             markdown: 'emails.meetings.invitation',
         );

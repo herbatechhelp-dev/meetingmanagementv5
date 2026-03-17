@@ -195,9 +195,7 @@
                                     <div>
                                         <div class="font-weight-bold text-dark mb-1 d-flex align-items-center">
                                             {{ Str::limit($meeting->title, 40) }}
-                                            @if($isOrganizer)
-                                            <span class="ml-2 badge bg-indigo-soft text-indigo text-xs px-2 py-1">Anda</span>
-                                            @endif
+
                                         </div>
                                         <div class="text-xs text-muted">
                                             <i class="far fa-clock mr-1 opacity-50"></i> {{ $meeting->start_time->format('H:i') }} • {{ $meeting->meetingType->name }}
@@ -211,7 +209,7 @@
                                         {{ strtoupper(substr($meeting->organizer->name, 0, 1)) }}
                                     </div>
                                     <div class="text-sm">
-                                        <div class="font-weight-bold text-dark">{{ $meeting->organizer->name }}</div>
+                                        <div class="font-weight-bold text-dark">{{ $meeting->organizer->name }}{{ $isOrganizer ? ' (Anda)' : '' }}</div>
                                         <div class="text-xs text-muted">{{ $meeting->department->name }}</div>
                                     </div>
                                 </div>
