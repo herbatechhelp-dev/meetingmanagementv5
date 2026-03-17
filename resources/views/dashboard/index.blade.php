@@ -13,65 +13,65 @@
     <!-- Redesigned Stats Cards -->
     <div class="row mb-5">
         <div class="col-lg-3 col-md-6 mb-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body p-4">
+            <div class="card h-100 border-0 stats-card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                <div class="card-body p-4 text-white">
                     <div class="d-flex align-items-center mb-3">
-                        <div class="rounded-lg p-2 mr-3" style="background: rgba(16, 185, 129, 0.1)">
-                            <i class="fas fa-tasks text-success"></i>
+                        <div class="glass-icon-wrapper mr-3">
+                            <i class="fas fa-tasks"></i>
                         </div>
-                        <span class="text-xs font-weight-bold text-uppercase text-muted letter-spacing-1">Tugas</span>
+                        <span class="text-xs font-weight-bold text-uppercase opacity-75 letter-spacing-1">Tugas</span>
                     </div>
                     <div class="d-flex align-items-baseline">
-                        <h2 class="font-weight-bold mb-0 mr-2">{{ $totalActions }}</h2>
-                        <span class="text-xs text-muted">Total item</span>
+                        <h2 class="font-weight-bold mb-0 mr-2 display-4">{{ $totalActions }}</h2>
+                        <span class="text-xs opacity-75">Total item</span>
                     </div>
                 </div>
             </div>
         </div>
         <div class="col-lg-3 col-md-6 mb-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body p-4">
+            <div class="card h-100 border-0 stats-card" style="background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);">
+                <div class="card-body p-4 text-white">
                     <div class="d-flex align-items-center mb-3">
-                        <div class="rounded-lg p-2 mr-3" style="background: rgba(79, 70, 229, 0.1)">
-                            <i class="fas fa-calendar-alt text-primary"></i>
+                        <div class="glass-icon-wrapper mr-3">
+                            <i class="fas fa-calendar-alt"></i>
                         </div>
-                        <span class="text-xs font-weight-bold text-uppercase text-muted letter-spacing-1">Rapat</span>
+                        <span class="text-xs font-weight-bold text-uppercase opacity-75 letter-spacing-1">Rapat</span>
                     </div>
                     <div class="d-flex align-items-baseline">
-                        <h2 class="font-weight-bold mb-0 mr-2">{{ $totalMeetings }}</h2>
-                        <span class="text-xs text-muted">Dilaksanakan</span>
+                        <h2 class="font-weight-bold mb-0 mr-2 display-4">{{ $totalMeetings }}</h2>
+                        <span class="text-xs opacity-75">Dilaksanakan</span>
                     </div>
                 </div>
             </div>
         </div>
         <div class="col-lg-3 col-md-6 mb-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body p-4">
+            <div class="card h-100 border-0 stats-card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                <div class="card-body p-4 text-white">
                     <div class="d-flex align-items-center mb-3">
-                        <div class="rounded-lg p-2 mr-3" style="background: rgba(245, 158, 11, 0.1)">
-                            <i class="fas fa-clock text-warning"></i>
+                        <div class="glass-icon-wrapper mr-3">
+                            <i class="fas fa-clock"></i>
                         </div>
-                        <span class="text-xs font-weight-bold text-uppercase text-muted letter-spacing-1">Dijadwalkan</span>
+                        <span class="text-xs font-weight-bold text-uppercase opacity-75 letter-spacing-1">Dijadwalkan</span>
                     </div>
                     <div class="d-flex align-items-baseline">
-                        <h2 class="font-weight-bold mb-0 mr-2">{{ $scheduledMeetings }}</h2>
-                        <span class="text-xs text-muted">Mendatang</span>
+                        <h2 class="font-weight-bold mb-0 mr-2 display-4">{{ $scheduledMeetings }}</h2>
+                        <span class="text-xs opacity-75">Mendatang</span>
                     </div>
                 </div>
             </div>
         </div>
         <div class="col-lg-3 col-md-6 mb-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body p-4">
+            <div class="card h-100 border-0 stats-card" style="background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);">
+                <div class="card-body p-4 text-white">
                     <div class="d-flex align-items-center mb-3">
-                        <div class="rounded-lg p-2 mr-3" style="background: rgba(244, 63, 94, 0.1)">
-                            <i class="fas fa-exclamation-triangle text-danger"></i>
+                        <div class="glass-icon-wrapper mr-3">
+                            <i class="fas fa-exclamation-triangle"></i>
                         </div>
-                        <span class="text-xs font-weight-bold text-uppercase text-muted letter-spacing-1">Terlambat</span>
+                        <span class="text-xs font-weight-bold text-uppercase opacity-75 letter-spacing-1">Terlambat</span>
                     </div>
                     <div class="d-flex align-items-baseline">
-                        <h2 class="font-weight-bold mb-0 mr-2">{{ $overdueActions }}</h2>
-                        <span class="text-xs text-muted">Perlu tindakan</span>
+                        <h2 class="font-weight-bold mb-0 mr-2 display-4">{{ $overdueActions }}</h2>
+                        <span class="text-xs opacity-75">Perlu tindakan</span>
                     </div>
                 </div>
             </div>
@@ -120,15 +120,24 @@
 
     <!-- Statistik Tugas per User -->
     @if(auth()->user()->isAdmin() || auth()->user()->isManager())
-    <div class="card shadow-sm border-0 rounded-lg mb-5">
-        <div class="card-header bg-white py-4 px-4 border-0">
-            <div class="d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0 font-weight-bold text-dark">Statistik Tugas per Penugasan</h5>
-                <div class="btn-group btn-group-sm shadow-sm rounded-pill overflow-hidden">
-                    <button type="button" class="btn btn-white border-0 px-3 active" data-display-type="chart">Grafik</button>
-                    <button type="button" class="btn btn-white border-0 px-3" data-display-type="table">Tabel</button>
-                </div>
+    <div class="card shadow-sm border-0 rounded-lg mb-5 stats-card-section">
+        <div class="card-header bg-white py-4 px-4 border-0 d-flex align-items-center justify-content-between">
+            <div style="flex: 1;">
+                <h5 class="card-title mb-0 font-weight-bold text-dark">
+                    <span class="title-accent mr-2"></span>Statistik Tugas per Penugasan
+                </h5>
             </div>
+            
+            <div class="display-toggle-pill mx-auto">
+                <button type="button" class="toggle-btn active" data-display-type="chart">
+                    <i class="fas fa-chart-bar mr-1"></i> Grafik
+                </button>
+                <button type="button" class="toggle-btn" data-display-type="table">
+                    <i class="fas fa-table mr-1"></i> Tabel
+                </button>
+            </div>
+
+            <div style="flex: 1;"></div>
         </div>
         <div class="card-body px-4 pb-4">
             <!-- Diagram Batang -->
@@ -152,12 +161,19 @@
                         </thead>
                         <tbody>
                             @foreach($userAssignmentStats as $stat)
-                            <tr>
-                                <td class="px-3 py-3 font-weight-bold text-dark">{{ $stat->name }}</td>
-                                <td class="px-3 py-3 text-center"><span class="badge bg-emerald-soft text-emerald">{{ $stat->completed_actions }}</span></td>
-                                <td class="px-3 py-3 text-center"><span class="badge bg-amber-soft text-amber">{{ $stat->in_progress_actions }}</span></td>
-                                <td class="px-3 py-3 text-center"><span class="badge bg-slate-soft text-slate">{{ $stat->pending_actions }}</span></td>
-                                <td class="px-3 py-3 text-center font-weight-bold">{{ $stat->completed_actions + $stat->in_progress_actions + $stat->pending_actions }}</td>
+                            <tr class="align-middle">
+                                <td class="px-3 py-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-sm mr-3 bg-light text-primary font-weight-bold rounded-circle d-flex align-items-center justify-content-center">
+                                            {{ strtoupper(substr($stat->name, 0, 1)) }}
+                                        </div>
+                                        <span class="font-weight-bold text-dark">{{ $stat->name }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-3 py-3 text-center"><span class="badge badge-soft-success">{{ $stat->completed_actions }}</span></td>
+                                <td class="px-3 py-3 text-center"><span class="badge badge-soft-warning">{{ $stat->in_progress_actions }}</span></td>
+                                <td class="px-3 py-3 text-center"><span class="badge badge-soft-secondary">{{ $stat->pending_actions }}</span></td>
+                                <td class="px-3 py-3 text-center font-weight-bold text-dark">{{ $stat->completed_actions + $stat->in_progress_actions + $stat->pending_actions }}</td>
                             </tr>
                             @endforeach
                         </tbody>
@@ -356,11 +372,11 @@
             const successColor = '#10b981';
 
             const blueGrad = ctx.createLinearGradient(0, 0, 0, 400);
-            blueGrad.addColorStop(0, 'rgba(79, 70, 229, 0.1)');
+            blueGrad.addColorStop(0, 'rgba(79, 70, 229, 0.4)');
             blueGrad.addColorStop(1, 'rgba(79, 70, 229, 0)');
 
             const greenGrad = ctx.createLinearGradient(0, 0, 0, 400);
-            greenGrad.addColorStop(0, 'rgba(16, 185, 129, 0.1)');
+            greenGrad.addColorStop(0, 'rgba(16, 185, 129, 0.4)');
             greenGrad.addColorStop(1, 'rgba(16, 185, 129, 0)');
 
             new Chart(ctx, {
@@ -374,7 +390,8 @@
                             borderColor: accentColor,
                             backgroundColor: blueGrad,
                             borderWidth: 3,
-                            pointRadius: 0,
+                            borderWidth: 3,
+                            pointRadius: 3,
                             pointHoverRadius: 6,
                             fill: true,
                             tension: 0.4
@@ -385,7 +402,7 @@
                             borderColor: successColor,
                             backgroundColor: greenGrad,
                             borderWidth: 3,
-                            pointRadius: 0,
+                            pointRadius: 3,
                             pointHoverRadius: 6,
                             fill: true,
                             tension: 0.4
@@ -401,7 +418,9 @@
                             backgroundColor: '#1e293b',
                             padding: 12,
                             cornerRadius: 8,
-                            titleFont: { size: 13, weight: '700' }
+                            titleFont: { size: 13, weight: '700' },
+                            mode: 'index',
+                            intersect: false
                         }
                     },
                     scales: {
@@ -412,7 +431,12 @@
                         },
                         x: { 
                             grid: { display: false }, 
-                            ticks: { font: { size: 12 } } 
+                            ticks: { 
+                                font: { size: 12 },
+                                maxRotation: 0,
+                                autoSkip: true,
+                                maxTicksLimit: 10
+                            } 
                         }
                     }
                 }
@@ -423,15 +447,19 @@
         const meetingTrendCtx = document.getElementById('meetingTrendChart');
         if (meetingTrendCtx) {
             const ctx = meetingTrendCtx.getContext('2d');
+            const barGrad = ctx.createLinearGradient(0, 0, 0, 200);
+            barGrad.addColorStop(0, '#4f46e5');
+            barGrad.addColorStop(1, 'rgba(79, 70, 229, 0.1)');
+
             new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: meetingTrendData.labels || [],
                     datasets: [{
                         data: meetingTrendData.created || [],
-                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                        backgroundColor: barGrad,
                         hoverBackgroundColor: '#4f46e5',
-                        borderRadius: 4
+                        borderRadius: 6
                     }]
                 },
                 options: {
@@ -446,10 +474,22 @@
             });
         }
 
-        // 3. User Assignment Chart (Manager/Admin Only)
         const userAssignmentCtx = document.getElementById('userAssignmentChart');
         if (userAssignmentCtx && userAssignmentStats && userAssignmentStats.length > 0) {
             const ctx = userAssignmentCtx.getContext('2d');
+            
+            const successGrad = ctx.createLinearGradient(0, 0, 0, 400);
+            successGrad.addColorStop(0, '#10b981');
+            successGrad.addColorStop(1, '#059669');
+
+            const warningGrad = ctx.createLinearGradient(0, 0, 0, 400);
+            warningGrad.addColorStop(0, '#f59e0b');
+            warningGrad.addColorStop(1, '#d97706');
+
+            const secondaryGrad = ctx.createLinearGradient(0, 0, 0, 400);
+            secondaryGrad.addColorStop(0, '#94a3b8');
+            secondaryGrad.addColorStop(1, '#64748b');
+
             new Chart(ctx, {
                 type: 'bar',
                 data: {
@@ -458,20 +498,23 @@
                         {
                             label: 'Selesai',
                             data: userAssignmentStats.map(u => u.completed_actions),
-                            backgroundColor: '#10b981',
-                            borderRadius: 6
+                            backgroundColor: successGrad,
+                            borderRadius: 6,
+                            barThickness: 20
                         },
                         {
-                            label: 'Sedang Berjalan',
+                            label: 'Proses',
                             data: userAssignmentStats.map(u => u.in_progress_actions),
-                            backgroundColor: '#f59e0b',
-                            borderRadius: 6
+                            backgroundColor: warningGrad,
+                            borderRadius: 6,
+                            barThickness: 20
                         },
                         {
                             label: 'Menunggu',
                             data: userAssignmentStats.map(u => u.pending_actions),
-                            backgroundColor: '#64748b',
-                            borderRadius: 6
+                            backgroundColor: secondaryGrad,
+                            borderRadius: 6,
+                            barThickness: 20
                         }
                     ]
                 },
@@ -479,12 +522,22 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 12 } } },
-                        tooltip: { mode: 'index', intersect: false }
+                        legend: { position: 'bottom', labels: { boxWidth: 10, padding: 20, font: { family: "'Inter'", size: 12 } } },
+                        tooltip: { 
+                            backgroundColor: '#1e293b',
+                            padding: 12,
+                            cornerRadius: 8,
+                            mode: 'index', 
+                            intersect: false 
+                        }
                     },
                     scales: {
                         x: { stacked: true, grid: { display: false }, ticks: { font: { size: 11 } } },
-                        y: { stacked: true, beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 11 }, precision: 0 } }
+                        y: { stacked: true, beginAtZero: true, grid: { color: 'rgba(0,0,0,0.03)', drawBorder: false }, ticks: { font: { size: 11 }, precision: 0 } }
+                    },
+                    animation: {
+                        duration: 1500,
+                        easing: 'easeOutQuart'
                     }
                 }
             });
@@ -493,19 +546,21 @@
         // Toggle Display Type
         $('[data-display-type]').on('click', function() {
             const type = $(this).data('display-type');
-            const parent = $(this).closest('.card');
+            const container = $(this).closest('.stats-card-section');
             
             // UI Toggle
-            parent.find('[data-display-type]').removeClass('active btn-emerald').addClass('btn-white');
-            $(this).addClass('active btn-emerald').removeClass('btn-white');
+            container.find('.toggle-btn').removeClass('active');
+            $(this).addClass('active');
             
-            // Content Toggle
+            // Content Toggle with smooth transition
             if (type === 'chart') {
-                $('#user-chart-container').fadeIn();
-                $('#user-table-container').hide();
+                $('#user-table-container').fadeOut(200, function() {
+                    $('#user-chart-container').fadeIn(300);
+                });
             } else {
-                $('#user-chart-container').hide();
-                $('#user-table-container').fadeIn();
+                $('#user-chart-container').fadeOut(200, function() {
+                    $('#user-table-container').fadeIn(300);
+                });
             }
         });
     });
@@ -513,12 +568,121 @@
 
 <style>
     .letter-spacing-1 { letter-spacing: 0.05em; }
-    .bg-opacity-10 { background-color: rgba(255, 255, 255, 0.1); }
     .bg-emerald-soft { background-color: rgba(16, 185, 129, 0.1); }
     .bg-amber-soft { background-color: rgba(245, 158, 11, 0.1); }
     .bg-slate-soft { background-color: rgba(100, 116, 139, 0.1); }
     .text-emerald { color: #10b981; }
     .text-amber { color: #f59e0b; }
     .text-slate { color: #64748b; }
+
+    /* Premium Dashboard Extensions */
+    .stats-card {
+        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.1);
+        position: relative;
+        overflow: hidden;
+    }
+    .stats-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 25px 40px -10px rgba(0, 0, 0, 0.2);
+    }
+    .stats-card::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 150px;
+        height: 150px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+    .glass-icon-wrapper {
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(8px);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        font-size: 1.25rem;
+    }
+    .card-header {
+        background: transparent !important;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+        padding: 1.25rem !important;
+    }
+    .badge-light-indigo {
+        background-color: rgba(79, 70, 229, 0.1);
+        color: #4f46e5;
+        border-radius: 30px;
+        font-weight: 600;
+    }
+    .progress {
+        background-color: #f1f5f9;
+        overflow: visible;
+    }
+    .progress-bar {
+        border-radius: 30px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    /* Animation entries */
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .row > div {
+        animation: fadeInUp 0.6s ease-out forwards;
+    }
+    .row > div:nth-child(1) { animation-delay: 0.1s; }
+    .row > div:nth-child(2) { animation-delay: 0.2s; }
+    .row > div:nth-child(3) { animation-delay: 0.3s; }
+    .row > div:nth-child(4) { animation-delay: 0.4s; }
+
+    /* User Stats Section Extensions */
+    .title-accent {
+        display: inline-block;
+        width: 4px;
+        height: 18px;
+        background: #4f46e5;
+        border-radius: 4px;
+        vertical-align: middle;
+    }
+    .display-toggle-pill {
+        background: #f1f5f9;
+        padding: 4px;
+        border-radius: 50px;
+        display: flex;
+        gap: 4px;
+    }
+    .toggle-btn {
+        border: none;
+        background: transparent;
+        padding: 6px 16px;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #64748b;
+        transition: all 0.3s ease;
+    }
+    .toggle-btn.active {
+        background: white;
+        color: #4f46e5;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    .avatar-sm {
+        width: 32px;
+        height: 32px;
+        font-size: 0.8rem;
+    }
+    .badge-soft-success { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+    .badge-soft-warning { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+    .badge-soft-secondary { background: rgba(148, 163, 184, 0.1); color: #475569; }
+    .table-hover tbody tr:hover {
+        background-color: rgba(79, 70, 229, 0.02) !important;
+    }
 </style>
 @endpush
