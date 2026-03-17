@@ -13,68 +13,76 @@
     <!-- Redesigned Stats Cards -->
     <div class="row mb-5">
         <div class="col-lg-3 col-md-6 mb-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="rounded-lg p-2 mr-3" style="background: rgba(16, 185, 129, 0.1)">
-                            <i class="fas fa-tasks text-success"></i>
+            <a href="{{ route('action-items.index') }}" class="text-decoration-none">
+                <div class="card h-100 shadow-sm border-0 transition-hover">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="rounded-lg p-2 mr-3" style="background: rgba(16, 185, 129, 0.1)">
+                                <i class="fas fa-tasks text-success"></i>
+                            </div>
+                            <span class="text-xs font-weight-bold text-uppercase text-muted letter-spacing-1">Tugas</span>
                         </div>
-                        <span class="text-xs font-weight-bold text-uppercase text-muted letter-spacing-1">Tugas</span>
-                    </div>
-                    <div class="d-flex align-items-baseline">
-                        <h2 class="font-weight-bold mb-0 mr-2">{{ $totalActions }}</h2>
-                        <span class="text-xs text-muted">Total item</span>
+                        <div class="d-flex align-items-baseline text-dark">
+                            <h2 class="font-weight-bold mb-0 mr-2">{{ $totalActions }}</h2>
+                            <span class="text-xs text-muted">Total item</span>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </a>
         </div>
         <div class="col-lg-3 col-md-6 mb-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="rounded-lg p-2 mr-3" style="background: rgba(79, 70, 229, 0.1)">
-                            <i class="fas fa-calendar-alt text-primary"></i>
+            <a href="{{ route('meetings.index') }}" class="text-decoration-none">
+                <div class="card h-100 shadow-sm border-0 transition-hover">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="rounded-lg p-2 mr-3" style="background: rgba(79, 70, 229, 0.1)">
+                                <i class="fas fa-calendar-alt text-primary"></i>
+                            </div>
+                            <span class="text-xs font-weight-bold text-uppercase text-muted letter-spacing-1">Rapat</span>
                         </div>
-                        <span class="text-xs font-weight-bold text-uppercase text-muted letter-spacing-1">Rapat</span>
-                    </div>
-                    <div class="d-flex align-items-baseline">
-                        <h2 class="font-weight-bold mb-0 mr-2">{{ $totalMeetings }}</h2>
-                        <span class="text-xs text-muted">Dilaksanakan</span>
+                        <div class="d-flex align-items-baseline text-dark">
+                            <h2 class="font-weight-bold mb-0 mr-2">{{ $totalMeetings }}</h2>
+                            <span class="text-xs text-muted">Dilaksanakan</span>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </a>
         </div>
         <div class="col-lg-3 col-md-6 mb-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="rounded-lg p-2 mr-3" style="background: rgba(245, 158, 11, 0.1)">
-                            <i class="fas fa-clock text-warning"></i>
+            <a href="{{ route('meetings.index') }}" class="text-decoration-none">
+                <div class="card h-100 shadow-sm border-0 transition-hover">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="rounded-lg p-2 mr-3" style="background: rgba(245, 158, 11, 0.1)">
+                                <i class="fas fa-clock text-warning"></i>
+                            </div>
+                            <span class="text-xs font-weight-bold text-uppercase text-muted letter-spacing-1">Dijadwalkan</span>
                         </div>
-                        <span class="text-xs font-weight-bold text-uppercase text-muted letter-spacing-1">Dijadwalkan</span>
-                    </div>
-                    <div class="d-flex align-items-baseline">
-                        <h2 class="font-weight-bold mb-0 mr-2">{{ $scheduledMeetings }}</h2>
-                        <span class="text-xs text-muted">Mendatang</span>
+                        <div class="d-flex align-items-baseline text-dark">
+                            <h2 class="font-weight-bold mb-0 mr-2">{{ $scheduledMeetings }}</h2>
+                            <span class="text-xs text-muted">Mendatang</span>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </a>
         </div>
         <div class="col-lg-3 col-md-6 mb-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="rounded-lg p-2 mr-3" style="background: rgba(244, 63, 94, 0.1)">
-                            <i class="fas fa-exclamation-triangle text-danger"></i>
+            <a href="{{ route('action-items.index') }}" class="text-decoration-none">
+                <div class="card h-100 shadow-sm border-0 transition-hover">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="rounded-lg p-2 mr-3" style="background: rgba(244, 63, 94, 0.1)">
+                                <i class="fas fa-exclamation-triangle text-danger"></i>
+                            </div>
+                            <span class="text-xs font-weight-bold text-uppercase text-muted letter-spacing-1">Terlambat</span>
                         </div>
-                        <span class="text-xs font-weight-bold text-uppercase text-muted letter-spacing-1">Terlambat</span>
-                    </div>
-                    <div class="d-flex align-items-baseline">
-                        <h2 class="font-weight-bold mb-0 mr-2">{{ $overdueActions }}</h2>
-                        <span class="text-xs text-muted">Perlu tindakan</span>
+                        <div class="d-flex align-items-baseline text-dark">
+                            <h2 class="font-weight-bold mb-0 mr-2">{{ $overdueActions }}</h2>
+                            <span class="text-xs text-muted">Perlu tindakan</span>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </a>
         </div>
     </div>
 

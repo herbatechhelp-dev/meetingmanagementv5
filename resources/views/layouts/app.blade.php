@@ -125,7 +125,11 @@
 
         .card:hover {
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02) !important;
-            transform: translateY(-2px);
+            transform: translateY(-4px);
+        }
+
+        .transition-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .card-header {
@@ -256,7 +260,7 @@
             <!-- Logo area -->
             <a href="{{ route('dashboard') }}" class="navbar-brand-custom">
                 <img src="{{ asset('images/logo.png') }}" alt="Logo" class="mr-2" style="height: 32px; width: auto; object-fit: contain;">
-                <span>{{ config('app.name') }}</span>
+                <span>HERBATECH</span>
             </a>
 
             <!-- Mobile toggler -->
@@ -327,7 +331,17 @@
                             @if(auth()->user() && auth()->user()->notifications->count() > 0)
                                 <div class="px-3 py-2 border-bottom d-flex justify-content-between align-items-center">
                                     <span class="font-weight-bold text-sm">Notifikasi</span>
-                                    <span class="badge badge-light text-primary">{{ auth()->user()->unreadNotifications->count() }} Baru</span>
+                                    <div>
+                                        @if(auth()->user()->unreadNotifications->count() > 0)
+                                        <form action="{{ route('notifications.mark-all-read') }}" method="POST" class="d-inline mr-2">
+                                            @csrf
+                                            <button type="submit" class="btn btn-xs btn-link p-0 text-muted" title="Tandai semua dibaca">
+                                                <i class="fas fa-check-double"></i>
+                                            </button>
+                                        </form>
+                                        @endif
+                                        <span class="badge badge-light text-primary">{{ auth()->user()->unreadNotifications->count() }} Baru</span>
+                                    </div>
                                 </div>
                                 
                                 <div style="max-height: 300px; overflow-y: auto;">
@@ -346,7 +360,12 @@
                                         </a>
                                     @endforeach
                                 </div>
-                                <a href="{{ route('notifications.index') }}" class="dropdown-item text-center text-primary text-xs font-weight-bold border-top py-2">Lihat Semua</a>
+                                <div class="d-flex border-top">
+                                    <a href="{{ route('notifications.index') }}" class="dropdown-item text-center text-primary text-xs font-weight-bold py-2 border-right" style="flex: 1;">Lihat Semua</a>
+                                    <a href="{{ route('notifications.settings') }}" class="dropdown-item text-center text-muted text-xs font-weight-bold py-2" style="flex: 1;" title="Pengaturan">
+                                        <i class="fas fa-cog"></i>
+                                    </a>
+                                </div>
                             @else
                                 <div class="p-4 text-center text-muted">
                                     <i class="far fa-bell-slash mb-2 fa-2x"></i>
@@ -456,7 +475,7 @@
             <div class="container-fluid">
                 <div class="row align-items-center text-sm">
                     <div class="col-sm-6 text-muted">
-                        &copy; {{ date('Y') }} <span class="font-weight-bold" style="color: var(--accent-color)">{{ config('app.name') }}</span>. Hak cipta dilindungi undang-undang.
+                        &copy; {{ date('Y') }} <span class="font-weight-bold" style="color: var(--accent-color)">HERBATECH</span>. Hak cipta dilindungi undang-undang.
                     </div>
                     <div class="col-sm-6 text-right text-muted">
                         <span class="px-2 py-1 rounded bg-light">v1.0.0</span>
