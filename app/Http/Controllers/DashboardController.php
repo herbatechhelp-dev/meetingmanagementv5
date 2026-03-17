@@ -193,8 +193,8 @@ class DashboardController extends Controller
             'overdue' => []
         ];
         
-        if ($days <= 7) {
-            // Data per hari untuk 7 hari terakhir
+        if ($days <= 30) {
+            // Data per hari untuk periode hingga 30 hari terakhir
             for ($i = $days - 1; $i >= 0; $i--) {
                 $date = now()->subDays($i);
                 $dateString = $date->format('Y-m-d');
@@ -216,7 +216,7 @@ class DashboardController extends Controller
                 $trendData['overdue'][] = $overdueQuery->count();
             }
         } else {
-            // Data per minggu untuk periode lebih dari 7 hari
+            // Data per minggu untuk periode lebih dari 30 hari
             $weeks = ceil($days / 7);
             
             for ($i = $weeks - 1; $i >= 0; $i--) {
@@ -258,8 +258,8 @@ class DashboardController extends Controller
             'scheduled' => []
         ];
         
-        if ($days <= 7) {
-            // Data per hari untuk 7 hari terakhir
+        if ($days <= 30) {
+            // Data per hari untuk periode hingga 30 hari terakhir
             for ($i = $days - 1; $i >= 0; $i--) {
                 $date = now()->subDays($i);
                 $dateString = $date->format('Y-m-d');
@@ -282,7 +282,7 @@ class DashboardController extends Controller
                 $trendData['scheduled'][] = $scheduledQuery->count();
             }
         } else {
-            // Data per minggu untuk periode lebih dari 7 hari
+            // Data per minggu untuk periode lebih dari 30 hari
             $weeks = ceil($days / 7);
             
             for ($i = $weeks - 1; $i >= 0; $i--) {
