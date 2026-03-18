@@ -514,4 +514,96 @@ class DashboardController extends Controller
         
         return response()->json($stats);
     }
+
+    /**
+     * Get events for FullCalendar (Meetings & Action Items)
+     */
+    public function getCalendarEvents(Request $request)
+    {
+        $user = auth()->user();
+        $start = $request->get('start');
+        $end = $request->get('end');
+
+        // Fetch Meetings
+        $meetingsQuery = Meeting::with(['meetingType']);
+        if ($start) $meetingsQuery->where('start_time', '>=', $start);
+        if ($end) $meetingsQuery->where('end_time', '<=', $end);
+        $this->applyRoleFilter($meetingsQuery, $user, 'meeting');
+        
+        $meetings = $meetingsQuery->get()->flatMap(function($meeting) {
+            $events = [];
+            $currentDate = $meeting->start_time->copy()->startOfDay();
+            $endDate = $meeting->end_time->copy()->endOfDay();
+            
+            $color = match($meeting->status) {
+                'scheduled' => '#4f46e5', // Indigo
+                'ongoing' => '#f59e0b',   // Amber
+                'completed' => '#10b981', // Emerald
+                default => '#64748b'      // Slate
+            };
+
+            while ($currentDate <= $endDate) {
+                $events[] = [
+                    'id' => 'm_' . $meeting->id . '_' . $currentDate->format('Ymd'),
+                    'title' => '📅 ' . $meeting->title,
+                    'start' => $currentDate->format('Y-m-d'),
+                    'allDay' => true,
+                    'url' => route('meetings.show', $meeting),
+                    'backgroundColor' => $color,
+                    'borderColor' => $color,
+                    'extendedProps' => [
+                        'type' => 'meeting',
+                        'status' => $meeting->status,
+                        'location' => $meeting->location ?? 'Online',
+                        'organizer' => $meeting->organizer->name ?? 'Unknown',
+                        'original_start' => $meeting->start_time->toIso8601String(),
+                        'original_end' => $meeting->end_time->toIso8601String(),
+                    ]
+                ];
+                $currentDate->addDay();
+            }
+            return $events;
+        });
+
+        // Fetch Action Items (Tasks)
+        $actionsQuery = ActionItem::with(['meeting']);
+        if ($start) $actionsQuery->where('due_date', '>=', $start);
+        if ($end) $actionsQuery->where('due_date', '<=', $end);
+        $this->applyRoleFilter($actionsQuery, $user, 'action');
+
+        $actions = $actionsQuery->get()->flatMap(function($action) {
+            $events = [];
+            $color = match($action->status) {
+                'completed' => '#10b981', // Emerald
+                'in_progress' => '#f59e0b', // Amber
+                default => '#64748b'       // Slate
+            };
+
+            // Override for overdue
+            if ($action->status !== 'completed' && $action->due_date < now()) {
+                $color = '#ef4444';
+            }
+
+            // Unlike meetings, tasks usually have only one due date, but we can still wrap it in flatmap
+            // in case they eventually span multiple days. For now, it's just one pill on the due date.
+            $events[] = [
+                'id' => 'a_' . $action->id,
+                'title' => '✅ ' . $action->title,
+                'start' => $action->due_date->toIso8601String(),
+                'allDay' => true,
+                'url' => route('action-items.show', $action),
+                'backgroundColor' => $color,
+                'borderColor' => $color,
+                'extendedProps' => [
+                    'type' => 'task',
+                    'status' => $action->status_label,
+                    'priority' => $action->priority_label,
+                    'meeting' => $action->meeting->title ?? 'No Meeting'
+                ]
+            ];
+            return $events;
+        });
+
+        return response()->json($meetings->concat($actions));
+    }
 }

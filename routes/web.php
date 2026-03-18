@@ -28,6 +28,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard/chart-data', [DashboardController::class, 'getChartData'])->name('dashboard.chart-data');
     Route::get('/dashboard/debug', [DashboardController::class, 'debugData'])->name('dashboard.debug');
     Route::get('/dashboard/real-time-stats', [DashboardController::class, 'getRealTimeStats'])->name('dashboard.real-time-stats');
+    Route::get('/dashboard/calendar-events', [DashboardController::class, 'getCalendarEvents'])->name('dashboard.calendar-events');
 
 
     // Meetings

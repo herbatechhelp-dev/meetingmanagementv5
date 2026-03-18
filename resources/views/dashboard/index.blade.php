@@ -10,21 +10,21 @@
 @section('hide_header', true)
 
 @section('content')
-    <!-- Redesigned Stats Cards -->
+    <!-- Extreme Minimalist Stats Cards -->
     <div class="row mb-5">
         <div class="col-lg-3 col-md-6 mb-4">
             <a href="{{ route('action-items.index') }}" class="text-decoration-none transition-hover d-block h-100">
-                <div class="card h-100 border-0 stats-card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
-                    <div class="card-body p-4 text-white">
+                <div class="card h-100 border-0 shadow-sm rounded-xl card-vibrant-emerald stats-card">
+                    <div class="card-body p-4">
                         <div class="d-flex align-items-center mb-3">
                             <div class="glass-icon-wrapper mr-3">
                                 <i class="fas fa-tasks"></i>
                             </div>
-                            <span class="text-xs font-weight-bold text-uppercase opacity-75 letter-spacing-1">Tugas</span>
+                            <span class="text-xs font-weight-bold text-uppercase text-white-50 letter-spacing-1">Tugas</span>
                         </div>
                         <div class="d-flex align-items-baseline">
-                            <h2 class="font-weight-bold mb-0 mr-2 display-4">{{ $totalActions }}</h2>
-                            <span class="text-xs opacity-75">Total item</span>
+                            <h2 class="font-weight-bold mb-0 mr-2 text-white">{{ $totalActions }}</h2>
+                            <span class="text-xs text-white-50">Total</span>
                         </div>
                     </div>
                 </div>
@@ -32,17 +32,17 @@
         </div>
         <div class="col-lg-3 col-md-6 mb-4">
             <a href="{{ route('meetings.index') }}" class="text-decoration-none transition-hover d-block h-100">
-                <div class="card h-100 border-0 stats-card" style="background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);">
-                    <div class="card-body p-4 text-white">
+                <div class="card h-100 border-0 shadow-sm rounded-xl card-vibrant-indigo stats-card">
+                    <div class="card-body p-4">
                         <div class="d-flex align-items-center mb-3">
                             <div class="glass-icon-wrapper mr-3">
                                 <i class="fas fa-calendar-alt"></i>
                             </div>
-                            <span class="text-xs font-weight-bold text-uppercase opacity-75 letter-spacing-1">Rapat</span>
+                            <span class="text-xs font-weight-bold text-uppercase text-white-50 letter-spacing-1">Rapat</span>
                         </div>
                         <div class="d-flex align-items-baseline">
-                            <h2 class="font-weight-bold mb-0 mr-2 display-4">{{ $totalMeetings }}</h2>
-                            <span class="text-xs opacity-75">Dilaksanakan</span>
+                            <h2 class="font-weight-bold mb-0 mr-2 text-white">{{ $totalMeetings }}</h2>
+                            <span class="text-xs text-white-50">Dilaksanakan</span>
                         </div>
                     </div>
                 </div>
@@ -50,17 +50,17 @@
         </div>
         <div class="col-lg-3 col-md-6 mb-4">
             <a href="{{ route('meetings.index') }}" class="text-decoration-none transition-hover d-block h-100">
-                <div class="card h-100 border-0 stats-card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
-                    <div class="card-body p-4 text-white">
+                <div class="card h-100 border-0 shadow-sm rounded-xl card-vibrant-amber stats-card">
+                    <div class="card-body p-4">
                         <div class="d-flex align-items-center mb-3">
                             <div class="glass-icon-wrapper mr-3">
                                 <i class="fas fa-clock"></i>
                             </div>
-                            <span class="text-xs font-weight-bold text-uppercase opacity-75 letter-spacing-1">Dijadwalkan</span>
+                            <span class="text-xs font-weight-bold text-uppercase text-white-50 letter-spacing-1">Mendatang</span>
                         </div>
                         <div class="d-flex align-items-baseline">
-                            <h2 class="font-weight-bold mb-0 mr-2 display-4">{{ $scheduledMeetings }}</h2>
-                            <span class="text-xs opacity-75">Mendatang</span>
+                            <h2 class="font-weight-bold mb-0 mr-2 text-white">{{ $scheduledMeetings }}</h2>
+                            <span class="text-xs text-white-50">Jadwal</span>
                         </div>
                     </div>
                 </div>
@@ -68,17 +68,17 @@
         </div>
         <div class="col-lg-3 col-md-6 mb-4">
             <a href="{{ route('action-items.index') }}" class="text-decoration-none transition-hover d-block h-100">
-                <div class="card h-100 border-0 stats-card" style="background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);">
-                    <div class="card-body p-4 text-white">
+                <div class="card h-100 border-0 shadow-sm rounded-xl card-vibrant-rose stats-card">
+                    <div class="card-body p-4">
                         <div class="d-flex align-items-center mb-3">
                             <div class="glass-icon-wrapper mr-3">
                                 <i class="fas fa-exclamation-triangle"></i>
                             </div>
-                            <span class="text-xs font-weight-bold text-uppercase opacity-75 letter-spacing-1">Terlambat</span>
+                            <span class="text-xs font-weight-bold text-uppercase text-white-50 letter-spacing-1">Terlambat</span>
                         </div>
                         <div class="d-flex align-items-baseline">
-                            <h2 class="font-weight-bold mb-0 mr-2 display-4">{{ $overdueActions }}</h2>
-                            <span class="text-xs opacity-75">Perlu tindakan</span>
+                            <h2 class="font-weight-bold mb-0 mr-2 text-white">{{ $overdueActions }}</h2>
+                            <span class="text-xs text-white-50">Perlu Tindakan</span>
                         </div>
                     </div>
                 </div>
@@ -270,34 +270,33 @@
             </div>
         </div>
 
-        <!-- Right Side: Notifications & Upcoming -->
+        <!-- Right Side: Dashboard Calendar -->
         <div class="col-lg-4">
-            <!-- Critical Notifications -->
-            <div class="card h-100 shadow-sm border-0 mb-4" style="background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%)">
-                <div class="card-body p-4 text-white">
-                    <div class="d-flex align-items-center mb-4">
-                        <div class="bg-white rounded-lg p-2 mr-3" style="background: rgba(255, 255, 255, 0.2) !important">
-                            <i class="fas fa-bell"></i>
+            <div class="card h-100 shadow-sm border-0 rounded-xl overflow-hidden bg-white">
+                <div class="card-header border-0 bg-white p-4 d-flex align-items-center">
+                    <div class="icon-box-indigo mr-3">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <h5 class="mb-0 font-weight-bold text-dark">Kalender</h5>
+                </div>
+                <div class="card-body p-2">
+                    <div id="dashboardCalendar"></div>
+                </div>
+                <div class="card-footer bg-white border-0 pt-0 pb-4 px-4">
+                    <div class="d-flex flex-wrap gap-3 justify-content-start small">
+                        <div class="d-flex align-items-center mr-3">
+                            <span class="dot bg-indigo mr-2"></span>
+                            <span class="text-muted font-weight-medium">Rapat</span>
                         </div>
-                        <h5 class="mb-0 font-weight-bold">Acara Mendatang</h5>
+                        <div class="d-flex align-items-center mr-3">
+                            <span class="dot bg-emerald mr-2"></span>
+                            <span class="text-muted font-weight-medium">Selesai</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="dot bg-rose mr-2"></span>
+                            <span class="text-muted font-weight-medium">Deadline</span>
+                        </div>
                     </div>
-                    
-                    @forelse($upcomingMeetings->take(3) as $meeting)
-                    <div class="mb-4 bg-white bg-opacity-10 p-3 rounded-lg border border-white border-opacity-10" style="background: rgba(255, 255, 255, 0.05)">
-                        <div class="text-sm text-white opacity-75 font-weight-bold mb-1">{{ $meeting->start_time->format('D, d M • H:i') }}</div>
-                        <a href="{{ route('meetings.show', $meeting) }}" class="text-white font-weight-bold d-block mb-2">{{ Str::limit($meeting->title, 35) }}</a>
-                        <div class="text-sm text-white opacity-50"><i class="fas fa-map-marker-alt mr-1"></i> {{ $meeting->location ?? 'Online' }}</div>
-                    </div>
-                    @empty
-                    <div class="text-center py-4 opacity-50">
-                        <i class="far fa-calendar-check fa-2x mb-2"></i>
-                        <p class="text-sm mb-0">Tidak ada rapat mendatang</p>
-                    </div>
-                    @endforelse
-
-                    <a href="{{ route('meetings.index') }}" class="btn btn-white w-100 rounded-lg font-weight-bold mt-2" style="background: white; color: #4f46e5; border: none;">
-                        Buka Kalender
-                    </a>
                 </div>
             </div>
         </div>
@@ -307,19 +306,19 @@
     @if(auth()->user()->isAdmin() || auth()->user()->isManager())
     <div class="row mb-5">
         <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Produktivitas Tim</h5>
+            <div class="card shadow-sm border-0 rounded-xl bg-white">
+                <div class="card-header border-0 bg-white">
+                    <h5 class="card-title mb-0 font-weight-bold">Produktivitas Tim</h5>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-hover mb-0 border-0">
                             <thead class="bg-light text-muted text-xs text-uppercase">
                                 <tr>
-                                    <th class="border-0 px-4 py-3">Anggota Tim</th>
-                                    <th class="border-0 px-4 py-3 text-center">Ditugaskan</th>
+                                    <th class="border-0 px-4 py-3">Anggota</th>
+                                    <th class="border-0 px-4 py-3 text-center">Tugas</th>
                                     <th class="border-0 px-4 py-3 text-center">Selesai</th>
-                                    <th class="border-0 px-4 py-3">Tingkat Keberhasilan</th>
+                                    <th class="border-0 px-4 py-3">Progress</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -327,24 +326,24 @@
                                 @php
                                     $progress = $user->total_assigned > 0 ? ($user->completed_actions / $user->total_assigned) * 100 : 0;
                                 @endphp
-                                <tr class="align-middle">
-                                    <td class="px-4 py-3">
+                                <tr class="align-middle border-0">
+                                    <td class="px-4 py-3 border-0">
                                         <div class="d-flex align-items-center">
-                                            <div class="bg-light rounded-circle font-weight-bold d-flex align-items-center justify-content-center mr-3" style="width: 40px; height: 40px; background: rgba(79, 70, 229, 0.05); color: #4f46e5">
+                                            <div class="bg-light rounded-circle font-weight-bold d-flex align-items-center justify-content-center mr-3" style="width: 36px; height: 36px; background: #f8fafc !important; color: #4f46e5">
                                                 {{ strtoupper(substr($user->name, 0, 1)) }}
                                             </div>
                                             <div>
-                                                <div class="font-weight-bold text-dark">{{ $user->name }}</div>
+                                                <div class="font-weight-bold text-dark text-sm">{{ $user->name }}</div>
                                                 <div class="text-xs text-muted">{{ $user->department->name ?? 'Global' }}</div>
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="px-4 py-3 text-center font-weight-bold">{{ $user->total_assigned }}</td>
-                                    <td class="px-4 py-3 text-center text-success font-weight-bold">{{ $user->completed_actions }}</td>
-                                    <td class="px-4 py-3" style="width: 250px;">
+                                    <td class="px-4 py-3 text-center font-weight-bold border-0 text-sm">{{ $user->total_assigned }}</td>
+                                    <td class="px-4 py-3 text-center text-success font-weight-bold border-0 text-sm">{{ $user->completed_actions }}</td>
+                                    <td class="px-4 py-3 border-0" style="width: 250px;">
                                         <div class="d-flex align-items-center">
-                                            <div class="progress flex-grow-1 rounded-pill" style="height: 6px; background: #f1f5f9">
-                                                <div class="progress-bar bg-primary" role="progressbar" style="width: {{ $progress }}%"></div>
+                                            <div class="progress flex-grow-1 rounded-pill" style="height: 4px; background: #f1f5f9; box-shadow: none">
+                                                <div class="progress-bar bg-primary" role="progressbar" style="width: {{ $progress }}%; box-shadow: none"></div>
                                             </div>
                                             <span class="text-xs font-weight-bold text-muted ml-3">{{ number_format($progress, 0) }}%</span>
                                         </div>
@@ -363,6 +362,9 @@
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+<script src="https://unpkg.com/@popperjs/core@2"></script>
+<script src="https://unpkg.com/tippy.js@6"></script>
 <script>
     // Initialize Data from PHP
     const actionTrendData = @json($actionTrendData);
@@ -370,6 +372,144 @@
     const userAssignmentStats = @json($userAssignmentStats);
 
     document.addEventListener('DOMContentLoaded', function() {
+        // --- FullCalendar Integration ---
+        const calendarEl = document.getElementById('dashboardCalendar');
+        if (calendarEl) {
+            const calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'id',
+                headerToolbar: {
+                    left: 'prev,next',
+                    center: 'title',
+                    right: 'today'
+                },
+                height: 'auto',
+                events: "{{ route('dashboard.calendar-events') }}",
+                dateClick: function(info) {
+                    const dateStr = info.dateStr;
+                    const events = calendar.getEvents().filter(event => {
+                        const eventDate = event.start.toISOString().split('T')[0];
+                        return eventDate === dateStr;
+                    });
+
+                    showDailyInfo(dateStr, events);
+                },
+                eventClick: function(info) {
+                    if (info.event.url) {
+                        window.location.href = info.event.url;
+                        info.jsEvent.preventDefault();
+                    }
+                },
+                eventContent: function(arg) {
+                    let icon = arg.event.extendedProps.type === 'meeting' ? '📅' : '✅';
+                    let title = arg.event.title.replace('📅 ', '').replace('✅ ', '');
+                    
+                    let el = document.createElement('div');
+                    el.className = 'fc-event-pill d-flex align-items-center px-2 py-1';
+                    el.style.backgroundColor = arg.event.backgroundColor;
+                    el.innerHTML = `<span class="mr-1" style="font-size: 0.7rem">${icon}</span> <span class="text-truncate" title="${title}">${title}</span>`;
+                    return { domNodes: [el] };
+                },
+                eventDidMount: function(info) {
+                    const props = info.event.extendedProps;
+                    let content = `<strong>${info.event.title}</strong><br>`;
+                    
+                    if (props.type === 'meeting') {
+                        content += `<span class="text-xs">📍 ${props.location}</span><br>`;
+                        content += `<span class="text-xs">👤 ${props.organizer}</span>`;
+                    } else {
+                        content += `<span class="text-xs">🚩 Prioritas: ${props.priority}</span><br>`;
+                        content += `<span class="text-xs">🔗 Rapat: ${props.meeting}</span>`;
+                    }
+
+                    tippy(info.el, {
+                        content: content,
+                        allowHTML: true,
+                        theme: 'light-border',
+                        animation: 'shift-away',
+                        placement: 'top',
+                    });
+                },
+                dayMaxEvents: 2,
+            });
+            calendar.render();
+        }
+
+        // --- Daily Info Function ---
+        function showDailyInfo(date, events) {
+            let infoHtml = `<div class="p-4">
+                <h5 class="font-weight-bold mb-4 d-flex align-items-center">
+                    <div class="icon-box-indigo mr-3" style="width: 32px; height: 32px; font-size: 0.9rem">
+                        <i class="fas fa-calendar-day"></i>
+                    </div>
+                    Informasi Tanggal: ${new Date(date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                </h5>`;
+
+            if (events.length === 0) {
+                infoHtml += `<div class="text-center py-5">
+                    <img src="https://img.icons8.com/bubbles/100/null/calendar.png" class="mb-3" style="opacity: 0.5">
+                    <p class="text-muted">Tidak ada agenda pada tanggal ini.</p>
+                </div>`;
+            } else {
+                infoHtml += `<div class="list-group list-group-flush">`;
+                events.forEach(event => {
+                    const props = event.extendedProps;
+                    const bgColor = event.backgroundColor;
+                    const typeLabel = props.type === 'meeting' ? 'Rapat' : 'Tugas';
+                    const detail = props.type === 'meeting' ? `📍 ${props.location}` : `🔗 ${props.meeting}`;
+
+                    infoHtml += `
+                        <a href="${event.url}" class="list-group-item list-group-item-action border-0 px-0 py-3 mb-2 rounded-lg transition-hover">
+                            <div class="d-flex align-items-center">
+                                <div class="mr-3" style="width: 4px; height: 32px; border-radius: 4px; background: ${bgColor}"></div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span class="badge badge-pill text-white px-2 py-1" style="background: ${bgColor}; font-size: 0.6rem; letter-spacing: 0.5px">${typeLabel.toUpperCase()}</span>
+                                    </div>
+                                    <h6 class="font-weight-bold text-dark mb-1">${event.title.replace('📅 ', '').replace('✅ ', '')}</h6>
+                                    <div class="text-xs text-muted">${detail}</div>
+                                </div>
+                                <i class="fas fa-chevron-right text-xs text-muted ml-2"></i>
+                            </div>
+                        </a>
+                    `;
+                });
+                infoHtml += `</div>`;
+            }
+            infoHtml += `</div>`;
+
+            // Create offcanvas or modal for daily info
+            let dailyPanel = document.getElementById('dailyInfoPanel');
+            if (!dailyPanel) {
+                dailyPanel = document.createElement('div');
+                dailyPanel.id = 'dailyInfoPanel';
+                dailyPanel.className = 'daily-info-panel';
+                document.body.appendChild(dailyPanel);
+                
+                const overlay = document.createElement('div');
+                overlay.className = 'panel-overlay';
+                overlay.id = 'panelOverlay';
+                document.body.appendChild(overlay);
+                
+                overlay.addEventListener('click', () => {
+                    dailyPanel.classList.remove('active');
+                    overlay.classList.remove('active');
+                });
+            }
+            
+            dailyPanel.innerHTML = `
+                <div class="d-flex justify-content-end p-3">
+                    <button class="btn btn-sm btn-light rounded-circle" onclick="document.getElementById('dailyInfoPanel').classList.remove('active'); document.getElementById('panelOverlay').classList.remove('active');">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                ${infoHtml}
+            `;
+            
+            document.getElementById('panelOverlay').classList.add('active');
+            dailyPanel.classList.add('active');
+        }
+
         // 1. Chart Trend Tindak Lanjut
         const actionTrendCtx = document.getElementById('actionTrendChart');
         if (actionTrendCtx) {
@@ -394,23 +534,22 @@
                             label: 'Dibuat',
                             data: actionTrendData.created || [],
                             borderColor: accentColor,
-                            backgroundColor: blueGrad,
-                            borderWidth: 3,
-                            borderWidth: 3,
-                            pointRadius: 3,
+                            backgroundColor: 'transparent',
+                            borderWidth: 2,
+                            pointRadius: 0,
                             pointHoverRadius: 6,
-                            fill: true,
+                            fill: false,
                             tension: 0.4
                         },
                         {
                             label: 'Selesai',
                             data: actionTrendData.completed || [],
                             borderColor: successColor,
-                            backgroundColor: greenGrad,
-                            borderWidth: 3,
-                            pointRadius: 3,
+                            backgroundColor: 'transparent',
+                            borderWidth: 2,
+                            pointRadius: 0,
                             pointHoverRadius: 6,
-                            fill: true,
+                            fill: false,
                             tension: 0.4
                         }
                     ]
@@ -587,11 +726,28 @@
         box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.1);
         position: relative;
         overflow: hidden;
+        border: none !important;
     }
     .stats-card:hover {
         transform: translateY(-8px);
         box-shadow: 0 25px 40px -10px rgba(0, 0, 0, 0.2);
     }
+    
+    .card-vibrant-emerald {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    }
+    .card-vibrant-indigo {
+        background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%) !important;
+    }
+    .card-vibrant-amber {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+    }
+    .card-vibrant-rose {
+        background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%) !important;
+    }
+
+    .text-white-50 { color: rgba(255, 255, 255, 0.7) !important; }
+
     .stats-card::after {
         content: '';
         position: absolute;
@@ -614,6 +770,28 @@
         border-radius: 12px;
         border: 1px solid rgba(255, 255, 255, 0.3);
         font-size: 1.25rem;
+    }
+    .icon-box-indigo {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(79, 70, 229, 0.08);
+        color: #4f46e5;
+        border-radius: 10px;
+        font-size: 1.1rem;
+    }
+    .icon-box-emerald { background: rgba(16, 185, 129, 0.08); color: #10b981; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 10px; font-size: 1.1rem; }
+    .icon-box-amber { background: rgba(245, 158, 11, 0.08); color: #f59e0b; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 10px; font-size: 1.1rem; }
+    .icon-box-rose { background: rgba(244, 63, 94, 0.08); color: #f43f5e; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 10px; font-size: 1.1rem; }
+
+    .stats-card-minimal {
+        transition: all 0.3s ease;
+    }
+    .stats-card-minimal:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.08) !important;
     }
     .card-header {
         background: transparent !important;
@@ -690,5 +868,145 @@
     .table-hover tbody tr:hover {
         background-color: rgba(79, 70, 229, 0.02) !important;
     }
+
+    /* Calendar Styling */
+    #dashboardCalendar {
+        background: white;
+        font-size: 0.85rem;
+    }
+    .fc .fc-toolbar-title {
+        font-size: 0.95rem !important;
+        font-weight: 700;
+        color: #1e293b;
+        text-transform: capitalize;
+    }
+    .fc .fc-button {
+        padding: 0.2rem 0.4rem !important;
+        font-size: 0.7rem !important;
+        background-color: transparent !important;
+        border: none !important;
+        color: #64748b !important;
+        box-shadow: none !important;
+        transition: all 0.2s ease;
+    }
+    .fc .fc-button:hover {
+        color: #4f46e5 !important;
+        background-color: #f8fafc !important;
+    }
+    .fc .fc-button-primary:not(:disabled).fc-button-active {
+        background-color: transparent !important;
+        color: #4f46e5 !important;
+        font-weight: 700;
+    }
+    .fc-theme-standard td, .fc-theme-standard th {
+        border-color: #f1f5f9 !important;
+    }
+    .fc-event {
+        cursor: pointer;
+        padding: 1px 4px;
+        border-radius: 6px !important;
+        border: none !important;
+        margin-top: 1px !important;
+        margin-bottom: 1px !important;
+        font-size: 0.75rem !important;
+        font-weight: 500 !important;
+    }
+    .fc-daygrid-day-number {
+        font-weight: 600;
+        color: #94a3b8;
+        text-decoration: none !important;
+        padding: 6px !important;
+        font-size: 0.8rem;
+    }
+    .fc-day-today {
+        background-color: rgba(79, 70, 229, 0.02) !important;
+    }
+    .fc-day-today .fc-daygrid-day-number {
+        color: #4f46e5;
+        background: rgba(79, 70, 229, 0.1);
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 4px;
+    }
+    .fc-col-header-cell-cushion {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #cbd5e1;
+        padding: 8px 0 !important;
+        text-decoration: none !important;
+    }
+    .bg-indigo { background-color: #4f46e5 !important; }
+    .bg-emerald { background-color: #10b981 !important; }
+    .bg-rose { background-color: #f43f5e !important; }
+
+    /* Custom Event Pill */
+    .fc-event-pill {
+        color: white;
+        border-radius: 50px !important;
+        font-size: 0.65rem !important;
+        font-weight: 600 !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border: none !important;
+    }
+    .fc-event { border: none !important; background: transparent !important; }
+
+    .dot {
+        height: 8px;
+        width: 8px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .rounded-xl { border-radius: 1.25rem !important; }
+
+    /* Daily Info Side Panel */
+    .daily-info-panel {
+        position: fixed;
+        right: -400px;
+        top: 0;
+        width: 400px;
+        height: 100vh;
+        background: white;
+        z-index: 1060;
+        box-shadow: -10px 0 30px rgba(0,0,0,0.1);
+        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        overflow-y: auto;
+    }
+    .daily-info-panel.active { right: 0; }
+    .panel-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0,0,0,0.3);
+        backdrop-filter: blur(4px);
+        z-index: 1050;
+        display: none;
+    }
+    .panel-overlay.active { display: block; }
+    .transition-hover:hover {
+        background-color: #f8fafc !important;
+        transform: translateX(5px);
+    }
+    .badge-pill { border-radius: 50px; font-weight: 700; }
+
+    /* Tippy Tooltip Styling - Modern Floating look */
+    .tippy-box[data-theme~='light-border'] {
+        background-color: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        color: #1e293b;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        border: 1px solid rgba(226, 232, 240, 0.5);
+        border-radius: 12px;
+        padding: 8px;
+        font-family: 'Inter', sans-serif;
+    }
+    .tippy-content { padding: 4px 8px; }
 </style>
 @endpush

@@ -615,7 +615,7 @@
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="font-weight-bold text-dark text-sm mb-1">Ditugaskan Ke <span class="text-danger">*</span></label>
-                                    <select name="assigned_to" class="form-control select2" required>
+                                    <select name="assigned_to" class="form-control" required>
                                         <option value="">Pilih Pengguna</option>
                                         @foreach($users as $user)
                                             <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->department->name ?? 'No Dept' }})</option>
@@ -704,7 +704,7 @@
                             <div class="modal-body p-4">
                                 <div class="form-group">
                                     <label class="font-weight-bold text-dark text-sm mb-2 d-block">Pilih Pengguna <span class="text-danger">*</span></label>
-                                    <select name="{{ $modalId === 'assignMinuteTakerModal' ? 'minute_taker_id' : 'action_taker_id' }}" class="form-control select2" required>
+                                    <select name="{{ $modalId === 'assignMinuteTakerModal' ? 'minute_taker_id' : 'action_taker_id' }}" class="form-control" required>
                                         <option value="">Pilih Pengguna</option>
                                         @foreach($users as $user)
                                             <option value="{{ $user->id }}" 
@@ -902,15 +902,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (display) display.innerText = fileName;
         });
 
-        // Initialize Select2 if available
-        if ($.fn.select2) {
-            $('.select2').select2({
-                placeholder: 'Pilih Pengguna',
-                allowClear: true,
-                width: '100%',
-                dropdownParent: $('.modal') // Fix select2 in bootstrap modal
-            });
-        }
+
 
         // Score Rating Logic
         document.querySelectorAll('.score-slider').forEach(function(slider) {

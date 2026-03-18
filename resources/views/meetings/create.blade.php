@@ -105,6 +105,9 @@
                                         <div id="booked-time-list" class="small text-danger font-weight-bold">
                                             <!-- Booked times will be listed here -->
                                         </div>
+                                        <div id="available-time-list" class="small text-success font-weight-bold mt-2">
+                                            <!-- Available times will be listed here -->
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -267,12 +270,25 @@
     }
     .booked-info-badge {
         font-size: 0.75rem;
-        padding: 4px 8px;
-        border-radius: 4px;
+        padding: 4px 10px;
+        border-radius: 6px;
         background-color: #fee2e2;
         color: #ef4444;
         display: inline-block;
         margin-top: 8px;
+        font-weight: 600;
+        border-left: 3px solid #ef4444;
+    }
+    .available-info-badge {
+        font-size: 0.75rem;
+        padding: 4px 10px;
+        border-radius: 6px;
+        background-color: #ecfdf5;
+        color: #10b981;
+        display: inline-block;
+        margin-top: 8px;
+        font-weight: 600;
+        border-left: 3px solid #10b981;
     }
 </style>
 @endpush
@@ -345,7 +361,8 @@ document.addEventListener('DOMContentLoaded', function() {
         function updateBookedTimeList(selectedDate) {
             if (!selectedDate) return;
             
-            const listContainer = document.getElementById('booked-time-list');
+            const bookedListContainer = document.getElementById('booked-time-list');
+            const availableListContainer = document.getElementById('available-time-list');
             const statusContainer = document.getElementById('booked-status');
             
             const bookedToday = bookedSlots.filter(slot => {
@@ -353,18 +370,57 @@ document.addEventListener('DOMContentLoaded', function() {
                 return selectedDate.getFullYear() === slotDay.getFullYear() &&
                        selectedDate.getMonth() === slotDay.getMonth() &&
                        selectedDate.getDate() === slotDay.getDate();
-            });
+            }).sort((a, b) => a.start - b.start);
+
+            // Selalu tampilkan statusContainer jika ada tanggal yang dipilih untuk info Jam Tersedia
+            statusContainer.style.display = 'block';
 
             if (bookedToday.length > 0) {
-                statusContainer.style.display = 'block';
-                listContainer.innerHTML = 'Jadwal Terisi:<br>' + bookedToday.map(slot => {
+                bookedListContainer.innerHTML = 'Jadwal Terisi:<br>' + bookedToday.map(slot => {
                     const start = slot.start.toLocaleTimeString('id-id', { hour: '2-digit', minute: '2-digit' });
                     const end = slot.end.toLocaleTimeString('id-id', { hour: '2-digit', minute: '2-digit' });
                     return `• ${start} - ${end}`;
                 }).join('<br>');
             } else {
-                statusContainer.style.display = 'none';
-                listContainer.innerHTML = '';
+                bookedListContainer.innerHTML = '';
+            }
+
+            // Hitung Jam Tersedia (Standard 08:00 - 17:00)
+            const workStart = new Date(selectedDate);
+            workStart.setHours(8, 0, 0, 0);
+            
+            const workEnd = new Date(selectedDate);
+            workEnd.setHours(17, 0, 0, 0);
+
+            let currentTime = new Date(workStart);
+            const freeSlots = [];
+
+            bookedToday.forEach(slot => {
+                const slotStart = new Date(slot.start);
+                const slotEnd = new Date(slot.end);
+
+                if (slotStart > currentTime) {
+                    freeSlots.push({ start: new Date(currentTime), end: new Date(slotStart) });
+                }
+                
+                if (slotEnd > currentTime) {
+                    currentTime = new Date(slotEnd);
+                }
+            });
+
+            if (currentTime < workEnd) {
+                freeSlots.push({ start: new Date(currentTime), end: new Date(workEnd) });
+            }
+
+            if (freeSlots.length > 0) {
+                availableListContainer.innerHTML = '<div class="available-info-badge mb-1 mt-3"><i class="fas fa-clock mr-1"></i> Jam Tersedia:</div><br>' + 
+                    freeSlots.map(slot => {
+                        const start = slot.start.toLocaleTimeString('id-id', { hour: '2-digit', minute: '2-digit' });
+                        const end = slot.end.toLocaleTimeString('id-id', { hour: '2-digit', minute: '2-digit' });
+                        return `• ${start} - ${end}`;
+                    }).join('<br>');
+            } else {
+                availableListContainer.innerHTML = '<div class="text-muted mt-3 small"><i>Tidak ada jam kerja yang tersisa hari ini.</i></div>';
             }
         }
     }

@@ -39,7 +39,20 @@
     .hover-bg-light:hover { background-color: #f8fafc; }
     .auto-resize { min-height: 120px; resize: none; border-radius: 12px; border: 1px solid #e2e8f0; }
     .auto-resize:focus { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1); }
+    
+    /* Quill Editor Adjustments */
+    .ql-container { border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; font-family: inherit; font-size: 0.95rem; }
+    .ql-container.ql-snow { border-color: #e2e8f0 !important; min-height: 200px; background: #ffffff; }
+    .ql-toolbar.ql-snow { border-color: #e2e8f0 !important; background: #f8fafc; border-top-left-radius: 12px; border-top-right-radius: 12px; }
+    .editor-wrapper { position: relative; }
+    .ql-editor { min-height: 200px; }
+    .ql-editor.ql-blank::before { color: #94a3b8; font-style: normal; }
 </style>
+
+@push('styles')
+<!-- Quill Assets -->
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+@endpush
 
 <div class="container-fluid">
     <div class="row">
@@ -141,14 +154,12 @@
                             <label for="content" class="font-weight-bold">
                                 <i class="fas fa-align-left mr-1"></i>Isi Notulensi *
                             </label>
-                            <textarea class="form-control auto-resize @error('content') is-invalid @enderror" 
-                                      id="content" 
-                                      name="content" 
-                                      rows="8" 
-                                      placeholder="Tuliskan rangkuman dan poin-poin penting dari meeting ini..."
-                                      {{ $meeting->minutes && $meeting->minutes->is_finalized ? 'disabled' : '' }}>{{ old('content', $meeting->minutes->content ?? '') }}</textarea>
+                            <div class="editor-wrapper">
+                                <div id="content-editor" style="height: 300px;">{!! old('content', $meeting->minutes->content ?? '') !!}</div>
+                                <textarea name="content" id="content-hidden" style="display:none;">{{ old('content', $meeting->minutes->content ?? '') }}</textarea>
+                            </div>
                             @error('content')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
                             <small class="form-text text-muted">
                                 Jelaskan secara detail apa yang dibahas dalam meeting, keputusan yang diambil, dan hal penting lainnya.
@@ -159,20 +170,15 @@
                             <label for="decisions" class="font-weight-bold">
                                 <i class="fas fa-gavel mr-1"></i>Keputusan Meeting
                             </label>
-                            <textarea class="form-control auto-resize @error('decisions') is-invalid @enderror" 
-                                      id="decisions" 
-                                      name="decisions" 
-                                      rows="4" 
-                                      placeholder="Tuliskan setiap keputusan dalam baris terpisah..."
-                                      {{ $meeting->minutes && $meeting->minutes->is_finalized ? 'disabled' : '' }}>{{ old('decisions', $meeting->minutes ? implode("\n", $meeting->minutes->decisions ?? []) : '') }}</textarea>
+                            <div class="editor-wrapper">
+                                <div id="decisions-editor" style="height: 200px;">{!! old('decisions_html', $meeting->minutes ? implode("<br>", array_map(fn($d) => "- $d", $meeting->minutes->decisions ?? [])) : '') !!}</div>
+                                <textarea name="decisions" id="decisions-hidden" style="display:none;">{{ old('decisions', $meeting->minutes ? implode("\n", $meeting->minutes->decisions ?? []) : '') }}</textarea>
+                            </div>
                             @error('decisions')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
                             <small class="form-text text-muted">
-                                Masukkan setiap keputusan dalam baris terpisah. Contoh:<br>
-                                - Disetujui pembelian software baru<br>
-                                - Deadline project diperpanjang 1 minggu<br>
-                                - Budget tambahan disetujui sebesar Rp 50 juta
+                                Masukkan setiap keputusan yang diambil selama rapat berlangsung.
                             </small>
                         </div>
 
@@ -225,52 +231,28 @@
                 </div>
             </div>
             @else
-            <!-- Info untuk user yang tidak ditunjuk -->
-            @if($meeting->assignedMinuteTaker)
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-light py-3">
-                    <h3 class="card-title m-0 text-muted">
-                        <i class="fas fa-user-edit mr-2"></i>Informasi Notulensi
-                    </h3>
-                </div>
-                <div class="card-body text-center py-4">
-                    <i class="fas fa-user-edit fa-3x text-muted mb-3"></i>
-                    <h5 class="text-muted">Penulis Notulensi</h5>
-                    <p class="lead">{{ $meeting->assignedMinuteTaker->name }}</p>
-                    <small class="text-muted">
-                        {{ $meeting->assignedMinuteTaker->position }} - {{ $meeting->assignedMinuteTaker->department->name }}
-                    </small>
-                    
-                    @if($meeting->minutes)
-                    <div class="mt-3">
-                        <a href="#minutesPreview" class="btn btn-outline-primary btn-sm">
-                            <i class="fas fa-eye mr-1"></i>Lihat Notulensi
+            <!-- Info untuk user yang tidak memiliki akses edit -->
+            <div class="card card-premium mb-4 shadow-sm border-0" id="minuteTakerForm">
+                <div class="card-body p-5 text-center">
+                    <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style="width: 80px; height: 80px;">
+                        <i class="fas fa-file-signature text-muted fa-2x"></i>
+                    </div>
+                    <h5 class="font-weight-bold text-dark mb-2">Notulensi Meeting</h5>
+                    @if($meeting->assignedMinuteTaker)
+                        <p class="text-muted">Notulensi sedang dikerjakan oleh <strong>{{ $meeting->assignedMinuteTaker->name }}</strong>.</p>
+                        <a href="#minutesPreview" class="btn btn-outline-primary rounded-pill px-4 mt-2">
+                            <i class="fas fa-eye mr-2"></i>Lihat Preview
                         </a>
-                    </div>
                     @else
-                    <div class="alert alert-warning mt-3 small">
-                        <i class="fas fa-clock mr-1"></i>
-                        Notulensi belum dibuat
-                    </div>
+                        <p class="text-muted">Belum ada penulis notulensi yang ditunjuk.</p>
+                        @if(auth()->user()->canManageMeetings() || $meeting->organizer_id == auth()->id())
+                            <button type="button" class="btn btn-primary rounded-pill px-4 mt-2" data-toggle="modal" data-target="#assignMinuteTakerModal">
+                                <i class="fas fa-user-plus mr-2"></i>Tunjuk Penulis
+                            </button>
+                        @endif
                     @endif
                 </div>
             </div>
-            @else
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-light py-3">
-                    <h3 class="card-title m-0 text-muted">
-                        <i class="fas fa-clipboard mr-2"></i>Notulensi Meeting
-                    </h3>
-                </div>
-                <div class="card-body text-center py-4">
-                    <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
-                    <h5 class="text-muted">Belum Ada Penulis Notulensi</h5>
-                    <p class="text-muted small">
-                        Organizer meeting belum menunjuk penulis notulensi untuk meeting ini.
-                    </p>
-                </div>
-            </div>
-            @endif
             @endif
 
             <!-- Tindak Lanjut Section -->
@@ -493,35 +475,40 @@
                     <h6 class="text-xs text-uppercase text-muted font-weight-bold mb-3 letter-spacing-1">Aksi Cepat</h6>
                     <div class="d-grid gap-2">
                         @if($meeting->status === 'ongoing')
-                        <form action="{{ route('meetings.complete', $meeting) }}" method="POST" class="mb-2">
+                        <form action="{{ route('meetings.complete', $meeting) }}" method="POST" id="completeMeetingForm" class="mb-2">
                             @csrf
-                            <button type="submit" class="btn btn-soft-danger btn-block text-left py-2 px-3 rounded-lg font-weight-bold transition-all" 
-                                    onclick="return confirm('Selesaikan meeting?')">
+                            <button type="submit" class="btn btn-soft-danger btn-block text-left py-2 px-3 rounded-lg font-weight-bold transition-all">
                                 <i class="fas fa-stop mr-2 opacity-50"></i>Akhiri Meeting
                             </button>
                         </form>
                         @endif
 
                         @php
-                            $isOrganizer = $meeting->organizer_id == auth()->id();
-                            $isAdmin = auth()->user()->isAdmin();
-                            $isParticipant = $meeting->participants->where('user_id', auth()->id())->first();
+                            $canManage = auth()->user()->canManageMeetings() || $meeting->organizer_id == auth()->id();
+                            $isMinuteTaker = $meeting->assigned_minute_taker_id == auth()->id();
+                            $myParticipant = $meeting->participants->where('user_id', auth()->id())->first();
+                            $hasAttended = $myParticipant && $myParticipant->attended !== null;
                         @endphp
 
-                        @if($isOrganizer || $isAdmin)
-                        <button type="button" class="btn btn-emerald btn-block text-left mb-2 py-2 px-3 rounded-lg font-weight-bold shadow-sm transition-all" data-toggle="modal" data-target="#attendanceModal">
-                            <i class="fas fa-list-check mr-2"></i>Daftar Kehadiran
-                        </button>
-                        @elseif($isParticipant)
-                        <button type="button" class="btn btn-emerald btn-block text-left mb-2 py-2 px-3 rounded-lg font-weight-bold shadow-sm transition-all" data-toggle="modal" data-target="#selfAttendanceModal">
-                            <i class="fas fa-user-check mr-2"></i>Isi Kehadiran
+                        <!-- Attendance Actions -->
+                        @if($myParticipant && $meeting->status === 'ongoing')
+                        <button type="button" class="btn {{ $hasAttended ? 'btn-soft-success' : 'btn-emerald-vibrant' }} btn-block text-left mb-4 py-3 px-3 rounded-xl font-weight-bold transition-all shadow-sm" data-toggle="modal" data-target="#selfAttendanceModal">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <span>
+                                    <i class="fas {{ $hasAttended ? 'fa-check-circle' : 'fa-user-check' }} mr-2"></i>
+                                    {{ $hasAttended ? 'Update Presensi' : 'Presensi Sekarang' }}
+                                </span>
+                                <i class="fas fa-chevron-right small opacity-50"></i>
+                            </div>
                         </button>
                         @endif
 
-                        @php
-                            $canManage = auth()->user()->canManageMeetings() || $meeting->organizer_id == auth()->id();
-                            $isMinuteTaker = $meeting->assigned_minute_taker_id == auth()->id();
-                        @endphp
+                        <button type="button" class="btn btn-light btn-block text-left mb-2 py-2 px-3 rounded-lg font-weight-bold text-emerald transition-all" data-toggle="modal" data-target="#attendanceModal">
+                            <i class="fas {{ $canManage ? 'fa-users-cog' : 'fa-clipboard-list' }} mr-2 opacity-50"></i>
+                            {{ $canManage ? 'Kelola Kehadiran' : 'Daftar Kehadiran' }}
+                        </button>
+
+                        <hr class="my-3 opacity-50">
 
                         @if($canManage || $isMinuteTaker)
                         <a href="#minuteTakerForm" class="btn btn-soft-primary btn-block text-left mb-2 py-2 px-3 rounded-lg font-weight-bold transition-all">
@@ -537,9 +524,7 @@
                         <button type="button" class="btn btn-light btn-block text-left mb-2 py-2 px-3 rounded-lg font-weight-bold text-emerald transition-all" data-toggle="modal" data-target="#assignActionTakerModal">
                             <i class="fas fa-user-plus mr-2 opacity-50"></i>@if($meeting->assignedActionTaker) Ganti @endif Action Taker
                         </button>
-                        @endif
-                        
-                        @if(auth()->user()->canManageMeetings() || $meeting->organizer_id == auth()->id() || $meeting->assigned_action_taker_id == auth()->id())
+
                         <button type="button" class="btn btn-light btn-block text-left mb-2 py-2 px-3 rounded-lg font-weight-bold text-emerald transition-all" data-toggle="modal" data-target="#addActionItemModal">
                             <i class="fas fa-plus-circle mr-2 opacity-50"></i>Tambah Tugas
                         </button>
@@ -563,8 +548,8 @@
                     @if($meeting->minutes)
                         <div class="minutes-content mb-3 minutes-preview">
                             <h6>Isi Notulensi:</h6>
-                            <div class="border rounded p-3 bg-light small">
-                                {{ $meeting->minutes->content }}
+                            <div class="border rounded p-3 bg-light small ql-editor">
+                                {!! html_entity_decode($meeting->minutes->content) ?: '<em class="text-muted">Belum ada isi notulensi.</em>' !!}
                             </div>
                             
                             <!-- Handle decisions -->
@@ -573,9 +558,8 @@
                             <ul class="list-group small">
                                 @foreach($meeting->minutes->decisions as $decision)
                                     @if(!empty(trim($decision)))
-                                    <li class="list-group-item d-flex align-items-center py-2">
-                                        <i class="fas fa-check text-success mr-2"></i>
-                                        {{ $decision }}
+                                    <li class="list-group-item py-2 ql-editor">
+                                        {!! html_entity_decode($decision) !!}
                                     </li>
                                     @endif
                                 @endforeach
@@ -998,48 +982,79 @@
         </div>
     </div>
 </div>
-@if(auth()->user()->canManageMeetings() || $meeting->organizer_id == auth()->id())
 <div class="modal fade" id="attendanceModal" tabindex="-1">
-    <div class="modal-dialog modal-lg border-0 shadow-lg">
-        <div class="modal-content border-0" style="border-radius: 20px;">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
             <div class="modal-header border-0 pb-0 pt-4 px-4">
                 <h5 class="font-weight-bold text-dark mb-0">
-                    <i class="fas fa-check-double mr-2 text-emerald"></i>Daftar Kehadiran
+                    <i class="fas fa-clipboard-check mr-2 text-emerald"></i>
+                    {{ $canManage ? 'Kelola Kehadiran Peserta' : 'Daftar Kehadiran' }}
                 </h5>
                 <button type="button" class="close" data-dismiss="modal">
                     <span>&times;</span>
                 </button>
             </div>
+            
+            @if($canManage)
+            <form action="{{ route('meetings.attendance.update', $meeting) }}" method="POST">
+                @csrf
+            @endif
+            
             <div class="modal-body p-4">
                 <div class="table-responsive">
-                    <table class="table table-hover border-0">
-                        <thead>
+                    <table class="table {{ $canManage ? 'table-hover' : '' }} align-middle border-0">
+                        <thead class="bg-light">
                             <tr class="text-xxs text-muted text-uppercase font-weight-bold letter-spacing-1">
-                                <th class="border-0 px-0">Peserta</th>
+                                <th class="border-0 px-3">Peserta</th>
                                 <th class="border-0 text-center">Status</th>
-                                <th class="border-0">Keterangan</th>
+                                <th class="border-0">Keterangan/Izin</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($meeting->participants as $participant)
-                            <tr class="border-bottom">
-                                <td class="border-0 px-0 py-3">
-                                    <div class="font-weight-bold text-dark">{{ $participant->user->name }}</div>
-                                    <div class="text-xxs text-muted">{{ $participant->user->department->name }}</div>
+                            @foreach($meeting->participants as $index => $participant)
+                            <tr class="{{ !$canManage ? 'border-bottom' : '' }}">
+                                <td class="px-3 py-3 border-0">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-soft-primary rounded-circle mr-3 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                            <i class="fas fa-user text-primary small"></i>
+                                        </div>
+                                        <div>
+                                            <div class="font-weight-bold text-dark text-sm">{{ $participant->user->name }}</div>
+                                            <div class="text-xxs text-muted">{{ $participant->user->department->name ?? '-' }}</div>
+                                        </div>
+                                        @if($canManage)
+                                            <input type="hidden" name="attendance[{{ $index }}][participant_id]" value="{{ $participant->id }}">
+                                        @endif
+                                    </div>
                                 </td>
-                                <td class="border-0 text-center py-3">
-                                    @if($participant->attended === true)
-                                        <span class="badge badge-soft-success rounded-pill px-3">Hadir</span>
-                                    @elseif($participant->attended === false && $participant->excuse)
-                                        <span class="badge badge-soft-warning rounded-pill px-3">Izin</span>
-                                    @elseif($participant->attended === false)
-                                        <span class="badge badge-soft-danger rounded-pill px-3">Alfa</span>
+                                <td class="text-center py-3 border-0">
+                                    @if($canManage)
+                                        <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                                            <label class="btn btn-outline-success btn-xs {{ $participant->attended === true ? 'active' : '' }}">
+                                                <input type="radio" name="attendance[{{ $index }}][attended]" value="1" {{ $participant->attended === true ? 'checked' : '' }}> Hadir
+                                            </label>
+                                            <label class="btn btn-outline-danger btn-xs {{ $participant->attended === false ? 'active' : '' }}">
+                                                <input type="radio" name="attendance[{{ $index }}][attended]" value="0" {{ $participant->attended === false ? 'checked' : '' }}> Alfa
+                                            </label>
+                                        </div>
                                     @else
-                                        <span class="badge badge-soft-secondary rounded-pill px-3">Belum Isi</span>
+                                        @if($participant->attended === true)
+                                            <span class="badge badge-soft-success rounded-pill px-3">Hadir</span>
+                                        @elseif($participant->attended === false && $participant->excuse)
+                                            <span class="badge badge-soft-warning rounded-pill px-3">Izin</span>
+                                        @elseif($participant->attended === false)
+                                            <span class="badge badge-soft-danger rounded-pill px-3">Alfa</span>
+                                        @else
+                                            <span class="badge badge-soft-secondary rounded-pill px-3 text-xxs">Belum isi</span>
+                                        @endif
                                     @endif
                                 </td>
-                                <td class="border-0 py-3">
-                                    <span class="text-sm text-muted italic">{{ $participant->excuse ?? '-' }}</span>
+                                <td class="py-3 border-0">
+                                    @if($canManage)
+                                        <input type="text" name="attendance[{{ $index }}][excuse]" class="form-control form-control-sm border-0 bg-light rounded-lg" placeholder="Alasan jika izin..." value="{{ $participant->excuse }}">
+                                    @else
+                                        <span class="text-sm text-muted italic">{{ $participant->excuse ?? '-' }}</span>
+                                    @endif
                                 </td>
                             </tr>
                             @endforeach
@@ -1047,13 +1062,20 @@
                     </table>
                 </div>
             </div>
-            <div class="modal-footer border-0 p-4 pt-0">
-                <button type="button" class="btn btn-light btn-block py-2 rounded-xl font-weight-bold" data-dismiss="modal">Tutup</button>
-            </div>
+
+            @if($canManage)
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button" class="btn btn-light rounded-xl px-4 font-weight-bold" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-emerald rounded-xl px-4 font-weight-bold shadow-sm">
+                        <i class="fas fa-save mr-2"></i>Simpan Kehadiran
+                    </button>
+                </div>
+            </form>
+            @endif
         </div>
     </div>
 </div>
-@endif
+
 
 {{-- Modal Absensi Mandiri untuk Peserta --}}
 @php
@@ -1116,7 +1138,7 @@
 <style>
 .attendance-option input:checked + .attendance-box {
     background-color: #f0fdf4;
-    border-color: #10b981 ! from-emerald-500;
+    border-color: #10b981 !important;
     box-shadow: 0 0 0 2px #10b981;
 }
 .attendance-box:hover {
@@ -1149,7 +1171,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Confirm meeting completion
-    const meetingCompleteForm = document.querySelector('form[action*="meetings.complete"]');
+    const meetingCompleteForm = document.getElementById('completeMeetingForm');
     if (meetingCompleteForm) {
         meetingCompleteForm.addEventListener('submit', function(e) {
             if (!confirm('Akhiri meeting ini? Tindakan ini tidak dapat dibatalkan.')) {
@@ -1296,31 +1318,48 @@ document.querySelectorAll('.score-number-input').forEach(function(input) {
     const departmentSelect = document.getElementById('department_id');
     
     if (assignedToSelect && departmentSelect) {
-        // Buat mapping user ke department
+        // Buat mapping user ke department (ID dan Nama)
         const userDepartments = {
-            @foreach($participants as $participant)
-            '{{ $participant->id }}': '{{ $participant->department_id }}',
+            @foreach($users as $u)
+            '{{ $u->id }}': '{{ $u->department_id }}',
+            @endforeach
+        };
+
+        const userDeptNames = {
+            @foreach($users as $u)
+            '{{ $u->id }}': '{{ $u->department->name ?? "" }}',
             @endforeach
         };
         
         assignedToSelect.addEventListener('change', function() {
             const userId = this.value;
             const departmentId = userDepartments[userId];
+            const departmentName = userDeptNames[userId];
             
             if (departmentId && departmentId !== '') {
                 departmentSelect.value = departmentId;
                 
-                // Jika department tidak ada di options, tambahkan
+                // Jika department tidak ada di options, tambahkan (untuk safety)
                 if (!departmentSelect.querySelector(`option[value="${departmentId}"]`)) {
-                    const user = {!! $participants->firstWhere('id', '==', ' + userId + ') ? json_encode($participants->firstWhere('id', '==', userId)) : 'null' !!};
-                    if (user && user.department) {
-                        const option = new Option(user.department.name, user.department.id, true, true);
+                    if (departmentName) {
+                        const option = new Option(departmentName, departmentId, true, true);
                         departmentSelect.appendChild(option);
-                        departmentSelect.value = user.department.id;
+                        departmentSelect.value = departmentId;
                     }
                 }
             }
         });
+
+        // Add jQuery Select2 listener if available (for more robust updates)
+        if (window.jQuery && $(assignedToSelect).hasClass('select2')) {
+            $(assignedToSelect).on('select2:select change', function (e) {
+                const userId = this.value;
+                const departmentId = userDepartments[userId];
+                if (departmentId) {
+                    $(departmentSelect).val(departmentId).trigger('change');
+                }
+            });
+        }
     }
 
     // Set minimum date untuk due_date ke hari ini
@@ -1432,22 +1471,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
 @if(session('error'))
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    showToast('{{ session('error') }}', 'danger');
-});
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof showToast === 'function') {
+            showToast('{{ session('error') }}', 'danger');
+        }
+    });
 </script>
 @endif
 
+@push('scripts')
+<!-- Quill Library -->
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Auto-scroll to hash if present in URL
+    console.log('Meeting Running Page Loaded');
+
+    // --- Auto-scroll logic ---
     if (window.location.hash) {
         const targetElement = document.querySelector(window.location.hash);
         if (targetElement) {
-            // Add a slight delay to ensure the page has completely rendered
             setTimeout(() => {
                 targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                // Optional: add a highlight effect to draw attention
                 targetElement.classList.add('border-primary', 'shadow');
                 setTimeout(() => {
                     targetElement.classList.remove('border-primary', 'shadow');
@@ -1455,8 +1500,66 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 300);
         }
     }
+
+    // --- Quill Editor Initialization ---
+    // Safely check for elements before initializing
+    const contentContainer = document.querySelector('#content-editor');
+    const decisionsContainer = document.querySelector('#decisions-editor');
+
+    if (contentContainer && decisionsContainer && typeof Quill !== 'undefined') {
+        const isFinalized = @json($meeting->minutes?->is_finalized ?? false);
+        
+        const toolbarOptions = [
+            ['bold', 'italic', 'underline', 'strike', 'link'],
+            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+            [{ 'align': [] }],
+            [{ 'header': [1, 2, 3, false] }],
+            ['clean']
+        ];
+
+        // Initialize Content Editor
+        const contentEditor = new Quill('#content-editor', {
+            modules: { toolbar: isFinalized ? false : toolbarOptions },
+            theme: 'snow',
+            placeholder: 'Tuliskan rangkuman dan poin-poin penting dari meeting ini...',
+            readOnly: isFinalized
+        });
+
+        // Initialize Decisions Editor
+        const decisionsEditor = new Quill('#decisions-editor', {
+            modules: { toolbar: isFinalized ? false : toolbarOptions },
+            theme: 'snow',
+            placeholder: 'Tuliskan setiap keputusan yang diambil selama rapat berlangsung...',
+            readOnly: isFinalized
+        });
+
+        // Sync Quill content to hidden textareas on form submission
+        const minuteForm = document.querySelector('#minuteTakerForm form');
+        if (minuteForm && !isFinalized) {
+            minuteForm.addEventListener('submit', function(e) {
+                const contentHtml = contentEditor.root.innerHTML;
+                const decisionsHtml = decisionsEditor.root.innerHTML;
+
+                // Strip HTML to check if really empty
+                const contentText = contentEditor.getText().trim();
+                if (contentText.length === 0) {
+                    e.preventDefault();
+                    alert('Isi notulensi tidak boleh kosong.');
+                    return;
+                }
+
+                document.querySelector('#content-hidden').value = contentHtml;
+                document.querySelector('#decisions-hidden').value = decisionsHtml;
+            });
+        }
+        
+        console.log('Quill successfully initialized.');
+    } else {
+        console.warn('Quill or editor containers not found.');
+    }
 });
 </script>
+@endpush
 
 {{-- Rating Modals --}}
 @if(($meeting->organizer_id == auth()->id() || auth()->user()->canManageMeetings()) && $meeting->status === 'completed')
@@ -1515,4 +1618,27 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     @endforeach
 @endif
+
+<style>
+    .btn-emerald-vibrant {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white !important;
+        border: none;
+    }
+    .btn-emerald-vibrant:hover {
+        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        transform: translateY(-2px);
+    }
+    .btn-xs {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+        line-height: 1.5;
+        border-radius: 0.5rem;
+    }
+    .badge-soft-success { background: #d1fae5; color: #065f46; }
+    .badge-soft-warning { background: #fef3c7; color: #92400e; }
+    .badge-soft-danger { background: #fee2e2; color: #991b1b; }
+    .text-xxs { font-size: 0.65rem; }
+    .bg-soft-primary { background: rgba(79, 70, 229, 0.1); }
+</style>
 @endsection
