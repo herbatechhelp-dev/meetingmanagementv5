@@ -212,6 +212,9 @@ class MeetingController extends Controller
 
             // ADD PARTICIPANTS
             foreach ($validated['participants'] as $participantId) {
+                // Skip adding organizer as participant here because they are added as chairperson below
+                if ($participantId == auth()->id()) continue;
+
                 MeetingParticipant::create([
                     'meeting_id' => $meeting->id,
                     'user_id' => $participantId,
@@ -607,7 +610,7 @@ public function storeActionItem(Request $request, Meeting $meeting)
         'description' => 'required|string',
         'assigned_to' => 'required|exists:users,id',
         'department_id' => 'required|exists:departments,id',
-        'due_date' => 'required|date|after:today',
+        'due_date' => 'required|date|after_or_equal:today',
         'priority' => 'required|in:1,2,3',
     ]);
 
@@ -798,7 +801,9 @@ public function runningMeeting(Meeting $meeting)
         $meeting->setRelation('minutes', null);
     }
 
-    $participants = $meeting->participants->pluck('user');
+    // Deduplicate participants by user_id to handle existing bad data
+    $participants = $meeting->participants->unique('user_id');
+    
     $departments = Department::active()->get();
     $users = User::active()->get();
 

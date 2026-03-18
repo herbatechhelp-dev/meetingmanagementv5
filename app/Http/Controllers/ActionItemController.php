@@ -133,7 +133,7 @@ class ActionItemController extends Controller
             'description' => 'required|string',
             'assigned_to' => 'required|exists:users,id',
             'department_id' => 'required|exists:departments,id',
-            'due_date' => 'required|date|after:today',
+            'due_date' => 'required|date|after_or_equal:today',
             'priority' => 'required|in:1,2,3',
         ]);
 

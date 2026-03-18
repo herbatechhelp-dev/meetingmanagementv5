@@ -475,35 +475,40 @@
                     <h6 class="text-xs text-uppercase text-muted font-weight-bold mb-3 letter-spacing-1">Aksi Cepat</h6>
                     <div class="d-grid gap-2">
                         @if($meeting->status === 'ongoing')
-                        <form action="{{ route('meetings.complete', $meeting) }}" method="POST" class="mb-2">
+                        <form action="{{ route('meetings.complete', $meeting) }}" method="POST" id="completeMeetingForm" class="mb-2">
                             @csrf
-                            <button type="submit" class="btn btn-soft-danger btn-block text-left py-2 px-3 rounded-lg font-weight-bold transition-all" 
-                                    onclick="return confirm('Selesaikan meeting?')">
+                            <button type="submit" class="btn btn-soft-danger btn-block text-left py-2 px-3 rounded-lg font-weight-bold transition-all">
                                 <i class="fas fa-stop mr-2 opacity-50"></i>Akhiri Meeting
                             </button>
                         </form>
                         @endif
 
                         @php
-                            $isOrganizer = $meeting->organizer_id == auth()->id();
-                            $isAdmin = auth()->user()->isAdmin();
-                            $isParticipant = $meeting->participants->where('user_id', auth()->id())->first();
+                            $canManage = auth()->user()->canManageMeetings() || $meeting->organizer_id == auth()->id();
+                            $isMinuteTaker = $meeting->assigned_minute_taker_id == auth()->id();
+                            $myParticipant = $meeting->participants->where('user_id', auth()->id())->first();
+                            $hasAttended = $myParticipant && $myParticipant->attended !== null;
                         @endphp
 
-                        @if($isOrganizer || $isAdmin)
-                        <button type="button" class="btn btn-emerald btn-block text-left mb-2 py-2 px-3 rounded-lg font-weight-bold shadow-sm transition-all" data-toggle="modal" data-target="#attendanceModal">
-                            <i class="fas fa-list-check mr-2"></i>Daftar Kehadiran
-                        </button>
-                        @elseif($isParticipant)
-                        <button type="button" class="btn btn-emerald btn-block text-left mb-2 py-2 px-3 rounded-lg font-weight-bold shadow-sm transition-all" data-toggle="modal" data-target="#selfAttendanceModal">
-                            <i class="fas fa-user-check mr-2"></i>Isi Kehadiran
+                        <!-- Attendance Actions -->
+                        @if($myParticipant && $meeting->status === 'ongoing')
+                        <button type="button" class="btn {{ $hasAttended ? 'btn-soft-success' : 'btn-emerald-vibrant' }} btn-block text-left mb-4 py-3 px-3 rounded-xl font-weight-bold transition-all shadow-sm" data-toggle="modal" data-target="#selfAttendanceModal">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <span>
+                                    <i class="fas {{ $hasAttended ? 'fa-check-circle' : 'fa-user-check' }} mr-2"></i>
+                                    {{ $hasAttended ? 'Update Presensi' : 'Presensi Sekarang' }}
+                                </span>
+                                <i class="fas fa-chevron-right small opacity-50"></i>
+                            </div>
                         </button>
                         @endif
 
-                        @php
-                            $canManage = auth()->user()->canManageMeetings() || $meeting->organizer_id == auth()->id();
-                            $isMinuteTaker = $meeting->assigned_minute_taker_id == auth()->id();
-                        @endphp
+                        <button type="button" class="btn btn-light btn-block text-left mb-2 py-2 px-3 rounded-lg font-weight-bold text-emerald transition-all" data-toggle="modal" data-target="#attendanceModal">
+                            <i class="fas {{ $canManage ? 'fa-users-cog' : 'fa-clipboard-list' }} mr-2 opacity-50"></i>
+                            {{ $canManage ? 'Kelola Kehadiran' : 'Daftar Kehadiran' }}
+                        </button>
+
+                        <hr class="my-3 opacity-50">
 
                         @if($canManage || $isMinuteTaker)
                         <a href="#minuteTakerForm" class="btn btn-soft-primary btn-block text-left mb-2 py-2 px-3 rounded-lg font-weight-bold transition-all">
@@ -519,9 +524,7 @@
                         <button type="button" class="btn btn-light btn-block text-left mb-2 py-2 px-3 rounded-lg font-weight-bold text-emerald transition-all" data-toggle="modal" data-target="#assignActionTakerModal">
                             <i class="fas fa-user-plus mr-2 opacity-50"></i>@if($meeting->assignedActionTaker) Ganti @endif Action Taker
                         </button>
-                        @endif
-                        
-                        @if(auth()->user()->canManageMeetings() || $meeting->organizer_id == auth()->id() || $meeting->assigned_action_taker_id == auth()->id())
+
                         <button type="button" class="btn btn-light btn-block text-left mb-2 py-2 px-3 rounded-lg font-weight-bold text-emerald transition-all" data-toggle="modal" data-target="#addActionItemModal">
                             <i class="fas fa-plus-circle mr-2 opacity-50"></i>Tambah Tugas
                         </button>
@@ -979,48 +982,79 @@
         </div>
     </div>
 </div>
-@if(auth()->user()->canManageMeetings() || $meeting->organizer_id == auth()->id())
 <div class="modal fade" id="attendanceModal" tabindex="-1">
-    <div class="modal-dialog modal-lg border-0 shadow-lg">
-        <div class="modal-content border-0" style="border-radius: 20px;">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
             <div class="modal-header border-0 pb-0 pt-4 px-4">
                 <h5 class="font-weight-bold text-dark mb-0">
-                    <i class="fas fa-check-double mr-2 text-emerald"></i>Daftar Kehadiran
+                    <i class="fas fa-clipboard-check mr-2 text-emerald"></i>
+                    {{ $canManage ? 'Kelola Kehadiran Peserta' : 'Daftar Kehadiran' }}
                 </h5>
                 <button type="button" class="close" data-dismiss="modal">
                     <span>&times;</span>
                 </button>
             </div>
+            
+            @if($canManage)
+            <form action="{{ route('meetings.attendance.update', $meeting) }}" method="POST">
+                @csrf
+            @endif
+            
             <div class="modal-body p-4">
                 <div class="table-responsive">
-                    <table class="table table-hover border-0">
-                        <thead>
+                    <table class="table {{ $canManage ? 'table-hover' : '' }} align-middle border-0">
+                        <thead class="bg-light">
                             <tr class="text-xxs text-muted text-uppercase font-weight-bold letter-spacing-1">
-                                <th class="border-0 px-0">Peserta</th>
+                                <th class="border-0 px-3">Peserta</th>
                                 <th class="border-0 text-center">Status</th>
-                                <th class="border-0">Keterangan</th>
+                                <th class="border-0">Keterangan/Izin</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($meeting->participants as $participant)
-                            <tr class="border-bottom">
-                                <td class="border-0 px-0 py-3">
-                                    <div class="font-weight-bold text-dark">{{ $participant->user->name }}</div>
-                                    <div class="text-xxs text-muted">{{ $participant->user->department->name }}</div>
+                            @foreach($meeting->participants as $index => $participant)
+                            <tr class="{{ !$canManage ? 'border-bottom' : '' }}">
+                                <td class="px-3 py-3 border-0">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-soft-primary rounded-circle mr-3 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                            <i class="fas fa-user text-primary small"></i>
+                                        </div>
+                                        <div>
+                                            <div class="font-weight-bold text-dark text-sm">{{ $participant->user->name }}</div>
+                                            <div class="text-xxs text-muted">{{ $participant->user->department->name ?? '-' }}</div>
+                                        </div>
+                                        @if($canManage)
+                                            <input type="hidden" name="attendance[{{ $index }}][participant_id]" value="{{ $participant->id }}">
+                                        @endif
+                                    </div>
                                 </td>
-                                <td class="border-0 text-center py-3">
-                                    @if($participant->attended === true)
-                                        <span class="badge badge-soft-success rounded-pill px-3">Hadir</span>
-                                    @elseif($participant->attended === false && $participant->excuse)
-                                        <span class="badge badge-soft-warning rounded-pill px-3">Izin</span>
-                                    @elseif($participant->attended === false)
-                                        <span class="badge badge-soft-danger rounded-pill px-3">Alfa</span>
+                                <td class="text-center py-3 border-0">
+                                    @if($canManage)
+                                        <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                                            <label class="btn btn-outline-success btn-xs {{ $participant->attended === true ? 'active' : '' }}">
+                                                <input type="radio" name="attendance[{{ $index }}][attended]" value="1" {{ $participant->attended === true ? 'checked' : '' }}> Hadir
+                                            </label>
+                                            <label class="btn btn-outline-danger btn-xs {{ $participant->attended === false ? 'active' : '' }}">
+                                                <input type="radio" name="attendance[{{ $index }}][attended]" value="0" {{ $participant->attended === false ? 'checked' : '' }}> Alfa
+                                            </label>
+                                        </div>
                                     @else
-                                        <span class="badge badge-soft-secondary rounded-pill px-3">Belum Isi</span>
+                                        @if($participant->attended === true)
+                                            <span class="badge badge-soft-success rounded-pill px-3">Hadir</span>
+                                        @elseif($participant->attended === false && $participant->excuse)
+                                            <span class="badge badge-soft-warning rounded-pill px-3">Izin</span>
+                                        @elseif($participant->attended === false)
+                                            <span class="badge badge-soft-danger rounded-pill px-3">Alfa</span>
+                                        @else
+                                            <span class="badge badge-soft-secondary rounded-pill px-3 text-xxs">Belum isi</span>
+                                        @endif
                                     @endif
                                 </td>
-                                <td class="border-0 py-3">
-                                    <span class="text-sm text-muted italic">{{ $participant->excuse ?? '-' }}</span>
+                                <td class="py-3 border-0">
+                                    @if($canManage)
+                                        <input type="text" name="attendance[{{ $index }}][excuse]" class="form-control form-control-sm border-0 bg-light rounded-lg" placeholder="Alasan jika izin..." value="{{ $participant->excuse }}">
+                                    @else
+                                        <span class="text-sm text-muted italic">{{ $participant->excuse ?? '-' }}</span>
+                                    @endif
                                 </td>
                             </tr>
                             @endforeach
@@ -1028,13 +1062,20 @@
                     </table>
                 </div>
             </div>
-            <div class="modal-footer border-0 p-4 pt-0">
-                <button type="button" class="btn btn-light btn-block py-2 rounded-xl font-weight-bold" data-dismiss="modal">Tutup</button>
-            </div>
+
+            @if($canManage)
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button" class="btn btn-light rounded-xl px-4 font-weight-bold" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-emerald rounded-xl px-4 font-weight-bold shadow-sm">
+                        <i class="fas fa-save mr-2"></i>Simpan Kehadiran
+                    </button>
+                </div>
+            </form>
+            @endif
         </div>
     </div>
 </div>
-@endif
+
 
 {{-- Modal Absensi Mandiri untuk Peserta --}}
 @php
@@ -1097,7 +1138,7 @@
 <style>
 .attendance-option input:checked + .attendance-box {
     background-color: #f0fdf4;
-    border-color: #10b981 ! from-emerald-500;
+    border-color: #10b981 !important;
     box-shadow: 0 0 0 2px #10b981;
 }
 .attendance-box:hover {
@@ -1130,7 +1171,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Confirm meeting completion
-    const meetingCompleteForm = document.querySelector('form[action*="meetings.complete"]');
+    const meetingCompleteForm = document.getElementById('completeMeetingForm');
     if (meetingCompleteForm) {
         meetingCompleteForm.addEventListener('submit', function(e) {
             if (!confirm('Akhiri meeting ini? Tindakan ini tidak dapat dibatalkan.')) {
@@ -1560,4 +1601,27 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     @endforeach
 @endif
+
+<style>
+    .btn-emerald-vibrant {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white !important;
+        border: none;
+    }
+    .btn-emerald-vibrant:hover {
+        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        transform: translateY(-2px);
+    }
+    .btn-xs {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+        line-height: 1.5;
+        border-radius: 0.5rem;
+    }
+    .badge-soft-success { background: #d1fae5; color: #065f46; }
+    .badge-soft-warning { background: #fef3c7; color: #92400e; }
+    .badge-soft-danger { background: #fee2e2; color: #991b1b; }
+    .text-xxs { font-size: 0.65rem; }
+    .bg-soft-primary { background: rgba(79, 70, 229, 0.1); }
+</style>
 @endsection

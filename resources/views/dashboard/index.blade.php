@@ -14,17 +14,17 @@
     <div class="row mb-5">
         <div class="col-lg-3 col-md-6 mb-4">
             <a href="{{ route('action-items.index') }}" class="text-decoration-none transition-hover d-block h-100">
-                <div class="card h-100 border-0 shadow-sm rounded-xl bg-white stats-card-minimal">
+                <div class="card h-100 border-0 shadow-sm rounded-xl card-vibrant-emerald stats-card">
                     <div class="card-body p-4">
                         <div class="d-flex align-items-center mb-3">
-                            <div class="icon-box-emerald mr-3">
+                            <div class="glass-icon-wrapper mr-3">
                                 <i class="fas fa-tasks"></i>
                             </div>
-                            <span class="text-xs font-weight-bold text-uppercase text-muted letter-spacing-1">Tugas</span>
+                            <span class="text-xs font-weight-bold text-uppercase text-white-50 letter-spacing-1">Tugas</span>
                         </div>
                         <div class="d-flex align-items-baseline">
-                            <h2 class="font-weight-bold mb-0 mr-2 text-dark">{{ $totalActions }}</h2>
-                            <span class="text-xs text-muted">Total</span>
+                            <h2 class="font-weight-bold mb-0 mr-2 text-white">{{ $totalActions }}</h2>
+                            <span class="text-xs text-white-50">Total</span>
                         </div>
                     </div>
                 </div>
@@ -32,17 +32,17 @@
         </div>
         <div class="col-lg-3 col-md-6 mb-4">
             <a href="{{ route('meetings.index') }}" class="text-decoration-none transition-hover d-block h-100">
-                <div class="card h-100 border-0 shadow-sm rounded-xl bg-white stats-card-minimal">
+                <div class="card h-100 border-0 shadow-sm rounded-xl card-vibrant-indigo stats-card">
                     <div class="card-body p-4">
                         <div class="d-flex align-items-center mb-3">
-                            <div class="icon-box-indigo mr-3">
+                            <div class="glass-icon-wrapper mr-3">
                                 <i class="fas fa-calendar-alt"></i>
                             </div>
-                            <span class="text-xs font-weight-bold text-uppercase text-muted letter-spacing-1">Rapat</span>
+                            <span class="text-xs font-weight-bold text-uppercase text-white-50 letter-spacing-1">Rapat</span>
                         </div>
                         <div class="d-flex align-items-baseline">
-                            <h2 class="font-weight-bold mb-0 mr-2 text-dark">{{ $totalMeetings }}</h2>
-                            <span class="text-xs text-muted">Dilaksanakan</span>
+                            <h2 class="font-weight-bold mb-0 mr-2 text-white">{{ $totalMeetings }}</h2>
+                            <span class="text-xs text-white-50">Dilaksanakan</span>
                         </div>
                     </div>
                 </div>
@@ -50,17 +50,17 @@
         </div>
         <div class="col-lg-3 col-md-6 mb-4">
             <a href="{{ route('meetings.index') }}" class="text-decoration-none transition-hover d-block h-100">
-                <div class="card h-100 border-0 shadow-sm rounded-xl bg-white stats-card-minimal">
+                <div class="card h-100 border-0 shadow-sm rounded-xl card-vibrant-amber stats-card">
                     <div class="card-body p-4">
                         <div class="d-flex align-items-center mb-3">
-                            <div class="icon-box-amber mr-3">
+                            <div class="glass-icon-wrapper mr-3">
                                 <i class="fas fa-clock"></i>
                             </div>
-                            <span class="text-xs font-weight-bold text-uppercase text-muted letter-spacing-1">Mendatang</span>
+                            <span class="text-xs font-weight-bold text-uppercase text-white-50 letter-spacing-1">Mendatang</span>
                         </div>
                         <div class="d-flex align-items-baseline">
-                            <h2 class="font-weight-bold mb-0 mr-2 text-dark">{{ $scheduledMeetings }}</h2>
-                            <span class="text-xs text-muted">Jadwal</span>
+                            <h2 class="font-weight-bold mb-0 mr-2 text-white">{{ $scheduledMeetings }}</h2>
+                            <span class="text-xs text-white-50">Jadwal</span>
                         </div>
                     </div>
                 </div>
@@ -68,17 +68,17 @@
         </div>
         <div class="col-lg-3 col-md-6 mb-4">
             <a href="{{ route('action-items.index') }}" class="text-decoration-none transition-hover d-block h-100">
-                <div class="card h-100 border-0 shadow-sm rounded-xl bg-white stats-card-minimal">
+                <div class="card h-100 border-0 shadow-sm rounded-xl card-vibrant-rose stats-card">
                     <div class="card-body p-4">
                         <div class="d-flex align-items-center mb-3">
-                            <div class="icon-box-rose mr-3">
+                            <div class="glass-icon-wrapper mr-3">
                                 <i class="fas fa-exclamation-triangle"></i>
                             </div>
-                            <span class="text-xs font-weight-bold text-uppercase text-muted letter-spacing-1">Terlambat</span>
+                            <span class="text-xs font-weight-bold text-uppercase text-white-50 letter-spacing-1">Terlambat</span>
                         </div>
                         <div class="d-flex align-items-baseline">
-                            <h2 class="font-weight-bold mb-0 mr-2 text-dark">{{ $overdueActions }}</h2>
-                            <span class="text-xs text-muted">Perlu Tindakan</span>
+                            <h2 class="font-weight-bold mb-0 mr-2 text-white">{{ $overdueActions }}</h2>
+                            <span class="text-xs text-white-50">Perlu Tindakan</span>
                         </div>
                     </div>
                 </div>
@@ -726,11 +726,28 @@
         box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.1);
         position: relative;
         overflow: hidden;
+        border: none !important;
     }
     .stats-card:hover {
         transform: translateY(-8px);
         box-shadow: 0 25px 40px -10px rgba(0, 0, 0, 0.2);
     }
+    
+    .card-vibrant-emerald {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    }
+    .card-vibrant-indigo {
+        background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%) !important;
+    }
+    .card-vibrant-amber {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+    }
+    .card-vibrant-rose {
+        background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%) !important;
+    }
+
+    .text-white-50 { color: rgba(255, 255, 255, 0.7) !important; }
+
     .stats-card::after {
         content: '';
         position: absolute;
