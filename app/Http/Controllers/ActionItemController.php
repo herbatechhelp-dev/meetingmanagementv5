@@ -15,11 +15,13 @@ use App\Mail\ActionItemVerified;
 use App\Mail\ActionItemRevisionRequested;
 use App\Mail\ActionItemUpdated;
 use App\Notifications\MeetingNotification;
+use Illuminate\Support\Facades\Log;
 
 class ActionItemController extends Controller
 {
     public function index(Request $request)
     {
+        /** @var \App\Models\User $user */
         $user = auth()->user();
         $status = $request->get('status');
         $type = $request->get('type', $this->getDefaultType($user));
@@ -250,6 +252,7 @@ class ActionItemController extends Controller
 
     public function updateStatus(Request $request, ActionItem $actionItem)
     {
+        /** @var \App\Models\User $user */
         $user = auth()->user();
         $isAssignee = $actionItem->assigned_to == $user->id;
         $isOrganizer = $actionItem->meeting->organizer_id == $user->id;
@@ -410,6 +413,7 @@ class ActionItemController extends Controller
 
     private function canDeleteActionItem($actionItem)
     {
+        /** @var \App\Models\User $user */
         $user = auth()->user();
 
         // Admin bisa hapus semua
@@ -437,6 +441,7 @@ class ActionItemController extends Controller
     // Helper methods
     private function checkActionItemAccess($actionItem)
     {
+        /** @var \App\Models\User $user */
         $user = auth()->user();
 
         if ($user->isAdmin() || $user->isManager()) {
@@ -469,6 +474,7 @@ class ActionItemController extends Controller
 
     private function canEditMeeting($meeting)
     {
+        /** @var \App\Models\User $user */
         $user = auth()->user();
         return $user->isAdmin() || $meeting->organizer_id === $user->id;
     }

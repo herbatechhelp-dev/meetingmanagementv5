@@ -25,6 +25,7 @@ class MeetingController extends Controller
 {
     public function index(Request $request)
     {
+        /** @var \App\Models\User $user */
         $user = auth()->user();
         
         // Get filter parameters dengan tambahan type
@@ -813,6 +814,7 @@ public function runningMeeting(Meeting $meeting)
         // Helper methods
     private function checkMeetingAccess($meeting)
     {
+        /** @var \App\Models\User $user */
         $user = auth()->user();
         
         if ($user->isAdmin()) {
@@ -840,6 +842,7 @@ public function runningMeeting(Meeting $meeting)
 
     private function canEditMeeting($meeting)
     {
+        /** @var \App\Models\User $user */
         $user = auth()->user();
         // Admin bisa edit semua, Manager/User hanya bisa edit jika organizer
         return $user->isAdmin() || $meeting->organizer_id === $user->id;

@@ -1318,31 +1318,48 @@ document.querySelectorAll('.score-number-input').forEach(function(input) {
     const departmentSelect = document.getElementById('department_id');
     
     if (assignedToSelect && departmentSelect) {
-        // Buat mapping user ke department
+        // Buat mapping user ke department (ID dan Nama)
         const userDepartments = {
-            @foreach($participants as $participant)
-            '{{ $participant->id }}': '{{ $participant->department_id }}',
+            @foreach($users as $u)
+            '{{ $u->id }}': '{{ $u->department_id }}',
+            @endforeach
+        };
+
+        const userDeptNames = {
+            @foreach($users as $u)
+            '{{ $u->id }}': '{{ $u->department->name ?? "" }}',
             @endforeach
         };
         
         assignedToSelect.addEventListener('change', function() {
             const userId = this.value;
             const departmentId = userDepartments[userId];
+            const departmentName = userDeptNames[userId];
             
             if (departmentId && departmentId !== '') {
                 departmentSelect.value = departmentId;
                 
-                // Jika department tidak ada di options, tambahkan
+                // Jika department tidak ada di options, tambahkan (untuk safety)
                 if (!departmentSelect.querySelector(`option[value="${departmentId}"]`)) {
-                    const user = {!! $participants->firstWhere('id', '==', ' + userId + ') ? json_encode($participants->firstWhere('id', '==', userId)) : 'null' !!};
-                    if (user && user.department) {
-                        const option = new Option(user.department.name, user.department.id, true, true);
+                    if (departmentName) {
+                        const option = new Option(departmentName, departmentId, true, true);
                         departmentSelect.appendChild(option);
-                        departmentSelect.value = user.department.id;
+                        departmentSelect.value = departmentId;
                     }
                 }
             }
         });
+
+        // Add jQuery Select2 listener if available (for more robust updates)
+        if (window.jQuery && $(assignedToSelect).hasClass('select2')) {
+            $(assignedToSelect).on('select2:select change', function (e) {
+                const userId = this.value;
+                const departmentId = userDepartments[userId];
+                if (departmentId) {
+                    $(departmentSelect).val(departmentId).trigger('change');
+                }
+            });
+        }
     }
 
     // Set minimum date untuk due_date ke hari ini
