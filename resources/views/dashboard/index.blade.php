@@ -11,7 +11,7 @@
 
 @section('content')
     <!-- Extreme Minimalist Stats Cards -->
-    <div class="row mb-5">
+    <div class="row mb-3">
         <div class="col-lg-3 col-md-6 mb-4">
             <a href="{{ route('action-items.index') }}" class="text-decoration-none transition-hover d-block h-100">
                 <div class="card h-100 border-0 shadow-sm rounded-xl card-vibrant-emerald stats-card">
@@ -86,111 +86,9 @@
         </div>
     </div>
 
-    <!-- Redesigned Trend Section -->
-    <div class="row mb-5">
-        <div class="col-lg-8 mb-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Tren Performa Tugas</h5>
-                    <div class="badge badge-light-indigo px-3 py-2">30 Hari Terakhir</div>
-                </div>
-                <div class="card-body">
-                    <div style="height: 350px;">
-                        <canvas id="actionTrendChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-4 mb-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Aktivitas Rapat</h5>
-                </div>
-                <div class="card-body">
-                    <div style="height: 200px;" class="mb-4">
-                        <canvas id="meetingTrendChart"></canvas>
-                    </div>
-                    <hr class="my-4 opacity-50">
-                    <div class="row text-center">
-                        <div class="col-6 mb-3">
-                            <div class="text-sm text-muted mb-1 text-uppercase font-weight-bold">Tingkat Keberhasilan</div>
-                            <div class="h4 font-weight-bold text-success mb-0">{{ $totalActions > 0 ? number_format(($completedActions/$totalActions)*100, 0) : 0 }}%</div>
-                        </div>
-                        <div class="col-6 mb-3">
-                            <div class="text-sm text-muted mb-1 text-uppercase font-weight-bold">Mendatang</div>
-                            <div class="h4 font-weight-bold text-primary mb-0">{{ $scheduledMeetings }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Redesigned Trend Section (dipindahkan) -->
 
-    <!-- Statistik Tugas per User -->
-    @if(auth()->user()->isAdmin() || auth()->user()->isManager())
-    <div class="card shadow-sm border-0 rounded-lg mb-5 stats-card-section">
-        <div class="card-header bg-white py-4 px-4 border-0 d-flex align-items-center justify-content-between">
-            <div style="flex: 1;">
-                <h5 class="card-title mb-0 font-weight-bold text-dark">
-                    <span class="title-accent mr-2"></span>Statistik Tugas per Penugasan
-                </h5>
-            </div>
-            
-            <div class="display-toggle-pill mx-auto">
-                <button type="button" class="toggle-btn active" data-display-type="chart">
-                    <i class="fas fa-chart-bar mr-1"></i> Grafik
-                </button>
-                <button type="button" class="toggle-btn" data-display-type="table">
-                    <i class="fas fa-table mr-1"></i> Tabel
-                </button>
-            </div>
-
-            <div style="flex: 1;"></div>
-        </div>
-        <div class="card-body px-4 pb-4">
-            <!-- Diagram Batang -->
-            <div id="user-chart-container">
-                <div class="chart-container" style="height: 350px;">
-                    <canvas id="userAssignmentChart"></canvas>
-                </div>
-            </div>
-            <!-- Tabel Statistik -->
-            <div id="user-table-container" style="display: none;">
-                <div class="table-responsive">
-                    <table class="table table-hover border-0 mb-0">
-                        <thead class="bg-light text-muted text-sm text-uppercase">
-                            <tr>
-                                <th class="border-0 px-3 py-3">Nama Anggota</th>
-                                <th class="border-0 px-3 py-3 text-center">Selesai</th>
-                                <th class="border-0 px-3 py-3 text-center">Proses</th>
-                                <th class="border-0 px-3 py-3 text-center">Menunggu</th>
-                                <th class="border-0 px-3 py-3 text-center">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($userAssignmentStats as $stat)
-                            <tr class="align-middle">
-                                <td class="px-3 py-3">
-                                    <div class="d-flex align-items-center">
-                                        <div class="avatar-sm mr-3 bg-light text-primary font-weight-bold rounded-circle d-flex align-items-center justify-content-center">
-                                            {{ strtoupper(substr($stat->name, 0, 1)) }}
-                                        </div>
-                                        <span class="font-weight-bold text-dark">{{ $stat->name }}</span>
-                                    </div>
-                                </td>
-                                <td class="px-3 py-3 text-center"><span class="badge badge-soft-success">{{ $stat->completed_actions }}</span></td>
-                                <td class="px-3 py-3 text-center"><span class="badge badge-soft-warning">{{ $stat->in_progress_actions }}</span></td>
-                                <td class="px-3 py-3 text-center"><span class="badge badge-soft-secondary">{{ $stat->pending_actions }}</span></td>
-                                <td class="px-3 py-3 text-center font-weight-bold text-dark">{{ $stat->completed_actions + $stat->in_progress_actions + $stat->pending_actions }}</td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-    @endif
+    
     
     <!-- Lower Dashboard Sections -->
     <div class="row">
@@ -295,6 +193,113 @@
                         <div class="d-flex align-items-center">
                             <span class="dot bg-rose mr-2"></span>
                             <span class="text-muted font-weight-medium">Deadline</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lower Dashboard Sections (tetap di atas) -->
+    <!-- Statistik Tugas per Penugasan (dipindahkan di bawah Kalender & Tindak Lanjut) -->
+    @if(auth()->user()->isAdmin() || auth()->user()->isManager())
+    <div class="card shadow-sm border-0 rounded-lg mb-5 stats-card-section">
+        <div class="card-header bg-white py-4 px-4 border-0 d-flex align-items-center justify-content-between">
+            <div style="flex: 1;">
+                <h5 class="card-title mb-0 font-weight-bold text-dark">
+                    <span class="title-accent mr-2"></span>Statistik Tugas per Penugasan
+                </h5>
+            </div>
+            
+            <div class="display-toggle-pill mx-auto">
+                <button type="button" class="toggle-btn active" data-display-type="chart">
+                    <i class="fas fa-chart-bar mr-1"></i> Grafik
+                </button>
+                <button type="button" class="toggle-btn" data-display-type="table">
+                    <i class="fas fa-table mr-1"></i> Tabel
+                </button>
+            </div>
+
+            <div style="flex: 1;"></div>
+        </div>
+        <div class="card-body px-4 pb-4">
+            <!-- Diagram Batang -->
+            <div id="user-chart-container">
+                <div class="chart-container" style="height: 350px;">
+                    <canvas id="userAssignmentChart"></canvas>
+                </div>
+            </div>
+            <!-- Tabel Statistik -->
+            <div id="user-table-container" style="display: none;">
+                <div class="table-responsive">
+                    <table class="table table-hover border-0 mb-0">
+                        <thead class="bg-light text-muted text-sm text-uppercase">
+                            <tr>
+                                <th class="border-0 px-3 py-3">Nama Anggota</th>
+                                <th class="border-0 px-3 py-3 text-center">Selesai</th>
+                                <th class="border-0 px-3 py-3 text-center">Proses</th>
+                                <th class="border-0 px-3 py-3 text-center">Menunggu</th>
+                                <th class="border-0 px-3 py-3 text-center">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($userAssignmentStats as $stat)
+                            <tr class="align-middle">
+                                <td class="px-3 py-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-sm mr-3 bg-light text-primary font-weight-bold rounded-circle d-flex align-items-center justify-content-center">
+                                            {{ strtoupper(substr($stat->name, 0, 1)) }}
+                                        </div>
+                                        <span class="font-weight-bold text-dark">{{ $stat->name }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-3 py-3 text-center"><span class="badge badge-soft-success">{{ $stat->completed_actions }}</span></td>
+                                <td class="px-3 py-3 text-center"><span class="badge badge-soft-warning">{{ $stat->in_progress_actions }}</span></td>
+                                <td class="px-3 py-3 text-center"><span class="badge badge-soft-secondary">{{ $stat->pending_actions }}</span></td>
+                                <td class="px-3 py-3 text-center font-weight-bold text-dark">{{ $stat->completed_actions + $stat->in_progress_actions + $stat->pending_actions }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- Redesigned Trend Section (dipindahkan ke bawah bagian ini) -->
+    <div class="row mb-5">
+        <div class="col-lg-8 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Tren Performa Tugas</h5>
+                    <div class="badge badge-light-indigo px-3 py-2">30 Hari Terakhir</div>
+                </div>
+                <div class="card-body">
+                    <div style="height: 350px;">
+                        <canvas id="actionTrendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Aktivitas Rapat</h5>
+                </div>
+                <div class="card-body">
+                    <div style="height: 200px;" class="mb-4">
+                        <canvas id="meetingTrendChart"></canvas>
+                    </div>
+                    <hr class="my-4 opacity-50">
+                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <div class="text-sm text-muted mb-1 text-uppercase font-weight-bold">Tingkat Keberhasilan</div>
+                            <div class="h4 font-weight-bold text-success mb-0">{{ $totalActions > 0 ? number_format(($completedActions/$totalActions)*100, 0) : 0 }}%</div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="text-sm text-muted mb-1 text-uppercase font-weight-bold">Mendatang</div>
+                            <div class="h4 font-weight-bold text-primary mb-0">{{ $scheduledMeetings }}</div>
                         </div>
                     </div>
                 </div>
