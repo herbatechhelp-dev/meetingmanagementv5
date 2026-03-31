@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title') - {{ config('app.name') }}</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     
     <!-- Favicon -->
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/favicon/apple-touch-icon.png') }}">
@@ -499,7 +500,23 @@
     <script src="https://npmcdn.com/flatpickr/dist/l10n/id.js"></script>
 
     <script>
+        // Setup AJAX headers for CSRF token
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
+        });
+
         $(document).ready(function() {
+            // Keep session alive every 15 minutes
+            setInterval(function() {
+                if (navigator.onLine) {
+                    $.get("{{ route('keep-alive') }}").fail(function() {
+                        console.log('Failed to keep session alive');
+                    });
+                }
+            }, 15 * 60 * 1000);
+
             // Auto-hide alerts after 5 seconds
             $('.alert').delay(5000).fadeOut(300);
             

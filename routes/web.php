@@ -22,6 +22,11 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Protected Routes
 Route::middleware(['auth'])->group(function () {
+    // Keep Session Alive Route
+    Route::get('/keep-alive', function () {
+        return response()->json(['status' => 'alive']);
+    })->name('keep-alive');
+
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/meeting/{id}', [DashboardController::class, 'getMeetingDetails'])->name('dashboard.meeting.details');
