@@ -86,15 +86,13 @@
         </div>
     </div>
 
-    <!-- Redesigned Trend Section (dipindahkan) -->
 
-    
     
     <!-- Lower Dashboard Sections -->
     <div class="row">
         <!-- Recent Tasks -->
         <div class="col-lg-8 mb-5">
-            <div class="card h-100 shadow-sm">
+            <div class="card shadow-sm">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Tindak Lanjut Terbaru</h5>
                     <a href="{{ route('action-items.index') }}" class="btn btn-sm btn-link text-primary font-weight-bold p-0">Lihat Semua</a>
@@ -170,12 +168,15 @@
 
         <!-- Right Side: Dashboard Calendar -->
         <div class="col-lg-4">
-            <div class="card h-100 shadow-sm border-0 rounded-xl overflow-hidden bg-white">
-                <div class="card-header border-0 bg-white p-4 d-flex align-items-center">
-                    <div class="icon-box-indigo mr-3">
-                        <i class="fas fa-calendar-alt"></i>
+            <div class="card shadow-sm border-0 rounded-xl overflow-hidden bg-white mb-4">
+                <div class="card-header border-0 bg-white p-3 d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-box-indigo mr-3">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <h5 class="mb-0 font-weight-bold text-dark">Kalender</h5>
                     </div>
-                    <h5 class="mb-0 font-weight-bold text-dark">Kalender</h5>
+
                 </div>
                 <div class="card-body p-2">
                     <div id="dashboardCalendar"></div>
@@ -195,6 +196,58 @@
                             <span class="text-muted font-weight-medium">Deadline</span>
                         </div>
                     </div>
+                </div>
+            </div>
+            <!-- Status Ruangan Meeting Card -->
+            <div class="card shadow-sm border-0 rounded-xl overflow-hidden bg-white">
+                <div class="card-header border-0 bg-white p-3 d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-box-indigo mr-3">
+                            <i class="fas fa-door-open"></i>
+                        </div>
+                        <h5 class="mb-0 font-weight-bold text-dark">Status Ruangan</h5>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    @if($todayRoomSchedules->isEmpty())
+                        <div class="p-4 text-center">
+                            <p class="mb-0 text-muted small">Tidak ada jadwal hari ini.</p>
+                        </div>
+                    @else
+                        <div class="list-group list-group-flush">
+                            @foreach($todayRoomSchedules as $location => $meetings)
+                                @php
+                                    $isOngoing = $meetings->where('status', 'ongoing')->isNotEmpty();
+                                    $badgeColor = $isOngoing ? 'danger' : 'success';
+                                    $badgeText = $isOngoing ? 'Dipakai' : 'Tersedia';
+                                @endphp
+                                <div class="list-group-item border-0 border-bottom px-3 py-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h6 class="font-weight-bold mb-0 text-dark">{{ Str::limit($location, 30) }}</h6>
+                                        <span class="badge badge-soft-{{ $badgeColor }} {{ $isOngoing ? 'pulse-danger' : '' }} px-2 py-1" style="font-size: 0.70rem;">
+                                            {{ $badgeText }}
+                                        </span>
+                                    </div>
+                                    <div class="timeline-sm pl-2 mt-2">
+                                        @foreach($meetings as $meeting)
+                                            <div class="timeline-item mb-2 border-left pl-2 ml-1 {{ $meeting->status === 'ongoing' ? 'border-danger' : ($meeting->status === 'completed' ? 'border-success' : 'border-secondary') }}" style="position: relative;">
+                                                <div class="position-absolute rounded-circle {{ $meeting->status === 'ongoing' ? 'bg-danger' : ($meeting->status === 'completed' ? 'bg-success' : 'bg-secondary') }}" 
+                                                     style="width: 6px; height: 6px; left: -4px; top: 5px;"></div>
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <span class="text-xs font-weight-bold text-dark">
+                                                        {{ $meeting->start_time->format('H:i') }} - {{ $meeting->end_time->format('H:i') }}
+                                                    </span>
+                                                </div>
+                                                <div class="text-xs text-muted text-truncate" title="{{ $meeting->title }}">
+                                                    {{ $meeting->title }}
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -389,12 +442,23 @@
                     right: 'today'
                 },
                 height: 'auto',
-                events: "{{ route('dashboard.calendar-events') }}",
+            events: function(info, successCallback, failureCallback) {
+                fetch(`{{ route('dashboard.calendar-events') }}?start=${info.startStr}&end=${info.endStr}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        let filteredData = data;
+                        successCallback(filteredData);
+                    })
+                    .catch(error => failureCallback(error));
+            },
                 dateClick: function(info) {
                     const dateStr = info.dateStr;
                     const events = calendar.getEvents().filter(event => {
-                        const eventDate = event.start.toISOString().split('T')[0];
-                        return eventDate === dateStr;
+                        const d = event.start;
+                        const localDate = d.getFullYear() + '-' +
+                            String(d.getMonth() + 1).padStart(2, '0') + '-' +
+                            String(d.getDate()).padStart(2, '0');
+                        return localDate === dateStr;
                     });
 
                     showDailyInfo(dateStr, events);
@@ -438,6 +502,8 @@
                 dayMaxEvents: 2,
             });
             calendar.render();
+
+
         }
 
         // --- Daily Info Function ---
@@ -726,6 +792,15 @@
     .text-slate { color: #64748b; }
 
     /* Premium Dashboard Extensions */
+    .badge-soft-success { background-color: rgba(16, 185, 129, 0.1); color: #10b981; }
+    .badge-soft-danger { background-color: rgba(239, 68, 68, 0.1); color: #ef4444; }
+    
+    @keyframes pulse-danger {
+        0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+        70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+    .pulse-danger { animation: pulse-danger 2s infinite; }
     .stats-card {
         transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
         box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.1);

@@ -160,6 +160,16 @@ class DashboardController extends Controller
         $actionTrendData = $this->getActionTrendData($actionPeriod, $user);
         $meetingTrendData = $this->getMeetingTrendData($meetingPeriod, $user);
 
+        // Data Keterpakaian Ruangan Hari Ini (tanpa filter role)
+        $todayRoomSchedules = Meeting::with(['organizer'])
+            ->whereDate('start_time', today())
+            ->where('is_online', false)
+            ->whereNotNull('location')
+            ->where('status', '!=', 'cancelled')
+            ->orderBy('start_time')
+            ->get()
+            ->groupBy('location');
+
         return view('dashboard.index', compact(
             'totalActions',
             'completedActions',
@@ -177,8 +187,17 @@ class DashboardController extends Controller
             'actionTrendData',
             'meetingTrendData',
             'actionPeriod',
-            'meetingPeriod'
+            'meetingPeriod',
+            'todayRoomSchedules'
         ));
+    }
+
+    /**
+     * Calendar page view
+     */
+    public function calendarView()
+    {
+        return view('dashboard.calendar');
     }
 
     /**
@@ -525,7 +544,7 @@ class DashboardController extends Controller
         $end = $request->get('end');
 
         // Fetch Meetings
-        $meetingsQuery = Meeting::with(['meetingType']);
+        $meetingsQuery = Meeting::with(['meetingType', 'organizer', 'participants.user']);
         if ($start) $meetingsQuery->where('start_time', '>=', $start);
         if ($end) $meetingsQuery->where('end_time', '<=', $end);
         $this->applyRoleFilter($meetingsQuery, $user, 'meeting');
@@ -556,6 +575,8 @@ class DashboardController extends Controller
                         'status' => $meeting->status,
                         'location' => $meeting->location ?? 'Online',
                         'organizer' => $meeting->organizer->name ?? 'Unknown',
+                        'participants' => $meeting->participants->pluck('user_id')->toArray(),
+                        'is_participant' => in_array(auth()->id(), $meeting->participants->pluck('user_id')->toArray()),
                         'original_start' => $meeting->start_time->toIso8601String(),
                         'original_end' => $meeting->end_time->toIso8601String(),
                     ]

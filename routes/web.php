@@ -29,6 +29,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/calendar', [DashboardController::class, 'calendarView'])->name('calendar');
     Route::get('/dashboard/meeting/{id}', [DashboardController::class, 'getMeetingDetails'])->name('dashboard.meeting.details');
     Route::get('/dashboard/chart-data', [DashboardController::class, 'getChartData'])->name('dashboard.chart-data');
     Route::get('/dashboard/debug', [DashboardController::class, 'debugData'])->name('dashboard.debug');
