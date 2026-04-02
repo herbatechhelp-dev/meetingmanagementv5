@@ -183,14 +183,17 @@ class MeetingController extends Controller
             DB::beginTransaction();
 
             // CHECK ROOM CONFLICT
-            if ($this->checkRoomConflict($validated['start_time'], $validated['end_time'])) {
-                return redirect()->back()
-                    ->withInput()
-                    ->withErrors([
-                        'start_time' => 'Ruangan sudah dibooking pada hari dan jam tersebut.',
-                        'end_time' => 'Ruangan sudah dibooking pada hari dan jam tersebut.',
-                    ])
-                    ->with('error', 'Konflik Jadwal: Ruangan sudah dibooking pada hari dan jam tersebut.');
+            $isOnline = $request->boolean('is_online');
+            if (!$isOnline && !empty($validated['location'])) {
+                if ($this->checkRoomConflict($validated['location'], $validated['start_time'], $validated['end_time'])) {
+                    return redirect()->back()
+                        ->withInput()
+                        ->withErrors([
+                            'start_time' => 'Ruangan sudah dibooking pada hari dan jam tersebut.',
+                            'end_time' => 'Ruangan sudah dibooking pada hari dan jam tersebut.',
+                        ])
+                        ->with('error', 'Konflik Jadwal: Ruangan sudah dibooking pada hari dan jam tersebut.');
+                }
             }
 
             // CREATE MEETING
@@ -343,14 +346,17 @@ class MeetingController extends Controller
             DB::beginTransaction();
 
             // CHECK ROOM CONFLICT
-            if ($this->checkRoomConflict($validated['start_time'], $validated['end_time'], $meeting->id)) {
-                return redirect()->back()
-                    ->withInput()
-                    ->withErrors([
-                        'start_time' => 'Ruangan sudah dibooking pada hari dan jam tersebut.',
-                        'end_time' => 'Ruangan sudah dibooking pada hari dan jam tersebut.',
-                    ])
-                    ->with('error', 'Konflik Jadwal: Ruangan sudah dibooking pada hari dan jam tersebut.');
+            $isOnline = $validated['is_online'] ?? false;
+            if (!$isOnline && !empty($validated['location'])) {
+                if ($this->checkRoomConflict($validated['location'], $validated['start_time'], $validated['end_time'], $meeting->id)) {
+                    return redirect()->back()
+                        ->withInput()
+                        ->withErrors([
+                            'start_time' => 'Ruangan sudah dibooking pada hari dan jam tersebut.',
+                            'end_time' => 'Ruangan sudah dibooking pada hari dan jam tersebut.',
+                        ])
+                        ->with('error', 'Konflik Jadwal: Ruangan sudah dibooking pada hari dan jam tersebut.');
+                }
             }
 
             $meeting->update([
@@ -1004,28 +1010,35 @@ private function isAssignedActionTaker($meeting)
     /**
      * Check if a meeting room conflict exists
      */
-    private function checkRoomConflict($startTime, $endTime, $excludeId = null)
+    private function checkRoomConflict($location, $startTime, $endTime, $excludeId = null)
     {
-        $query = Meeting::where(function ($q) use ($startTime, $endTime) {
-            $q->where(function ($query) use ($startTime, $endTime) {
-                $query->where('start_time', '>=', $startTime)
-                      ->where('start_time', '<', $endTime);
-            })->orWhere(function ($query) use ($startTime, $endTime) {
-                $query->where('end_time', '>', $startTime)
-                      ->where('end_time', '<=', $endTime);
-            })->orWhere(function ($query) use ($startTime, $endTime) {
-                $query->where('start_time', '<=', $startTime)
-                      ->where('end_time', '>=', $endTime);
-            });
-        });
+        $clashQuery = function($q) use ($startTime, $endTime) {
+            $q->where('start_time', '<', $endTime)
+              ->where('end_time', '>', $startTime);
+        };
+
+        $meetingQuery = Meeting::where('location', $location)
+            ->where('is_online', false)
+            ->whereIn('status', ['scheduled', 'ongoing'])
+            ->where($clashQuery);
 
         if ($excludeId) {
-            $query->where('id', '!=', $excludeId);
+            $meetingQuery->where('id', '!=', $excludeId);
         }
 
-        // Only check for scheduled or ongoing meetings
-        $query->whereIn('status', ['scheduled', 'ongoing']);
+        if ($meetingQuery->exists()) {
+            return true;
+        }
 
-        return $query->exists();
+        // Check against Room Bookings as well
+        $roomBookingQuery = \App\Models\RoomBooking::where('location', $location)
+            ->whereIn('status', ['booked', 'ongoing'])
+            ->where($clashQuery);
+            
+        if ($roomBookingQuery->exists()) {
+            return true;
+        }
+
+        return false;
     }
 }

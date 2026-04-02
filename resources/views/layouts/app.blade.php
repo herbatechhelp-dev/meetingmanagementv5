@@ -287,6 +287,11 @@
                             <i class="fas fa-tasks mr-1"></i> Tugas
                         </a>
                     </li>
+                    <li class="nav-item mr-1">
+                        <a href="{{ route('room-bookings.index') }}" class="nav-link nav-link-custom {{ request()->routeIs('room-bookings.*') ? 'active' : '' }}">
+                            <i class="fas fa-door-open mr-1"></i> Pinjam Ruang
+                        </a>
+                    </li>
 
                     @if(auth()->user()->isAdmin() || auth()->user()->isManager())
                     <li class="nav-item mr-1">

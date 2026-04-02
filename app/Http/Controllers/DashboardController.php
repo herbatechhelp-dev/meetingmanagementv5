@@ -161,13 +161,31 @@ class DashboardController extends Controller
         $meetingTrendData = $this->getMeetingTrendData($meetingPeriod, $user);
 
         // Data Keterpakaian Ruangan Hari Ini (tanpa filter role)
-        $todayRoomSchedules = Meeting::with(['organizer'])
+        $todayMeetings = Meeting::with(['organizer'])
             ->whereDate('start_time', today())
             ->where('is_online', false)
             ->whereNotNull('location')
             ->where('status', '!=', 'cancelled')
             ->orderBy('start_time')
             ->get()
+            ->map(function($m) {
+                $m->organizer_name = $m->organizer->name ?? 'Unknown';
+                return $m;
+            });
+
+        $todayRoomBookings = \App\Models\RoomBooking::with(['user'])
+            ->whereDate('start_time', today())
+            ->where('status', '!=', 'cancelled')
+            ->orderBy('start_time')
+            ->get()
+            ->map(function($b) {
+                $b->title = 'Reservasi: ' . $b->purpose;
+                $b->organizer_name = $b->user->name ?? 'Unknown';
+                return $b;
+            });
+
+        $todayRoomSchedules = collect($todayMeetings)->concat($todayRoomBookings)
+            ->sortBy('start_time')
             ->groupBy('location');
 
         return view('dashboard.index', compact(
@@ -542,29 +560,49 @@ class DashboardController extends Controller
         $user = auth()->user();
         $start = $request->get('start');
         $end = $request->get('end');
+        $filter = $request->get('filter', 'all'); // 'all' or 'rooms'
+
+        // Helper untuk generate warna berdasarkan nama ruangan
+        $getLocationColor = function($location) {
+            if (empty($location)) return '#64748b'; // Slate
+            $colors = ['#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#06b6d4', '#84cc16'];
+            $hash = hexdec(substr(md5($location), 0, 8));
+            return $colors[$hash % count($colors)];
+        };
 
         // Fetch Meetings
         $meetingsQuery = Meeting::with(['meetingType', 'organizer', 'participants.user']);
         if ($start) $meetingsQuery->where('start_time', '>=', $start);
         if ($end) $meetingsQuery->where('end_time', '<=', $end);
-        $this->applyRoleFilter($meetingsQuery, $user, 'meeting');
         
-        $meetings = $meetingsQuery->get()->flatMap(function($meeting) {
+        if ($filter === 'rooms') {
+            $meetingsQuery->where('is_online', false)->whereNotNull('location');
+        } else {
+            $this->applyRoleFilter($meetingsQuery, $user, 'meeting');
+        }
+        
+        $meetings = $meetingsQuery->get()->flatMap(function($meeting) use ($filter, $getLocationColor) {
             $events = [];
             $currentDate = $meeting->start_time->copy()->startOfDay();
             $endDate = $meeting->end_time->copy()->endOfDay();
             
-            $color = match($meeting->status) {
-                'scheduled' => '#4f46e5', // Indigo
-                'ongoing' => '#f59e0b',   // Amber
-                'completed' => '#10b981', // Emerald
-                default => '#64748b'      // Slate
-            };
+            if ($filter === 'rooms') {
+                $color = $getLocationColor($meeting->location);
+                $title = $meeting->start_time->format('H:i') . ' ' . $meeting->location . ' - ' . $meeting->title;
+            } else {
+                $color = match($meeting->status) {
+                    'scheduled' => '#4f46e5', // Indigo
+                    'ongoing' => '#f59e0b',   // Amber
+                    'completed' => '#10b981', // Emerald
+                    default => '#64748b'      // Slate
+                };
+                $title = '📅 ' . $meeting->title;
+            }
 
             while ($currentDate <= $endDate) {
                 $events[] = [
                     'id' => 'm_' . $meeting->id . '_' . $currentDate->format('Ymd'),
-                    'title' => '📅 ' . $meeting->title,
+                    'title' => $title,
                     'start' => $currentDate->format('Y-m-d'),
                     'allDay' => true,
                     'url' => route('meetings.show', $meeting),
@@ -586,8 +624,10 @@ class DashboardController extends Controller
             return $events;
         });
 
-        // Fetch Action Items (Tasks)
-        $actionsQuery = ActionItem::with(['meeting']);
+        // Fetch Action Items (Tasks) - LEWATI jika filter rooms
+        $actions = collect();
+        if ($filter !== 'rooms') {
+            $actionsQuery = ActionItem::with(['meeting']);
         if ($start) $actionsQuery->where('due_date', '>=', $start);
         if ($end) $actionsQuery->where('due_date', '<=', $end);
         $this->applyRoleFilter($actionsQuery, $user, 'action');
@@ -624,7 +664,51 @@ class DashboardController extends Controller
             ];
             return $events;
         });
+        } // End of conditional for Action Items
 
-        return response()->json($meetings->concat($actions));
+        // Fetch Room Bookings for Calendar
+        $roomBookingsQuery = \App\Models\RoomBooking::with(['user']);
+        if ($start) $roomBookingsQuery->where('start_time', '>=', $start);
+        if ($end) $roomBookingsQuery->where('end_time', '<=', $end);
+        
+        $roomBookings = $roomBookingsQuery->get()->flatMap(function($booking) use ($filter, $getLocationColor) {
+            $events = [];
+            $currentDate = $booking->start_time->copy()->startOfDay();
+            $endDate = $booking->end_time->copy()->endOfDay();
+            
+            if ($filter === 'rooms') {
+                $color = $getLocationColor($booking->location);
+                $title = $booking->start_time->format('H:i') . ' ' . $booking->location . ' - ' . $booking->purpose;
+            } else {
+                $color = match($booking->status) {
+                    'booked', 'ongoing' => '#8b5cf6', // Violet
+                    'completed' => '#10b981', // Emerald
+                    default => '#64748b' // Slate
+                };
+                $title = '🔑 Reservasi Ruangan';
+            }
+
+            while ($currentDate <= $endDate) {
+                $events[] = [
+                    'id' => 'rb_' . $booking->id . '_' . $currentDate->format('Ymd'),
+                    'title' => $title,
+                    'start' => $currentDate->format('Y-m-d'),
+                    'allDay' => true,
+                    'url' => route('room-bookings.index'), 
+                    'backgroundColor' => $color,
+                    'borderColor' => $color,
+                    'extendedProps' => [
+                        'type' => 'room_booking',
+                        'status' => $booking->status,
+                        'location' => $booking->location,
+                        'organizer' => $booking->user->name ?? 'Unknown',
+                    ]
+                ];
+                $currentDate->addDay();
+            }
+            return $events;
+        });
+
+        return response()->json($meetings->concat($actions)->concat($roomBookings));
     }
 }

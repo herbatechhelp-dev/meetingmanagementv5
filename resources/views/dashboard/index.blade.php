@@ -164,6 +164,21 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Kalender Penggunaan Ruangan Perbulan -->
+            <div class="card shadow-sm border-0 rounded-xl overflow-hidden mt-4 bg-white">
+                <div class="card-header border-0 bg-white p-3 d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-box-indigo mr-3" style="background-color: rgba(139, 92, 246, 0.1); color: #8b5cf6;">
+                            <i class="far fa-calendar-check text-lg"></i>
+                        </div>
+                        <h5 class="mb-0 font-weight-bold text-dark">Kalender Penggunaan Ruangan</h5>
+                    </div>
+                </div>
+                <div class="card-body p-2">
+                    <div id="roomUsageCalendar"></div>
+                </div>
+            </div>
         </div>
 
         <!-- Right Side: Dashboard Calendar -->
@@ -503,7 +518,47 @@
             });
             calendar.render();
 
+        }
 
+        // --- Room Usage Calendar Integration ---
+        const roomCalendarEl = document.getElementById('roomUsageCalendar');
+        if (roomCalendarEl) {
+            const roomCalendar = new FullCalendar.Calendar(roomCalendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'id',
+                headerToolbar: {
+                    left: 'title',
+                    right: 'prev,next today'
+                },
+                height: 'auto',
+                events: function(info, successCallback, failureCallback) {
+                    fetch(`{{ route('dashboard.calendar-events') }}?filter=rooms&start=${info.startStr}&end=${info.endStr}`)
+                        .then(response => response.json())
+                        .then(data => successCallback(data))
+                        .catch(error => failureCallback(error));
+                },
+                eventContent: function(arg) {
+                    let textParts = arg.event.title.split(' - ');
+                    let mainTitle = textParts[0]; 
+                    
+                    let el = document.createElement('div');
+                    el.className = 'fc-event-pill px-2 py-1 mb-1 shadow-sm';
+                    el.style.backgroundColor = arg.event.backgroundColor;
+                    el.style.color = 'white';
+                    el.style.borderLeft = '3px solid rgba(255,255,255,0.5)';
+                    el.style.width = '100%';
+                    el.innerHTML = `<span class="text-truncate d-block w-100" style="font-size: 0.65rem" title="${arg.event.title}">${arg.event.title}</span>`;
+                    return { domNodes: [el] };
+                },
+                dayMaxEvents: 3,
+                eventClick: function(info) {
+                    if (info.event.url) {
+                        window.location.href = info.event.url;
+                        info.jsEvent.preventDefault();
+                    }
+                }
+            });
+            roomCalendar.render();
         }
 
         // --- Daily Info Function ---

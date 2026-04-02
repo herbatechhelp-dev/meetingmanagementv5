@@ -9,6 +9,7 @@ use App\Http\Controllers\ActionItemController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TrashMeetingController;
 use App\Http\Controllers\NotificationSettingsController;
+use App\Http\Controllers\RoomBookingController;
 use Illuminate\Support\Facades\Route;
 
 // Public Routes
@@ -40,6 +41,9 @@ Route::middleware(['auth'])->group(function () {
     // Meetings
     Route::resource('meetings', MeetingController::class);
     
+    // Room Bookings
+    Route::resource('room-bookings', RoomBookingController::class)->except(['show', 'edit', 'update']);
+
     // Meeting Actions
     Route::post('/meetings/{meeting}/start', [MeetingController::class, 'startMeeting'])->name('meetings.start');
     Route::get('/meetings/{meeting}/running', [MeetingController::class, 'runningMeeting'])->name('meetings.running');
@@ -161,4 +165,12 @@ Route::get('/test-agenda', function() {
         Route::resource('departments', DepartmentController::class);
         Route::resource('users', UserController::class);
     });
+});
+
+Route::get('/dev-run-migrations', function() {
+    \Illuminate\Support\Facades\Artisan::call('migrate:status');
+    $status = \Illuminate\Support\Facades\Artisan::output();
+    \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+    $migrate = \Illuminate\Support\Facades\Artisan::output();
+    return nl2br("Status:\n" . $status . "\n\nMigrate:\n" . $migrate);
 });
