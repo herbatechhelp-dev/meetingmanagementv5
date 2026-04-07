@@ -354,6 +354,11 @@
         border-radius: 50%;
         background-color: #64748b;
     }
+    @keyframes pulse {
+        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+        70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+        100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
 </style>
 @endpush
 
@@ -456,6 +461,7 @@ document.addEventListener('DOMContentLoaded', function() {
             onChange: function(selectedDates, dateStr, instance) {
                 if (selectedDates[0]) {
                     updateBookedTimeList(selectedDates[0]);
+                    checkAvailability();
                 }
             }
         });
@@ -563,26 +569,57 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch("{{ route('meetings.booked-slots') }}?location=" + encodeURIComponent(loc) + "&date=" + encodeURIComponent(dateObj))
             .then(res => res.json())
             .then(response => {
-                loader.classList.add('d-none');
+                loader.classList.add('none');
                 if (response.length === 0) {
                     badge.innerHTML = '<span class="badge badge-pill bg-emerald-soft font-weight-bold" style="padding: 6px 12px;">Tersedia</span>';
                     listContainer.insertAdjacentHTML('beforeend', '<div class="empty-state text-center py-4 text-muted"><i class="fas fa-check-circle fa-2x text-emerald mb-2 opacity-50"></i><br>Tidak ada jadwal</div>');
                 } else {
-                    badge.innerHTML = '<span class="badge badge-pill bg-danger-soft font-weight-bold" style="padding: 6px 12px;">Terjadwal</span>';
                     response.sort((a,b) => (a.start_time > b.start_time) ? 1 : -1);
+                    
+                    // Clash detection logic
+                    let userStart = new Date(document.getElementById('start_time').value);
+                    let userEnd = new Date(document.getElementById('end_time').value);
+                    let hasClash = false;
                     
                     let html = '';
                     response.forEach(function(item) {
-                        let s = new Date(item.start_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                        let e = new Date(item.end_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                        let sTime = new Date(item.start_time);
+                        let eTime = new Date(item.end_time);
+                        
+                        // Check overlap
+                        let isOverlapping = userStart < eTime && userEnd > sTime;
+                        if (isOverlapping) hasClash = true;
+                        
+                        let s = sTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                        let e = eTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                        
                         html += `
-                            <div class="timeline-item">
-                                <div class="timeline-dot"></div>
-                                <div class="font-weight-bold text-dark mb-1" style="font-size: 0.95rem;">${s} - ${e}</div>
+                            <div class="timeline-item ${isOverlapping ? 'active' : ''}">
+                                <div class="timeline-dot" style="${isOverlapping ? 'background-color: #ef4444;' : ''}"></div>
+                                <div class="font-weight-bold ${isOverlapping ? 'text-danger' : 'text-dark'} mb-1" style="font-size: 0.95rem;">
+                                    ${s} - ${e} ${isOverlapping ? '<span class="badge badge-danger ml-1" style="font-size: 0.6rem;">BENTROK</span>' : ''}
+                                </div>
                                 <div class="text-muted" style="font-size: 0.85rem;">Reservasi: ${item.title}</div>
                             </div>
                         `;
                     });
+                    
+                    if (hasClash) {
+                        badge.innerHTML = '<span class="badge badge-pill bg-danger font-weight-bold text-white shadow-sm" style="padding: 6px 12px; animation: pulse 2s infinite;">BENTROK!</span>';
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Jadwal Bentrok!',
+                            text: 'Waktu rapat ini bentrok dengan jadwal lain.',
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true
+                        });
+                    } else {
+                        badge.innerHTML = '<span class="badge badge-pill bg-danger-soft font-weight-bold" style="padding: 6px 12px;">Terjadwal</span>';
+                    }
+                    
                     listContainer.insertAdjacentHTML('beforeend', html);
                 }
             })
