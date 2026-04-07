@@ -319,6 +319,9 @@
                             <a href="{{ route('meeting-types.index') }}" class="dropdown-item">
                                 <i class="fas fa-list-ul mr-2"></i> Jenis Meeting
                             </a>
+                            <a href="{{ route('rooms.index') }}" class="dropdown-item {{ request()->routeIs('rooms.*') ? 'active' : '' }}">
+                                <i class="fas fa-door-open mr-2"></i> Manajemen Ruangan
+                            </a>
                             <a href="{{ route('departments.index') }}" class="dropdown-item">
                                 <i class="far fa-building mr-2"></i> Departemen
                             </a>

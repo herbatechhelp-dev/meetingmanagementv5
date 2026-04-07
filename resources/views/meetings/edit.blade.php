@@ -117,10 +117,18 @@
                         </div>
 
                         <div id="locationField" class="form-group mb-0" style="{{ old('is_online', $meeting->is_online) ? 'display: none;' : '' }}">
-                            <label class="text-xs font-weight-bold text-uppercase text-muted mb-2 letter-spacing-1">Lokasi <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control border-light bg-light rounded-lg @error('location') is-invalid @enderror" 
-                                   id="location" name="location" value="{{ old('location', $meeting->location) }}" placeholder="Nama ruangan atau alamat">
-                            @error('location')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            <label class="text-xs font-weight-bold text-uppercase text-muted mb-2 letter-spacing-1">Lokasi / Ruangan <span class="text-danger">*</span></label>
+                            <select class="form-control border-light bg-light rounded-lg @error('room_id') is-invalid @enderror" 
+                                    id="room_id" name="room_id">
+                                <option value="">Pilih Ruangan</option>
+                                @foreach($rooms as $room)
+                                    <option value="{{ $room->id }}" {{ old('room_id', $meeting->room_id) == $room->id ? 'selected' : '' }}>
+                                        {{ $room->name }} (Kap: {{ $room->capacity }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            <input type="hidden" id="location" name="location" value="{{ old('location', $meeting->location) }}">
+                            @error('room_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
 
                         <div id="onlineMeetingSection" style="{{ old('is_online', $meeting->is_online) ? 'display: block;' : 'display: none;' }}">
@@ -167,7 +175,38 @@
 
             <!-- Right Column: Participants & Action -->
             <div class="col-lg-4">
-                <div class="card shadow-sm border-0 mb-4 rounded-xl sticky-top" style="top: 100px; z-index: 10;">
+                <!-- Widget Cek Ketersediaan -->
+                <div class="card shadow-sm border-0 mb-4 rounded-xl overflow-hidden" id="availabilityWidget" style="{{ $meeting->is_online ? 'display: none;' : '' }}">
+                    <div class="card-header bg-white border-bottom-0 p-4 pb-0">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="icon-box-indigo bg-indigo-soft text-indigo rounded-lg p-2 mr-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; border-radius: 10px;">
+                                <i class="fas fa-door-open fa-lg"></i>
+                            </div>
+                            <h5 class="mb-0 font-weight-bold text-dark" style="font-size: 1.15rem;">Status Ruangan</h5>
+                        </div>
+                        <hr class="m-0 border-light">
+                    </div>
+                    <div class="card-body p-4 bg-white" style="min-height: 250px; max-height: 350px; overflow-y: auto;">
+                        <div id="availabilityHeader" class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3 d-none">
+                            <div class="font-weight-bold text-dark text-truncate mr-2" id="availabilityLocName" style="font-size: 1.05rem;"></div>
+                            <div id="availabilityBadge"></div>
+                        </div>
+                        
+                        <div class="text-muted text-sm" id="availabilityPrompt">
+                            <i class="fas fa-info-circle mr-1"></i>Pilih lokasi dan tanggal untuk mengecek jadwal.
+                        </div>
+                        
+                        <div id="availabilityList" class="position-relative mt-2">
+                            <div class="text-center text-muted">
+                                <div class="spinner-border text-primary spinner-border-sm d-none" id="availabilityLoader" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0 mb-4 rounded-xl sticky-top" style="top: 20px; z-index: 10;">
                     <div class="card-body p-4">
                         <h5 class="font-weight-bold text-dark mb-4 pb-2 border-bottom">
                             <i class="fas fa-users text-primary mr-2"></i> Peserta
@@ -310,12 +349,62 @@
     }
     .booked-info-badge {
         font-size: 0.75rem;
-        padding: 4px 8px;
-        border-radius: 4px;
+        padding: 4px 10px;
+        border-radius: 6px;
         background-color: #fee2e2;
         color: #ef4444;
         display: inline-block;
         margin-top: 8px;
+        font-weight: 600;
+        border-left: 3px solid #ef4444;
+    }
+    .available-info-badge {
+        font-size: 0.75rem;
+        padding: 4px 10px;
+        border-radius: 6px;
+        background-color: #ecfdf5;
+        color: #10b981;
+        display: inline-block;
+        margin-top: 8px;
+        font-weight: 600;
+        border-left: 3px solid #10b981;
+    }
+    
+    .bg-indigo-soft { background-color: rgba(79, 70, 229, 0.1); }
+    .text-indigo { color: #4f46e5; }
+    .bg-emerald-soft { background-color: rgba(16, 185, 129, 0.1) !important; color: #10b981 !important; }
+    .bg-danger-soft { background-color: rgba(239, 68, 68, 0.1) !important; color: #ef4444 !important; }
+    
+    .timeline-item {
+        position: relative;
+        padding-left: 20px;
+        margin-bottom: 15px;
+    }
+    .timeline-item:before {
+        content: '';
+        position: absolute;
+        left: 4px;
+        top: 8px;
+        bottom: -20px;
+        width: 2px;
+        background-color: #cbd5e1;
+    }
+    .timeline-item:last-child:before {
+        display: none;
+    }
+    .timeline-dot {
+        position: absolute;
+        left: 0;
+        top: 6px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: #64748b;
+    }
+    @keyframes pulse {
+        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+        70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+        100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
     }
 </style>
 @endpush
@@ -324,24 +413,58 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    let hasClash = false;
     let bookedSlots = [];
+    let startFP = null;
+    let endFP = null;
 
-    // Fetch booked slots
-    fetch("{{ route('meetings.booked-slots') }}")
-        .then(response => response.json())
-        .then(data => {
-            bookedSlots = data.map(slot => ({
-                id: slot.id,
-                start: new Date(slot.start_time),
-                end: new Date(slot.end_time)
-            }));
-            
-            if (bookedSlots.length > 1) { // Lebih dari 1 karena meeting ini sendiri dihitung
-                document.getElementById('booked-status').style.display = 'block';
-            }
-            
-            initFlatpickr();
-        });
+    function fetchBookedSlotsForRoom() {
+        let roomId = document.getElementById('room_id').value;
+        if (!roomId) {
+            bookedSlots = [];
+            if(startFP) startFP.redraw();
+            if(endFP) endFP.redraw();
+            return;
+        }
+
+        fetch("{{ route('meetings.booked-slots') }}?room_id=" + encodeURIComponent(roomId))
+            .then(response => response.json())
+            .then(data => {
+                bookedSlots = data.map(slot => ({
+                    id: slot.id,
+                    type: slot.type,
+                    start: new Date(slot.start_time),
+                    end: new Date(slot.end_time),
+                    title: slot.title
+                }));
+                if(startFP) startFP.redraw();
+                if(endFP) endFP.redraw();
+                checkAvailability();
+            });
+    }
+
+    // Toggle meeting online fields
+    const isOnlineCheckbox = document.getElementById('is_online');
+    const locationField = document.getElementById('locationField');
+    const onlineMeetingSection = document.getElementById('onlineMeetingSection');
+    const availabilityWidget = document.getElementById('availabilityWidget');
+    
+    function toggleMeetingType() {
+        if (isOnlineCheckbox.checked) {
+            locationField.style.display = 'none';
+            availabilityWidget.style.display = 'none';
+            onlineMeetingSection.style.display = 'block';
+            document.getElementById('room_id').required = false;
+        } else {
+            locationField.style.display = 'block';
+            availabilityWidget.style.display = 'block';
+            onlineMeetingSection.style.display = 'none';
+            document.getElementById('room_id').required = true;
+        }
+    }
+    
+    isOnlineCheckbox.addEventListener('change', toggleMeetingType);
+    toggleMeetingType();
 
     function initFlatpickr() {
         const currentMeetingId = {{ $meeting->id }};
@@ -353,7 +476,7 @@ document.addEventListener('DOMContentLoaded', function() {
             onDayCreate: function(dObj, dStr, fp, dayElem) {
                 const date = dayElem.dateObj;
                 const isBooked = bookedSlots.some(slot => {
-                    if (slot.id === currentMeetingId) return false;
+                    if (slot.type === 'meeting' && slot.id === currentMeetingId) return false;
                     const slotDay = new Date(slot.start);
                     return date.getFullYear() === slotDay.getFullYear() &&
                            date.getMonth() === slotDay.getMonth() &&
@@ -367,21 +490,23 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         };
 
-        const startTimePicker = flatpickr("#start_time", {
+        startFP = flatpickr("#start_time", {
             ...commonConfig,
             onChange: function(selectedDates, dateStr, instance) {
                 if (selectedDates[0]) {
-                    endTimePicker.set('minDate', dateStr);
+                    endFP.set('minDate', dateStr);
                     updateBookedTimeList(selectedDates[0]);
+                    checkAvailability();
                 }
             }
         });
 
-        const endTimePicker = flatpickr("#end_time", {
+        endFP = flatpickr("#end_time", {
             ...commonConfig,
             onChange: function(selectedDates, dateStr, instance) {
                 if (selectedDates[0]) {
                     updateBookedTimeList(selectedDates[0]);
+                    checkAvailability();
                 }
             }
         });
@@ -389,32 +514,123 @@ document.addEventListener('DOMContentLoaded', function() {
         function updateBookedTimeList(selectedDate) {
             if (!selectedDate) return;
             
-            const listContainer = document.getElementById('booked-time-list');
+            const bookedListContainer = document.getElementById('booked-time-list');
             const statusContainer = document.getElementById('booked-status');
             
             const bookedToday = bookedSlots.filter(slot => {
-                if (slot.id === currentMeetingId) return false;
+                if (slot.type === 'meeting' && slot.id === currentMeetingId) return false;
                 const slotDay = new Date(slot.start);
                 return selectedDate.getFullYear() === slotDay.getFullYear() &&
                        selectedDate.getMonth() === slotDay.getMonth() &&
                        selectedDate.getDate() === slotDay.getDate();
-            });
+            }).sort((a, b) => a.start - b.start);
 
             if (bookedToday.length > 0) {
                 statusContainer.style.display = 'block';
-                listContainer.innerHTML = 'Jadwal Terisi Lainnya:<br>' + bookedToday.map(slot => {
+                bookedListContainer.innerHTML = 'Jadwal Terisi Lainnya:<br>' + bookedToday.map(slot => {
                     const start = slot.start.toLocaleTimeString('id-id', { hour: '2-digit', minute: '2-digit' });
                     const end = slot.end.toLocaleTimeString('id-id', { hour: '2-digit', minute: '2-digit' });
                     return `• ${start} - ${end}`;
                 }).join('<br>');
             } else {
                 statusContainer.style.display = 'none';
-                listContainer.innerHTML = '';
+                bookedListContainer.innerHTML = '';
             }
         }
     }
+    
+    initFlatpickr();
 
-    // Select2 Initialization
+    document.getElementById('room_id').addEventListener('change', function() {
+        // Update hidden location field for backward compatibility if needed
+        const selectedOption = this.options[this.selectedIndex];
+        document.getElementById('location').value = selectedOption ? selectedOption.text.split(' (')[0] : '';
+        
+        fetchBookedSlotsForRoom();
+    });
+
+    function checkAvailability() {
+        let roomId = document.getElementById('room_id').value;
+        let dateVal = document.getElementById('start_time').value;
+        let currentMeetingId = {{ $meeting->id }};
+        
+        let header = document.getElementById('availabilityHeader');
+        let locName = document.getElementById('availabilityLocName');
+        let badge = document.getElementById('availabilityBadge');
+        let prompt = document.getElementById('availabilityPrompt');
+        let loader = document.getElementById('availabilityLoader');
+        let listContainer = document.getElementById('availabilityList');
+        
+        if (!roomId || !dateVal) return;
+        
+        let dateObj = dateVal.split(' ')[0];
+        
+        header.classList.remove('d-none');
+        locName.textContent = document.getElementById('room_id').options[document.getElementById('room_id').selectedIndex].text.split(' (')[0];
+        prompt.style.display = 'none';
+        
+        loader.classList.remove('d-none');
+        document.querySelectorAll('.timeline-item').forEach(e => e.remove());
+        badge.innerHTML = '';
+        
+        fetch("{{ route('meetings.booked-slots') }}?room_id=" + encodeURIComponent(roomId) + "&date=" + encodeURIComponent(dateObj))
+            .then(res => res.json())
+            .then(response => {
+                loader.classList.add('d-none');
+                
+                // Exclude current meeting from clash detection
+                let otherEvents = response.filter(item => !(item.type === 'meeting' && item.id == currentMeetingId));
+
+                if (otherEvents.length === 0) {
+                    badge.innerHTML = '<span class="badge badge-pill bg-emerald-soft font-weight-bold" style="padding: 6px 12px;">Tersedia</span>';
+                    listContainer.insertAdjacentHTML('beforeend', '<div class="empty-state text-center py-4 text-muted"><i class="fas fa-check-circle fa-2x text-emerald mb-2 opacity-50"></i><br>Tidak ada jadwal lain</div>');
+                } else {
+                    otherEvents.sort((a,b) => (a.start_time > b.start_time) ? 1 : -1);
+                    
+                    let userStart = new Date(document.getElementById('start_time').value);
+                    let userEnd = new Date(document.getElementById('end_time').value);
+                    hasClash = false;
+                    
+                    let html = '';
+                    otherEvents.forEach(function(item) {
+                        let sTime = new Date(item.start_time);
+                        let eTime = new Date(item.end_time);
+                        
+                        let isOverlapping = userStart < eTime && userEnd > sTime;
+                        if (isOverlapping) hasClash = true;
+                        
+                        let s = sTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                        let e = eTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                        
+                        html += `
+                            <div class="timeline-item ${isOverlapping ? 'active' : ''}">
+                                <div class="timeline-dot" style="${isOverlapping ? 'background-color: #ef4444;' : ''}"></div>
+                                <div class="font-weight-bold ${isOverlapping ? 'text-danger' : 'text-dark'} mb-1" style="font-size: 0.95rem;">
+                                    ${s} - ${e} ${isOverlapping ? '<span class="badge badge-danger ml-1" style="font-size: 0.6rem;">BENTROK</span>' : ''}
+                                </div>
+                                <div class="text-muted" style="font-size: 0.85rem;">Reservasi: ${item.title}</div>
+                            </div>
+                        `;
+                    });
+                    
+                    if (hasClash) {
+                        badge.innerHTML = '<span class="badge badge-pill bg-danger font-weight-bold text-white shadow-sm" style="padding: 6px 12px; animation: pulse 2s infinite;">BENTROK!</span>';
+                    } else {
+                        badge.innerHTML = '<span class="badge badge-pill bg-danger-soft font-weight-bold" style="padding: 6px 12px;">Terjadwal</span>';
+                    }
+                    
+                    listContainer.insertAdjacentHTML('beforeend', html);
+                }
+            })
+            .catch(() => {
+                loader.classList.add('d-none');
+            });
+    }
+
+    if (document.getElementById('room_id').value) {
+        fetchBookedSlotsForRoom();
+    }
+
     if ($.fn.select2) {
         $('#participants').select2({
             placeholder: 'Select members...',
@@ -424,25 +640,30 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Toggle meeting online fields
-    const isOnlineCheckbox = document.getElementById('is_online');
-    const locationField = document.getElementById('locationField');
-    const onlineMeetingSection = document.getElementById('onlineMeetingSection');
-    
-    function toggleMeetingType() {
-        if (isOnlineCheckbox.checked) {
-            locationField.style.display = 'none';
-            onlineMeetingSection.style.display = 'block';
-            document.getElementById('location').required = false;
-        } else {
-            locationField.style.display = 'block';
-            onlineMeetingSection.style.display = 'none';
-            document.getElementById('location').required = true;
-        }
+    const meetingForm = document.getElementById('meetingForm');
+    if (meetingForm) {
+        meetingForm.addEventListener('submit', function(e) {
+            if (!isOnlineCheckbox.checked) {
+                const roomId = document.getElementById('room_id');
+                if (roomId && !roomId.value) {
+                    e.preventDefault();
+                    roomId.classList.add('is-invalid');
+                    alert('Silakan pilih lokasi/ruangan meeting.');
+                    return;
+                }
+            }
+
+            if (hasClash) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Tidak Bisa Menyimpan',
+                    text: 'Jadwal yang Anda pilih bentrok dengan jadwal lain.',
+                    confirmButtonColor: '#10b981'
+                });
+            }
+        });
     }
-    
-    isOnlineCheckbox.addEventListener('change', toggleMeetingType);
-    toggleMeetingType();
 });
 </script>
 @endpush

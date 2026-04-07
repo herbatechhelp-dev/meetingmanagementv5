@@ -9,6 +9,7 @@ use App\Http\Controllers\ActionItemController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TrashMeetingController;
 use App\Http\Controllers\NotificationSettingsController;
+use App\Http\Controllers\RoomController;
 use App\Http\Controllers\RoomBookingController;
 use Illuminate\Support\Facades\Route;
 
@@ -89,6 +90,10 @@ Route::delete('/meetings/{meeting}/files/{file}/delete', [MeetingController::cla
         Route::delete('/meetings/{id}/force-delete', [TrashMeetingController::class, 'forceDelete'])->name('force-delete');
         Route::delete('/meetings/empty', [TrashMeetingController::class, 'emptyTrash'])->name('empty');
     });
+
+    // Room & Booking Routes
+    Route::resource('rooms', RoomController::class);
+    Route::resource('room-bookings', RoomBookingController::class);
 
     // Action Items
     Route::resource('action-items', ActionItemController::class)->except(['create', 'store']);

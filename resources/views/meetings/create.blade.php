@@ -114,10 +114,18 @@
                         </div>
 
                         <div id="locationField" class="form-group mb-0">
-                            <label class="text-xs font-weight-bold text-uppercase text-muted mb-2 letter-spacing-1">Lokasi <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control border-light bg-light rounded-lg @error('location') is-invalid @enderror" 
-                                   id="location" name="location" value="{{ old('location') }}" placeholder="Nama ruangan atau alamat">
-                            @error('location')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            <label class="text-xs font-weight-bold text-uppercase text-muted mb-2 letter-spacing-1">Lokasi / Ruangan <span class="text-danger">*</span></label>
+                            <select class="form-control border-light bg-light rounded-lg @error('room_id') is-invalid @enderror" 
+                                    id="room_id" name="room_id">
+                                <option value="">Pilih Ruangan</option>
+                                @foreach($rooms as $room)
+                                    <option value="{{ $room->id }}" {{ old('room_id') == $room->id ? 'selected' : '' }}>
+                                        {{ $room->name }} (Kap: {{ $room->capacity }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            <input type="hidden" id="location" name="location" value="{{ old('location') }}">
+                            @error('room_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
 
                         <div id="onlineMeetingSection" style="display: none;">
@@ -373,16 +381,16 @@ document.addEventListener('DOMContentLoaded', function() {
     let startFP = null;
     let endFP = null;
 
-    function fetchBookedSlotsForLocation() {
-        let loc = document.getElementById('location').value;
-        if (!loc) {
+    function fetchBookedSlotsForRoom() {
+        let roomId = document.getElementById('room_id').value;
+        if (!roomId) {
             bookedSlots = [];
             if(startFP) startFP.redraw();
             if(endFP) endFP.redraw();
             return;
         }
 
-        fetch("{{ route('meetings.booked-slots') }}?location=" + encodeURIComponent(loc))
+        fetch("{{ route('meetings.booked-slots') }}?room_id=" + encodeURIComponent(roomId))
             .then(response => response.json())
             .then(data => {
                 bookedSlots = data.map(slot => ({
@@ -534,16 +542,16 @@ document.addEventListener('DOMContentLoaded', function() {
     
     initFlatpickr();
 
-    let timeout = null;
-    document.getElementById('location').addEventListener('input', function() {
-        clearTimeout(timeout);
-        timeout = setTimeout(function() {
-            fetchBookedSlotsForLocation();
-        }, 500);
+    document.getElementById('room_id').addEventListener('change', function() {
+        // Update hidden location field for backward compatibility if needed
+        const selectedOption = this.options[this.selectedIndex];
+        document.getElementById('location').value = selectedOption.text.split(' (')[0];
+        
+        fetchBookedSlotsForRoom();
     });
 
     function checkAvailability() {
-        let loc = document.getElementById('location').value;
+        let roomId = document.getElementById('room_id').value;
         let dateVal = document.getElementById('start_time').value;
         
         let header = document.getElementById('availabilityHeader');
@@ -553,13 +561,13 @@ document.addEventListener('DOMContentLoaded', function() {
         let loader = document.getElementById('availabilityLoader');
         let listContainer = document.getElementById('availabilityList');
         
-        if (!loc || !dateVal) return;
+        if (!roomId || !dateVal) return;
         
         // Extract Y-m-d
         let dateObj = dateVal.split(' ')[0];
         
         header.classList.remove('d-none');
-        locName.textContent = loc;
+        locName.textContent = document.getElementById('room_id').options[document.getElementById('room_id').selectedIndex].text.split(' (')[0];
         prompt.style.display = 'none';
         
         loader.classList.remove('d-none');
@@ -567,7 +575,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.empty-state').forEach(e => e.remove());
         badge.innerHTML = '';
         
-        fetch("{{ route('meetings.booked-slots') }}?location=" + encodeURIComponent(loc) + "&date=" + encodeURIComponent(dateObj))
+        fetch("{{ route('meetings.booked-slots') }}?room_id=" + encodeURIComponent(roomId) + "&date=" + encodeURIComponent(dateObj))
             .then(res => res.json())
             .then(response => {
                 loader.classList.add('none');
@@ -630,8 +638,8 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
-    if (document.getElementById('location').value) {
-        fetchBookedSlotsForLocation();
+    if (document.getElementById('room_id').value) {
+        fetchBookedSlotsForRoom();
     }
 
     // Platform change handler
@@ -689,11 +697,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     alert('Silakan masukkan link meeting untuk meeting online.');
                 }
             } else {
-                const location = document.getElementById('location');
-                if (location && !location.value.trim()) {
+                const roomId = document.getElementById('room_id');
+                if (roomId && !roomId.value) {
                     isValid = false;
-                    location.classList.add('is-invalid');
-                    alert('Silakan masukkan lokasi meeting.');
+                    roomId.classList.add('is-invalid');
+                    alert('Silakan pilih lokasi/ruangan meeting.');
                 }
             }
             

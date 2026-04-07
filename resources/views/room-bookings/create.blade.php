@@ -44,8 +44,14 @@
                             <div class="col-md-12 mb-3">
                                 <div class="form-group">
                                     <label class="font-weight-bold text-dark text-sm">Nama/Lokasi Ruangan <span class="text-danger">*</span></label>
-                                    <input type="text" name="location" id="location" class="form-control form-control-lg text-sm @error('location') is-invalid @enderror" value="{{ old('location') }}" required placeholder="Contoh: Ruang Meeting Utama, Ruang Diskusi Lt. 2">
-                                    @error('location')
+                                    <select name="room_id" id="room_id" class="form-control form-control-lg text-sm @error('room_id') is-invalid @enderror" required>
+                                        <option value="">-- Pilih Ruangan --</option>
+                                        @foreach($rooms as $room)
+                                            <option value="{{ $room->id }}" {{ old('room_id') == $room->id ? 'selected' : '' }}>{{ $room->name }} (Kapasitas: {{ $room->capacity }})</option>
+                                        @endforeach
+                                    </select>
+                                    <input type="hidden" name="location" id="location" value="{{ old('location') }}">
+                                    @error('room_id')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
@@ -203,7 +209,7 @@
             }
         });
         
-        flatpickr("#end_time", {
+        let endFP = flatpickr("#end_time", {
             enableTime: true,
             dateFormat: "Y-m-d H:i",
             time_24hr: true,
@@ -213,37 +219,34 @@
             }
         });
         
-        let timeout = null;
-        $('#location').on('input', function() {
-            clearTimeout(timeout);
-            timeout = setTimeout(function() {
-                checkAvailability();
-            }, 500);
+        $('#room_id').on('change', function() {
+            // Update hidden location field for compatibility
+            let selectedText = $(this).find('option:selected').text().split(' (')[0];
+            $('#location').val(selectedText);
+            checkAvailability();
         });
         
         function checkAvailability() {
-            let loc = $('#location').val();
-            let dateVal = $('#start_time').val();
+            let roomId = $('#room_id').val();
+            let startTime = $('#start_time').val();
             
-            if (!loc || !dateVal) return;
+            if (!roomId || !startTime) return;
             
-            // Extract Y-m-d from datetime string
-            let dateObj = dateVal.split(' ')[0];
+            let dateObj = startTime.split(' ')[0];
             
             $('#availabilityHeader').removeClass('d-none');
-            $('#availabilityLocName').text(loc);
+            $('#availabilityLocName').text($('#room_id option:selected').text());
             $('#availabilityPrompt').hide();
             
             $('#availabilityLoader').removeClass('d-none');
-            $('#availabilityList').find('.timeline-item').remove();
-            $('#availabilityList').find('.empty-state').remove();
+            $('#availabilityList').empty();
             $('#availabilityBadge').empty();
             
             $.ajax({
-                url: '{{ route("meetings.booked-slots") }}',
+                url: "{{ route('meetings.booked-slots') }}",
                 method: 'GET',
                 data: {
-                    location: loc,
+                    room_id: roomId,
                     date: dateObj
                 },
                 success: function(response) {
@@ -324,7 +327,7 @@
         });
 
         // Initial check if values are present (e.g. going back on validation error)
-        if ($('#location').val() && $('#start_time').val()) {
+        if ($('#room_id').val() && $('#start_time').val()) {
             checkAvailability();
         }
     });

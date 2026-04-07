@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\RoomBooking;
 use App\Models\Meeting;
+use App\Models\Room;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -26,7 +27,8 @@ class RoomBookingController extends Controller
      */
     public function create()
     {
-        return view('room-bookings.create');
+        $rooms = Room::active()->orderBy('name')->get();
+        return view('room-bookings.create', compact('rooms'));
     }
 
     /**
@@ -36,15 +38,15 @@ class RoomBookingController extends Controller
     {
         $request->validate([
             'pic_name' => 'nullable|string|max:255',
-            'location' => 'required|string|max:255',
+            'room_id' => 'required|exists:rooms,id',
             'purpose' => 'required|string|max:255',
             'start_time' => 'required|date',
             'end_time' => 'required|date|after:start_time',
         ]);
 
+        $room = Room::findOrFail($request->room_id);
         $startTime = Carbon::parse($request->start_time);
         $endTime = Carbon::parse($request->end_time);
-        $location = trim($request->location);
 
         // Anti-clash check
         $clashQuery = function($q) use ($startTime, $endTime) {
@@ -52,19 +54,19 @@ class RoomBookingController extends Controller
               ->where('end_time', '>', $startTime);
         };
 
-        $clashingRoomBooking = RoomBooking::where('location', 'like', $location)
+        $clashingRoomBooking = RoomBooking::where('room_id', $room->id)
             ->where('status', '!=', 'cancelled')
             ->where($clashQuery)
             ->exists();
 
-        $clashingMeeting = Meeting::where('location', 'like', $location)
+        $clashingMeeting = Meeting::where('room_id', $room->id)
             ->where('is_online', false)
             ->where('status', '!=', 'cancelled')
             ->where($clashQuery)
             ->exists();
 
         if ($clashingRoomBooking || $clashingMeeting) {
-            return back()->with('error', 'Ruangan tersebut sudah dibooking pada jam tersebut (terdapat bentrok dengan jadwal lain). Silakan pilih ruangan/waktu berbeda.')
+            return back()->with('error', 'Ruangan tersebut sudah dibooking pada jam tersebut. Silakan pilih waktu berbeda.')
                          ->withInput();
         }
         
@@ -72,8 +74,9 @@ class RoomBookingController extends Controller
 
         RoomBooking::create([
             'user_id' => auth()->id(),
+            'room_id' => $room->id,
             'pic_name' => $picName,
-            'location' => $request->location,
+            'location' => $room->name,
             'purpose' => $request->purpose,
             'start_time' => $startTime,
             'end_time' => $endTime,
@@ -81,6 +84,77 @@ class RoomBookingController extends Controller
         ]);
 
         return redirect()->route('room-bookings.index')->with('success', 'Reservasi ruangan berhasil dibuat.');
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(RoomBooking $roomBooking)
+    {
+        // Hanya yang membooking atau admin yang bisa mengedit
+        if (auth()->id() !== $roomBooking->user_id && !auth()->user()->isAdmin()) {
+            return back()->with('error', 'Anda tidak memiliki akses untuk mengedit reservasi ini.');
+        }
+
+        $rooms = Room::active()->orderBy('name')->get();
+        return view('room-bookings.edit', compact('roomBooking', 'rooms'));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, RoomBooking $roomBooking)
+    {
+        // Hanya yang membooking atau admin yang bisa mengedit
+        if (auth()->id() !== $roomBooking->user_id && !auth()->user()->isAdmin()) {
+            return back()->with('error', 'Anda tidak memiliki akses untuk mengedit reservasi ini.');
+        }
+
+        $request->validate([
+            'pic_name' => 'nullable|string|max:255',
+            'room_id' => 'required|exists:rooms,id',
+            'purpose' => 'required|string|max:255',
+            'start_time' => 'required|date',
+            'end_time' => 'required|date|after:start_time',
+        ]);
+
+        $room = Room::findOrFail($request->room_id);
+        $startTime = Carbon::parse($request->start_time);
+        $endTime = Carbon::parse($request->end_time);
+
+        // Anti-clash check (exclude current booking)
+        $clashQuery = function($q) use ($startTime, $endTime) {
+            $q->where('start_time', '<', $endTime)
+              ->where('end_time', '>', $startTime);
+        };
+
+        $clashingRoomBooking = RoomBooking::where('room_id', $room->id)
+            ->where('id', '!=', $roomBooking->id)
+            ->where('status', '!=', 'cancelled')
+            ->where($clashQuery)
+            ->exists();
+
+        $clashingMeeting = Meeting::where('room_id', $room->id)
+            ->where('is_online', false)
+            ->where('status', '!=', 'cancelled')
+            ->where($clashQuery)
+            ->exists();
+
+        if ($clashingRoomBooking || $clashingMeeting) {
+            return back()->with('error', 'Ruangan tersebut sudah dibooking pada jam tersebut. Silakan pilih waktu berbeda.')
+                         ->withInput();
+        }
+
+        $roomBooking->update([
+            'room_id' => $room->id,
+            'pic_name' => $request->pic_name ?: $roomBooking->user->name,
+            'location' => $room->name,
+            'purpose' => $request->purpose,
+            'start_time' => $startTime,
+            'end_time' => $endTime,
+        ]);
+
+        return redirect()->route('room-bookings.index')->with('success', 'Reservasi ruangan berhasil diperbarui.');
     }
 
     /**
