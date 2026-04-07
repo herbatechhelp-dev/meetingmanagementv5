@@ -114,10 +114,18 @@
                         </div>
 
                         <div id="locationField" class="form-group mb-0">
-                            <label class="text-xs font-weight-bold text-uppercase text-muted mb-2 letter-spacing-1">Lokasi <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control border-light bg-light rounded-lg @error('location') is-invalid @enderror" 
-                                   id="location" name="location" value="{{ old('location') }}" placeholder="Nama ruangan atau alamat">
-                            @error('location')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            <label class="text-xs font-weight-bold text-uppercase text-muted mb-2 letter-spacing-1">Lokasi / Ruangan <span class="text-danger">*</span></label>
+                            <select class="form-control border-light bg-light rounded-lg @error('room_id') is-invalid @enderror" 
+                                    id="room_id" name="room_id">
+                                <option value="">Pilih Ruangan</option>
+                                @foreach($rooms as $room)
+                                    <option value="{{ $room->id }}" {{ old('room_id') == $room->id ? 'selected' : '' }}>
+                                        {{ $room->name }} (Kap: {{ $room->capacity }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            <input type="hidden" id="location" name="location" value="{{ old('location') }}">
+                            @error('room_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
 
                         <div id="onlineMeetingSection" style="display: none;">
@@ -162,7 +170,39 @@
 
             <!-- Right Column: Participants & Action -->
             <div class="col-lg-4">
-                <div class="card shadow-sm border-0 mb-4 rounded-xl sticky-top" style="top: 100px; z-index: 10;">
+                <!-- Widget Cek Ketersediaan -->
+                <div class="card shadow-sm border-0 mb-4 rounded-xl overflow-hidden" id="availabilityWidget">
+                    <div class="card-header bg-white border-bottom-0 p-4 pb-0">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="icon-box-indigo bg-indigo-soft text-indigo rounded-lg p-2 mr-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; border-radius: 10px;">
+                                <i class="fas fa-door-open fa-lg"></i>
+                            </div>
+                            <h5 class="mb-0 font-weight-bold text-dark" style="font-size: 1.15rem;">Status Ruangan</h5>
+                        </div>
+                        <hr class="m-0 border-light">
+                    </div>
+                    <div class="card-body p-4 bg-white" style="min-height: 250px; max-height: 350px; overflow-y: auto;">
+                        <div id="availabilityHeader" class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3 d-none">
+                            <div class="font-weight-bold text-dark text-truncate mr-2" id="availabilityLocName" style="font-size: 1.05rem;"></div>
+                            <div id="availabilityBadge"></div>
+                        </div>
+                        
+                        <div class="text-muted text-sm" id="availabilityPrompt">
+                            <i class="fas fa-info-circle mr-1"></i>Pilih lokasi dan tanggal untuk mengecek jadwal.
+                        </div>
+                        
+                        <!-- Tempat hasil AJAX -->
+                        <div id="availabilityList" class="position-relative mt-2">
+                            <div class="text-center text-muted">
+                                <div class="spinner-border text-primary spinner-border-sm d-none" id="availabilityLoader" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0 mb-4 rounded-xl sticky-top" style="top: 20px; z-index: 10;">
                     <div class="card-body p-4">
                         <h5 class="font-weight-bold text-dark mb-4 pb-2 border-bottom">
                             <i class="fas fa-users text-primary mr-2"></i> Peserta
@@ -290,6 +330,43 @@
         font-weight: 600;
         border-left: 3px solid #10b981;
     }
+    
+    .bg-indigo-soft { background-color: rgba(79, 70, 229, 0.1); }
+    .text-indigo { color: #4f46e5; }
+    .bg-emerald-soft { background-color: rgba(16, 185, 129, 0.1) !important; color: #10b981 !important; }
+    .bg-danger-soft { background-color: rgba(239, 68, 68, 0.1) !important; color: #ef4444 !important; }
+    
+    .timeline-item {
+        position: relative;
+        padding-left: 20px;
+        margin-bottom: 15px;
+    }
+    .timeline-item:before {
+        content: '';
+        position: absolute;
+        left: 4px;
+        top: 8px;
+        bottom: -20px;
+        width: 2px;
+        background-color: #cbd5e1;
+    }
+    .timeline-item:last-child:before {
+        display: none;
+    }
+    .timeline-dot {
+        position: absolute;
+        left: 0;
+        top: 6px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: #64748b;
+    }
+    @keyframes pulse {
+        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+        70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+        100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
 </style>
 @endpush
 
@@ -298,24 +375,62 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Document loaded, initializing meeting form...');
-
+    
+    let hasClash = false;
     let bookedSlots = [];
+    let startFP = null;
+    let endFP = null;
 
-    // Fetch booked slots
-    fetch("{{ route('meetings.booked-slots') }}")
-        .then(response => response.json())
-        .then(data => {
-            bookedSlots = data.map(slot => ({
-                start: new Date(slot.start_time),
-                end: new Date(slot.end_time)
-            }));
-            
-            if (bookedSlots.length > 0) {
-                document.getElementById('booked-status').style.display = 'block';
-            }
-            
-            initFlatpickr();
-        });
+    function fetchBookedSlotsForRoom() {
+        let roomId = document.getElementById('room_id').value;
+        if (!roomId) {
+            bookedSlots = [];
+            if(startFP) startFP.redraw();
+            if(endFP) endFP.redraw();
+            return;
+        }
+
+        fetch("{{ route('meetings.booked-slots') }}?room_id=" + encodeURIComponent(roomId))
+            .then(response => response.json())
+            .then(data => {
+                bookedSlots = data.map(slot => ({
+                    start: new Date(slot.start_time),
+                    end: new Date(slot.end_time),
+                    title: slot.title
+                }));
+                if(startFP) startFP.redraw();
+                if(endFP) endFP.redraw();
+                checkAvailability();
+            });
+    }
+
+    // Toggle meeting online fields
+    const isOnlineCheckbox = document.getElementById('is_online');
+    const locationField = document.getElementById('locationField');
+    const onlineMeetingSection = document.getElementById('onlineMeetingSection');
+    const availabilityWidget = document.getElementById('availabilityWidget');
+    
+    function toggleMeetingType() {
+        console.log('Toggle meeting type, checked:', isOnlineCheckbox.checked);
+        if (isOnlineCheckbox.checked) {
+            locationField.style.display = 'none';
+            availabilityWidget.style.display = 'none';
+            onlineMeetingSection.style.display = 'block';
+            document.getElementById('meeting_platform').required = true;
+            document.getElementById('meeting_link').required = true;
+            document.getElementById('location').required = false;
+        } else {
+            locationField.style.display = 'block';
+            availabilityWidget.style.display = 'block';
+            onlineMeetingSection.style.display = 'none';
+            document.getElementById('location').required = true;
+            document.getElementById('meeting_platform').required = false;
+            document.getElementById('meeting_link').required = false;
+        }
+    }
+    
+    isOnlineCheckbox.addEventListener('change', toggleMeetingType);
+    toggleMeetingType();
 
     function initFlatpickr() {
         const commonConfig = {
@@ -339,21 +454,23 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         };
 
-        const startTimePicker = flatpickr("#start_time", {
+        startFP = flatpickr("#start_time", {
             ...commonConfig,
             onChange: function(selectedDates, dateStr, instance) {
                 if (selectedDates[0]) {
-                    endTimePicker.set('minDate', dateStr);
+                    endFP.set('minDate', dateStr);
                     updateBookedTimeList(selectedDates[0]);
+                    checkAvailability();
                 }
             }
         });
 
-        const endTimePicker = flatpickr("#end_time", {
+        endFP = flatpickr("#end_time", {
             ...commonConfig,
             onChange: function(selectedDates, dateStr, instance) {
                 if (selectedDates[0]) {
                     updateBookedTimeList(selectedDates[0]);
+                    checkAvailability();
                 }
             }
         });
@@ -372,7 +489,6 @@ document.addEventListener('DOMContentLoaded', function() {
                        selectedDate.getDate() === slotDay.getDate();
             }).sort((a, b) => a.start - b.start);
 
-            // Selalu tampilkan statusContainer jika ada tanggal yang dipilih untuk info Jam Tersedia
             statusContainer.style.display = 'block';
 
             if (bookedToday.length > 0) {
@@ -385,7 +501,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 bookedListContainer.innerHTML = '';
             }
 
-            // Hitung Jam Tersedia (Standard 08:00 - 17:00)
             const workStart = new Date(selectedDate);
             workStart.setHours(8, 0, 0, 0);
             
@@ -424,31 +539,108 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
+    
+    initFlatpickr();
 
-    // Toggle meeting online fields
-    const isOnlineCheckbox = document.getElementById('is_online');
-    const locationField = document.getElementById('locationField');
-    const onlineMeetingSection = document.getElementById('onlineMeetingSection');
-    
-    function toggleMeetingType() {
-        console.log('Toggle meeting type, checked:', isOnlineCheckbox.checked);
-        if (isOnlineCheckbox.checked) {
-            locationField.style.display = 'none';
-            onlineMeetingSection.style.display = 'block';
-            document.getElementById('meeting_platform').required = true;
-            document.getElementById('meeting_link').required = true;
-            document.getElementById('location').required = false;
-        } else {
-            locationField.style.display = 'block';
-            onlineMeetingSection.style.display = 'none';
-            document.getElementById('location').required = true;
-            document.getElementById('meeting_platform').required = false;
-            document.getElementById('meeting_link').required = false;
-        }
+    document.getElementById('room_id').addEventListener('change', function() {
+        // Update hidden location field for backward compatibility if needed
+        const selectedOption = this.options[this.selectedIndex];
+        document.getElementById('location').value = selectedOption.text.split(' (')[0];
+        
+        fetchBookedSlotsForRoom();
+    });
+
+    function checkAvailability() {
+        let roomId = document.getElementById('room_id').value;
+        let dateVal = document.getElementById('start_time').value;
+        
+        let header = document.getElementById('availabilityHeader');
+        let locName = document.getElementById('availabilityLocName');
+        let badge = document.getElementById('availabilityBadge');
+        let prompt = document.getElementById('availabilityPrompt');
+        let loader = document.getElementById('availabilityLoader');
+        let listContainer = document.getElementById('availabilityList');
+        
+        if (!roomId || !dateVal) return;
+        
+        // Extract Y-m-d
+        let dateObj = dateVal.split(' ')[0];
+        
+        header.classList.remove('d-none');
+        locName.textContent = document.getElementById('room_id').options[document.getElementById('room_id').selectedIndex].text.split(' (')[0];
+        prompt.style.display = 'none';
+        
+        loader.classList.remove('d-none');
+        document.querySelectorAll('.timeline-item').forEach(e => e.remove());
+        document.querySelectorAll('.empty-state').forEach(e => e.remove());
+        badge.innerHTML = '';
+        
+        fetch("{{ route('meetings.booked-slots') }}?room_id=" + encodeURIComponent(roomId) + "&date=" + encodeURIComponent(dateObj))
+            .then(res => res.json())
+            .then(response => {
+                loader.classList.add('none');
+                if (response.length === 0) {
+                    badge.innerHTML = '<span class="badge badge-pill bg-emerald-soft font-weight-bold" style="padding: 6px 12px;">Tersedia</span>';
+                    listContainer.insertAdjacentHTML('beforeend', '<div class="empty-state text-center py-4 text-muted"><i class="fas fa-check-circle fa-2x text-emerald mb-2 opacity-50"></i><br>Tidak ada jadwal</div>');
+                } else {
+                    response.sort((a,b) => (a.start_time > b.start_time) ? 1 : -1);
+                    
+                    // Clash detection logic
+                    let userStart = new Date(document.getElementById('start_time').value);
+                    let userEnd = new Date(document.getElementById('end_time').value);
+                    hasClash = false;
+                    
+                    let html = '';
+                    response.forEach(function(item) {
+                        let sTime = new Date(item.start_time);
+                        let eTime = new Date(item.end_time);
+                        
+                        // Check overlap
+                        let isOverlapping = userStart < eTime && userEnd > sTime;
+                        if (isOverlapping) hasClash = true;
+                        
+                        let s = sTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                        let e = eTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                        
+                        html += `
+                            <div class="timeline-item ${isOverlapping ? 'active' : ''}">
+                                <div class="timeline-dot" style="${isOverlapping ? 'background-color: #ef4444;' : ''}"></div>
+                                <div class="font-weight-bold ${isOverlapping ? 'text-danger' : 'text-dark'} mb-1" style="font-size: 0.95rem;">
+                                    ${s} - ${e} ${isOverlapping ? '<span class="badge badge-danger ml-1" style="font-size: 0.6rem;">BENTROK</span>' : ''}
+                                </div>
+                                <div class="text-muted" style="font-size: 0.85rem;">Reservasi: ${item.title}</div>
+                            </div>
+                        `;
+                    });
+                    
+                    if (hasClash) {
+                        badge.innerHTML = '<span class="badge badge-pill bg-danger font-weight-bold text-white shadow-sm" style="padding: 6px 12px; animation: pulse 2s infinite;">BENTROK!</span>';
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Jadwal Bentrok!',
+                            text: 'Waktu rapat ini bentrok dengan jadwal lain.',
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true
+                        });
+                    } else {
+                        badge.innerHTML = '<span class="badge badge-pill bg-danger-soft font-weight-bold" style="padding: 6px 12px;">Terjadwal</span>';
+                    }
+                    
+                    listContainer.insertAdjacentHTML('beforeend', html);
+                }
+            })
+            .catch(() => {
+                loader.classList.add('d-none');
+                listContainer.insertAdjacentHTML('beforeend', '<div class="empty-state text-center py-3 text-danger"><i class="fas fa-exclamation-triangle mr-1"></i> Gagal memuat jadwal.</div>');
+            });
     }
-    
-    isOnlineCheckbox.addEventListener('change', toggleMeetingType);
-    toggleMeetingType();
+
+    if (document.getElementById('room_id').value) {
+        fetchBookedSlotsForRoom();
+    }
 
     // Platform change handler
     const platformSelect = document.getElementById('meeting_platform');
@@ -505,12 +697,22 @@ document.addEventListener('DOMContentLoaded', function() {
                     alert('Silakan masukkan link meeting untuk meeting online.');
                 }
             } else {
-                const location = document.getElementById('location');
-                if (location && !location.value.trim()) {
+                const roomId = document.getElementById('room_id');
+                if (roomId && !roomId.value) {
                     isValid = false;
-                    location.classList.add('is-invalid');
-                    alert('Silakan masukkan lokasi meeting.');
+                    roomId.classList.add('is-invalid');
+                    alert('Silakan pilih lokasi/ruangan meeting.');
                 }
+            }
+            
+            if (hasClash) {
+                isValid = false;
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Tidak Bisa Menyimpan',
+                    text: 'Jadwal yang Anda pilih bentrok dengan jadwal lain. Silakan ubah waktu atau lokasi ruangan.',
+                    confirmButtonColor: '#10b981'
+                });
             }
             
             if (!isValid) {

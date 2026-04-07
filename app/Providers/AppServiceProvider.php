@@ -21,5 +21,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Paginator::useBootstrap();
+        
+        \Illuminate\Support\Facades\View::composer('*', function ($view) {
+            $view->with('globalSetting', \App\Models\AppSetting::first());
+        });
     }
 }

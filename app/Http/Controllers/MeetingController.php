@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Room;
 use App\Models\Meeting;
 use App\Models\MeetingType;
 use App\Models\User;
@@ -154,8 +155,9 @@ class MeetingController extends Controller
         $meetingTypes = MeetingType::active()->get();
         $departments = Department::active()->get();
         $users = User::active()->get();
+        $rooms = Room::active()->orderBy('name')->get();
         
-        return view('meetings.create', compact('meetingTypes', 'departments', 'users'));
+        return view('meetings.create', compact('meetingTypes', 'departments', 'users', 'rooms'));
     }
 
     public function store(Request $request)
@@ -170,11 +172,18 @@ class MeetingController extends Controller
         // VALIDASI DASAR TANPA AGENDAS
         $validated = $request->validate([
             'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
             'meeting_type_id' => 'required|exists:meeting_types,id',
             'department_id' => 'required|exists:departments,id',
             'start_time' => 'required|date',
             'end_time' => 'required|date|after:start_time',
-            'location' => 'required_without:is_online|nullable|string|max:255',
+            'room_id' => 'required_without:is_online|nullable|exists:rooms,id',
+            'location' => 'nullable|string|max:255',
+            'is_online' => 'boolean',
+            'meeting_link' => 'nullable|url',
+            'meeting_platform' => 'nullable|string',
+            'meeting_id' => 'nullable|string',
+            'meeting_password' => 'nullable|string',
             'participants' => 'required|array|min:1',
             'participants.*' => 'exists:users,id',
         ]);
@@ -183,27 +192,36 @@ class MeetingController extends Controller
             DB::beginTransaction();
 
             // CHECK ROOM CONFLICT
-            if ($this->checkRoomConflict($validated['start_time'], $validated['end_time'])) {
-                return redirect()->back()
-                    ->withInput()
-                    ->withErrors([
-                        'start_time' => 'Ruangan sudah dibooking pada hari dan jam tersebut.',
-                        'end_time' => 'Ruangan sudah dibooking pada hari dan jam tersebut.',
-                    ])
-                    ->with('error', 'Konflik Jadwal: Ruangan sudah dibooking pada hari dan jam tersebut.');
+            $isOnline = $request->boolean('is_online');
+            $roomId = $validated['room_id'] ?? null;
+            $location = $validated['location'];
+
+            if (!$isOnline && $roomId) {
+                $room = Room::find($roomId);
+                $location = $room->name;
+                if ($this->checkRoomConflict($roomId, $validated['start_time'], $validated['end_time'])) {
+                    return redirect()->back()
+                        ->withInput()
+                        ->withErrors([
+                            'start_time' => 'Ruangan sudah dibooking pada hari dan jam tersebut.',
+                            'end_time' => 'Ruangan sudah dibooking pada hari dan jam tersebut.',
+                        ])
+                        ->with('error', 'Konflik Jadwal: Ruangan sudah dibooking pada hari dan jam tersebut.');
+                }
             }
 
             // CREATE MEETING
             $meeting = Meeting::create([
                 'title' => $validated['title'],
-                'description' => $request->description,
+                'description' => $validated['description'],
                 'meeting_type_id' => $validated['meeting_type_id'],
                 'organizer_id' => auth()->id(),
                 'department_id' => $validated['department_id'],
                 'start_time' => $validated['start_time'],
                 'end_time' => $validated['end_time'],
-                'location' => $validated['location'],
-                'is_online' => $request->boolean('is_online'),
+                'room_id' => $roomId,
+                'location' => $location,
+                'is_online' => $isOnline,
                 'meeting_link' => $request->meeting_link,
                 'meeting_platform' => $request->meeting_platform,
                 'meeting_id' => $request->meeting_id,
@@ -311,9 +329,10 @@ class MeetingController extends Controller
         $meetingTypes = MeetingType::active()->get();
         $departments = Department::active()->get();
         $users = User::active()->get();
+        $rooms = Room::active()->orderBy('name')->get();
         $currentParticipants = $meeting->participants->pluck('user_id')->toArray();
 
-        return view('meetings.edit', compact('meeting', 'meetingTypes', 'departments', 'users', 'currentParticipants'));
+        return view('meetings.edit', compact('meeting', 'meetingTypes', 'departments', 'users', 'rooms', 'currentParticipants'));
     }
 
     public function update(Request $request, Meeting $meeting)
@@ -329,7 +348,8 @@ class MeetingController extends Controller
             'department_id' => 'required|exists:departments,id',
             'start_time' => 'required|date',
             'end_time' => 'required|date|after:start_time',
-            'location' => 'required_without:is_online|nullable|string|max:255',
+            'room_id' => 'required_without:is_online|nullable|exists:rooms,id',
+            'location' => 'nullable|string|max:255',
             'is_online' => 'boolean',
             'meeting_link' => 'nullable|url',
             'meeting_platform' => 'nullable|string',
@@ -343,14 +363,22 @@ class MeetingController extends Controller
             DB::beginTransaction();
 
             // CHECK ROOM CONFLICT
-            if ($this->checkRoomConflict($validated['start_time'], $validated['end_time'], $meeting->id)) {
-                return redirect()->back()
-                    ->withInput()
-                    ->withErrors([
-                        'start_time' => 'Ruangan sudah dibooking pada hari dan jam tersebut.',
-                        'end_time' => 'Ruangan sudah dibooking pada hari dan jam tersebut.',
-                    ])
-                    ->with('error', 'Konflik Jadwal: Ruangan sudah dibooking pada hari dan jam tersebut.');
+            $isOnline = $request->is_online ?? false;
+            $roomId = $validated['room_id'] ?? null;
+            $location = $validated['location'];
+
+            if (!$isOnline && $roomId) {
+                $room = Room::find($roomId);
+                $location = $room->name;
+                if ($this->checkRoomConflict($roomId, $validated['start_time'], $validated['end_time'], $meeting->id)) {
+                    return redirect()->back()
+                        ->withInput()
+                        ->withErrors([
+                            'start_time' => 'Ruangan sudah dibooking pada hari dan jam tersebut.',
+                            'end_time' => 'Ruangan sudah dibooking pada hari dan jam tersebut.',
+                        ])
+                        ->with('error', 'Konflik Jadwal: Ruangan sudah dibooking pada hari dan jam tersebut.');
+                }
             }
 
             $meeting->update([
@@ -360,8 +388,9 @@ class MeetingController extends Controller
                 'department_id' => $validated['department_id'],
                 'start_time' => $validated['start_time'],
                 'end_time' => $validated['end_time'],
-                'location' => $validated['location'],
-                'is_online' => $validated['is_online'] ?? false,
+                'room_id' => $roomId,
+                'location' => $location,
+                'is_online' => $isOnline,
                 'meeting_link' => $validated['meeting_link'] ?? null,
                 'meeting_platform' => $validated['meeting_platform'] ?? null,
                 'meeting_id' => $validated['meeting_id'] ?? null,
@@ -989,43 +1018,91 @@ private function isAssignedActionTaker($meeting)
         return redirect()->back()->with('success', 'Kehadiran Anda berhasil dicatat.');
     }
 
-    /**
-     * Get booked slots for the datepicker
-     */
     public function getBookedSlots(\Illuminate\Http\Request $request)
     {
-        $meetings = Meeting::whereIn('status', ['scheduled', 'ongoing'])
-            ->select('id', 'title', 'start_time', 'end_time')
-            ->get();
+        $roomId = $request->get('room_id');
+        $location = $request->get('location');
+        $date = $request->get('date'); // Y-m-d format
 
-        return response()->json($meetings);
+        if ((!$roomId && !$location) || !$date) {
+            return response()->json([]);
+        }
+
+        $meetingsQuery = Meeting::whereIn('status', ['scheduled', 'ongoing', 'completed'])
+            ->where('is_online', false)
+            ->whereDate('start_time', $date);
+
+        $roomBookingsQuery = \App\Models\RoomBooking::whereIn('status', ['booked', 'ongoing'])
+            ->whereDate('start_time', $date);
+
+        if ($roomId) {
+            $meetingsQuery->where('room_id', $roomId);
+            $roomBookingsQuery->where('room_id', $roomId);
+        } else {
+            $meetingsQuery->where('location', $location);
+            $roomBookingsQuery->where('location', $location);
+        }
+
+        $meetings = $meetingsQuery->get()->map(function($m) {
+            return [
+                'id' => $m->id,
+                'type' => 'meeting',
+                'title' => $m->title,
+                'start_time' => $m->start_time,
+                'end_time' => $m->end_time,
+                'organizer_name' => $m->organizer->name ?? 'Anonymous',
+            ];
+        });
+
+        $roomBookings = $roomBookingsQuery->get()->map(function($rb) {
+            return [
+                'id' => $rb->id,
+                'type' => 'room_booking',
+                'title' => '[Peminjaman] ' . $rb->purpose,
+                'start_time' => $rb->start_time,
+                'end_time' => $rb->end_time,
+                'organizer_name' => $rb->pic_name,
+            ];
+        });
+
+        return response()->json($meetings->concat($roomBookings));
     }
 
     /**
      * Check if a meeting room conflict exists
      */
-    private function checkRoomConflict($startTime, $endTime, $excludeId = null)
+    private function checkRoomConflict($roomId, $startTime, $endTime, $excludeId = null)
     {
-        $query = Meeting::where(function ($q) use ($startTime, $endTime) {
-            $q->where(function ($query) use ($startTime, $endTime) {
-                $query->where('start_time', '>=', $startTime)
-                      ->where('start_time', '<', $endTime);
-            })->orWhere(function ($query) use ($startTime, $endTime) {
-                $query->where('end_time', '>', $startTime)
-                      ->where('end_time', '<=', $endTime);
-            })->orWhere(function ($query) use ($startTime, $endTime) {
-                $query->where('start_time', '<=', $startTime)
-                      ->where('end_time', '>=', $endTime);
-            });
-        });
+        $startTime = \Carbon\Carbon::parse($startTime);
+        $endTime = \Carbon\Carbon::parse($endTime);
+        
+        $clashQuery = function($q) use ($startTime, $endTime) {
+            $q->where('start_time', '<', $endTime)
+              ->where('end_time', '>', $startTime);
+        };
+
+        $meetingQuery = Meeting::where('room_id', $roomId)
+            ->where('is_online', false)
+            ->whereIn('status', ['scheduled', 'ongoing'])
+            ->where($clashQuery);
 
         if ($excludeId) {
-            $query->where('id', '!=', $excludeId);
+            $meetingQuery->where('id', '!=', $excludeId);
         }
 
-        // Only check for scheduled or ongoing meetings
-        $query->whereIn('status', ['scheduled', 'ongoing']);
+        if ($meetingQuery->exists()) {
+            return true;
+        }
 
-        return $query->exists();
+        // Check against Room Bookings as well
+        $roomBookingQuery = \App\Models\RoomBooking::where('room_id', $roomId)
+            ->whereIn('status', ['booked', 'ongoing'])
+            ->where($clashQuery);
+            
+        if ($roomBookingQuery->exists()) {
+            return true;
+        }
+
+        return false;
     }
 }

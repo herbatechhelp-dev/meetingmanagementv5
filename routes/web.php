@@ -9,6 +9,8 @@ use App\Http\Controllers\ActionItemController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TrashMeetingController;
 use App\Http\Controllers\NotificationSettingsController;
+use App\Http\Controllers\RoomController;
+use App\Http\Controllers\RoomBookingController;
 use Illuminate\Support\Facades\Route;
 
 // Public Routes
@@ -22,8 +24,14 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Protected Routes
 Route::middleware(['auth'])->group(function () {
+    // Keep Session Alive Route
+    Route::get('/keep-alive', function () {
+        return response()->json(['status' => 'alive']);
+    })->name('keep-alive');
+
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/calendar', [DashboardController::class, 'calendarView'])->name('calendar');
     Route::get('/dashboard/meeting/{id}', [DashboardController::class, 'getMeetingDetails'])->name('dashboard.meeting.details');
     Route::get('/dashboard/chart-data', [DashboardController::class, 'getChartData'])->name('dashboard.chart-data');
     Route::get('/dashboard/debug', [DashboardController::class, 'debugData'])->name('dashboard.debug');
@@ -34,6 +42,9 @@ Route::middleware(['auth'])->group(function () {
     // Meetings
     Route::resource('meetings', MeetingController::class);
     
+    // Room Bookings
+    Route::resource('room-bookings', RoomBookingController::class)->except(['show', 'edit', 'update']);
+
     // Meeting Actions
     Route::post('/meetings/{meeting}/start', [MeetingController::class, 'startMeeting'])->name('meetings.start');
     Route::get('/meetings/{meeting}/running', [MeetingController::class, 'runningMeeting'])->name('meetings.running');
@@ -79,6 +90,10 @@ Route::delete('/meetings/{meeting}/files/{file}/delete', [MeetingController::cla
         Route::delete('/meetings/{id}/force-delete', [TrashMeetingController::class, 'forceDelete'])->name('force-delete');
         Route::delete('/meetings/empty', [TrashMeetingController::class, 'emptyTrash'])->name('empty');
     });
+
+    // Room & Booking Routes
+    Route::resource('rooms', RoomController::class);
+    Route::resource('room-bookings', RoomBookingController::class);
 
     // Action Items
     Route::resource('action-items', ActionItemController::class)->except(['create', 'store']);
@@ -151,8 +166,18 @@ Route::get('/test-agenda', function() {
 
     // Admin only routes
     Route::middleware(['role:admin'])->group(function () {
+        Route::get('/settings/branding', [\App\Http\Controllers\SettingController::class, 'branding'])->name('settings.branding');
+        Route::post('/settings/branding', [\App\Http\Controllers\SettingController::class, 'updateBranding'])->name('settings.branding.update');
         Route::resource('meeting-types', MeetingTypeController::class);
         Route::resource('departments', DepartmentController::class);
         Route::resource('users', UserController::class);
     });
+});
+
+Route::get('/dev-run-migrations', function() {
+    \Illuminate\Support\Facades\Artisan::call('migrate:status');
+    $status = \Illuminate\Support\Facades\Artisan::output();
+    \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+    $migrate = \Illuminate\Support\Facades\Artisan::output();
+    return nl2br("Status:\n" . $status . "\n\nMigrate:\n" . $migrate);
 });

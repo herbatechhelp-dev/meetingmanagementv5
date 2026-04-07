@@ -15,14 +15,22 @@
                 <div class="ornament-circle ornament-4"></div>
             </div>
             <div class="login-logo" style="display: flex; align-items: center; justify-content: center; gap: 20px;">
-                @if(file_exists(public_path('images/logo.png')))
+                @if(isset($globalSetting) && $globalSetting->logo_path)
+                    <img src="{{ Storage::url($globalSetting->logo_path) }}" alt="Logo" style="height: 60px; width: auto; object-fit: contain;">
+                @elseif(file_exists(public_path('images/logo.png')))
                     <img src="{{ asset('images/logo.png') }}" alt="Logo" style="height: 60px; width: auto; object-fit: contain;">
                 @else
                     <div class="logo-fallback" style="width: 60px; height: 60px; background: white; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
                         <i class="fas fa-handshake" style="font-size: 2rem; color: #10b981;"></i>
                     </div>
                 @endif
-                <h1 style="margin: 0; display: flex; align-items: center;">HERBA<span>TECH</span></h1>
+                <h1 style="margin: 0; display: flex; align-items: center;">
+                    @if(isset($globalSetting) && $globalSetting->login_title)
+                        {{ $globalSetting->login_title }}
+                    @else
+                        HERBA<span>TECH</span>
+                    @endif
+                </h1>
             </div>
         </div>
         

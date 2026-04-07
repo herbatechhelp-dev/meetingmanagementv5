@@ -122,10 +122,20 @@
                     </form>
                 @endif
             @endif
-            @if($meeting->status === 'ongoing' && ($meeting->organizer_id == auth()->id() || $meeting->assigned_action_taker_id == auth()->id() || $meeting->assigned_minute_taker_id == auth()->id()))
+            @if($meeting->status === 'ongoing')
+                @if(auth()->user()->canManageMeetings() || $meeting->organizer_id == auth()->id())
+                    <form action="{{ route('meetings.complete', $meeting) }}" method="POST" class="d-inline mr-2" onsubmit="return confirm('Anda yakin ingin mengakhiri rapat ini?');">
+                        @csrf
+                        <button type="submit" class="btn btn-soft-danger px-4 py-2 rounded-lg font-weight-bold shadow-sm transition-all hover-translate-y">
+                            <i class="fas fa-stop mr-2"></i> Selesaikan
+                        </button>
+                    </form>
+                @endif
+                @if($meeting->organizer_id == auth()->id() || $meeting->assigned_action_taker_id == auth()->id() || $meeting->assigned_minute_taker_id == auth()->id())
                 <a href="{{ route('meetings.running', $meeting) }}" class="btn btn-warning px-4 py-2 rounded-lg font-weight-bold shadow-sm transition-all hover-translate-y">
                     <i class="fas fa-tasks mr-2"></i> Kelola
                 </a>
+                @endif
             @endif
         </div>
     </div>

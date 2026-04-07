@@ -18,6 +18,7 @@ class Meeting extends Model
         'meeting_type_id',
         'organizer_id',
         'department_id',
+        'room_id',
         'start_time',
         'end_time',
         'location',

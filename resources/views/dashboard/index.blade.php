@@ -11,7 +11,7 @@
 
 @section('content')
     <!-- Extreme Minimalist Stats Cards -->
-    <div class="row mb-5">
+    <div class="row mb-3">
         <div class="col-lg-3 col-md-6 mb-4">
             <a href="{{ route('action-items.index') }}" class="text-decoration-none transition-hover d-block h-100">
                 <div class="card h-100 border-0 shadow-sm rounded-xl card-vibrant-emerald stats-card">
@@ -86,117 +86,13 @@
         </div>
     </div>
 
-    <!-- Redesigned Trend Section -->
-    <div class="row mb-5">
-        <div class="col-lg-8 mb-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Tren Performa Tugas</h5>
-                    <div class="badge badge-light-indigo px-3 py-2">30 Hari Terakhir</div>
-                </div>
-                <div class="card-body">
-                    <div style="height: 350px;">
-                        <canvas id="actionTrendChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-4 mb-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Aktivitas Rapat</h5>
-                </div>
-                <div class="card-body">
-                    <div style="height: 200px;" class="mb-4">
-                        <canvas id="meetingTrendChart"></canvas>
-                    </div>
-                    <hr class="my-4 opacity-50">
-                    <div class="row text-center">
-                        <div class="col-6 mb-3">
-                            <div class="text-sm text-muted mb-1 text-uppercase font-weight-bold">Tingkat Keberhasilan</div>
-                            <div class="h4 font-weight-bold text-success mb-0">{{ $totalActions > 0 ? number_format(($completedActions/$totalActions)*100, 0) : 0 }}%</div>
-                        </div>
-                        <div class="col-6 mb-3">
-                            <div class="text-sm text-muted mb-1 text-uppercase font-weight-bold">Mendatang</div>
-                            <div class="h4 font-weight-bold text-primary mb-0">{{ $scheduledMeetings }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Statistik Tugas per User -->
-    @if(auth()->user()->isAdmin() || auth()->user()->isManager())
-    <div class="card shadow-sm border-0 rounded-lg mb-5 stats-card-section">
-        <div class="card-header bg-white py-4 px-4 border-0 d-flex align-items-center justify-content-between">
-            <div style="flex: 1;">
-                <h5 class="card-title mb-0 font-weight-bold text-dark">
-                    <span class="title-accent mr-2"></span>Statistik Tugas per Penugasan
-                </h5>
-            </div>
-            
-            <div class="display-toggle-pill mx-auto">
-                <button type="button" class="toggle-btn active" data-display-type="chart">
-                    <i class="fas fa-chart-bar mr-1"></i> Grafik
-                </button>
-                <button type="button" class="toggle-btn" data-display-type="table">
-                    <i class="fas fa-table mr-1"></i> Tabel
-                </button>
-            </div>
-
-            <div style="flex: 1;"></div>
-        </div>
-        <div class="card-body px-4 pb-4">
-            <!-- Diagram Batang -->
-            <div id="user-chart-container">
-                <div class="chart-container" style="height: 350px;">
-                    <canvas id="userAssignmentChart"></canvas>
-                </div>
-            </div>
-            <!-- Tabel Statistik -->
-            <div id="user-table-container" style="display: none;">
-                <div class="table-responsive">
-                    <table class="table table-hover border-0 mb-0">
-                        <thead class="bg-light text-muted text-sm text-uppercase">
-                            <tr>
-                                <th class="border-0 px-3 py-3">Nama Anggota</th>
-                                <th class="border-0 px-3 py-3 text-center">Selesai</th>
-                                <th class="border-0 px-3 py-3 text-center">Proses</th>
-                                <th class="border-0 px-3 py-3 text-center">Menunggu</th>
-                                <th class="border-0 px-3 py-3 text-center">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($userAssignmentStats as $stat)
-                            <tr class="align-middle">
-                                <td class="px-3 py-3">
-                                    <div class="d-flex align-items-center">
-                                        <div class="avatar-sm mr-3 bg-light text-primary font-weight-bold rounded-circle d-flex align-items-center justify-content-center">
-                                            {{ strtoupper(substr($stat->name, 0, 1)) }}
-                                        </div>
-                                        <span class="font-weight-bold text-dark">{{ $stat->name }}</span>
-                                    </div>
-                                </td>
-                                <td class="px-3 py-3 text-center"><span class="badge badge-soft-success">{{ $stat->completed_actions }}</span></td>
-                                <td class="px-3 py-3 text-center"><span class="badge badge-soft-warning">{{ $stat->in_progress_actions }}</span></td>
-                                <td class="px-3 py-3 text-center"><span class="badge badge-soft-secondary">{{ $stat->pending_actions }}</span></td>
-                                <td class="px-3 py-3 text-center font-weight-bold text-dark">{{ $stat->completed_actions + $stat->in_progress_actions + $stat->pending_actions }}</td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-    @endif
     
     <!-- Lower Dashboard Sections -->
     <div class="row">
         <!-- Recent Tasks -->
         <div class="col-lg-8 mb-5">
-            <div class="card h-100 shadow-sm">
+            <div class="card shadow-sm">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Tindak Lanjut Terbaru</h5>
                     <a href="{{ route('action-items.index') }}" class="btn btn-sm btn-link text-primary font-weight-bold p-0">Lihat Semua</a>
@@ -268,16 +164,48 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Kalender Penggunaan Ruangan Perbulan -->
+            <div class="card shadow-sm border-0 rounded-xl overflow-hidden mt-4 bg-white">
+                <div class="card-header border-0 bg-white p-3 d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-box-indigo mr-3" style="background-color: rgba(139, 92, 246, 0.1); color: #8b5cf6;">
+                            <i class="far fa-building text-lg"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0 font-weight-bold text-dark">Kalender Penggunaan Ruangan</h5>
+                            <small class="text-muted d-block mt-1">Pantauan ruang fisik global. Gunakan kalender ini untuk mengecek ketersediaan sebelum memesan.</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-2">
+                    <div id="roomUsageCalendar"></div>
+                </div>
+                <div class="card-footer bg-white border-0 pt-0 pb-3 px-3">
+                    <div class="d-flex justify-content-start small text-muted">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-palette mr-2 opacity-50"></i>
+                            <span class="font-weight-medium">Warna merepresentasikan ruangan rapat secara unik</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Right Side: Dashboard Calendar -->
         <div class="col-lg-4">
-            <div class="card h-100 shadow-sm border-0 rounded-xl overflow-hidden bg-white">
-                <div class="card-header border-0 bg-white p-4 d-flex align-items-center">
-                    <div class="icon-box-indigo mr-3">
-                        <i class="fas fa-calendar-alt"></i>
+            <div class="card shadow-sm border-0 rounded-xl overflow-hidden bg-white mb-4">
+                <div class="card-header border-0 bg-white p-3 d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-box-indigo mr-3">
+                            <i class="fas fa-user-clock text-lg"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0 font-weight-bold text-dark">Agenda Pribadi Anda</h5>
+                            <small class="text-muted d-block mt-1">Menampilkan mandat rapat khusus dan batas waktu tugas milik Anda.</small>
+                        </div>
                     </div>
-                    <h5 class="mb-0 font-weight-bold text-dark">Kalender</h5>
+
                 </div>
                 <div class="card-body p-2">
                     <div id="dashboardCalendar"></div>
@@ -295,6 +223,177 @@
                         <div class="d-flex align-items-center">
                             <span class="dot bg-rose mr-2"></span>
                             <span class="text-muted font-weight-medium">Deadline</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Status Ruangan Meeting Card -->
+            <div class="card shadow-sm border-0 rounded-xl overflow-hidden bg-white">
+                <div class="card-header border-0 bg-white p-4 pb-0">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-indigo-soft text-indigo rounded-lg p-2 mr-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; border-radius: 10px; background-color: rgba(79,70,229,0.1);">
+                            <i class="fas fa-door-open" style="color: #4f46e5;"></i>
+                        </div>
+                        <h5 class="mb-0 font-weight-bold text-dark" style="font-size: 1.1rem;">Status Ruangan</h5>
+                    </div>
+                    <hr class="m-0 border-light">
+                </div>
+                <div class="card-body p-4">
+                    @if($todayRoomSchedules->isEmpty())
+                        <div class="text-center py-4">
+                            <div class="mb-3" style="font-size: 2rem; opacity: 0.3;">🏢</div>
+                            <p class="mb-0 text-muted small">Tidak ada jadwal hari ini.</p>
+                        </div>
+                    @else
+                        @foreach($todayRoomSchedules as $location => $meetings)
+                            @php
+                                $isOngoing = $meetings->where('status', 'ongoing')->isNotEmpty();
+                                $badgeText = $isOngoing ? 'Dipakai' : 'Tersedia';
+                            @endphp
+                            <div class="mb-4">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="font-weight-bold mb-0 text-dark" style="font-size: 1rem;">{{ Str::limit($location, 28) }}</h6>
+                                    @if($isOngoing)
+                                        <span class="badge badge-pill font-weight-bold" style="background: rgba(239,68,68,0.12); color: #ef4444; padding: 6px 12px; font-size: 0.78rem;">{{ $badgeText }}</span>
+                                    @else
+                                        <span class="badge badge-pill font-weight-bold" style="background: rgba(16,185,129,0.12); color: #10b981; padding: 6px 12px; font-size: 0.78rem;">{{ $badgeText }}</span>
+                                    @endif
+                                </div>
+                                <div class="pl-1">
+                                    @foreach($meetings as $meeting)
+                                        @php
+                                            $dotColor = $meeting->status === 'ongoing' ? '#ef4444' : ($meeting->status === 'completed' ? '#10b981' : '#94a3b8');
+                                        @endphp
+                                        <div class="d-flex mb-3" style="position: relative; padding-left: 18px;">
+                                            <!-- vertical line -->
+                                            @if(!$loop->last)
+                                            <div style="position: absolute; left: 4px; top: 14px; bottom: -12px; width: 2px; background: #e2e8f0;"></div>
+                                            @endif
+                                            <!-- dot -->
+                                            <div style="position: absolute; left: 0; top: 6px; width: 10px; height: 10px; border-radius: 50%; background: {{ $dotColor }}; flex-shrink: 0;"></div>
+                                            <div style="flex: 1;">
+                                                <div class="font-weight-bold text-dark" style="font-size: 0.9rem; line-height: 1.2;">
+                                                    {{ $meeting->start_time->format('H:i') }} - {{ $meeting->end_time->format('H:i') }}
+                                                </div>
+                                                <div class="text-muted mt-1" style="font-size: 0.82rem;">
+                                                    Reservasi: {{ Str::limit($meeting->title, 35) }}
+                                                </div>
+                                                <div class="d-flex align-items-center mt-1">
+                                                    <i class="fas fa-user-circle mr-1" style="font-size: 0.72rem; color: #94a3b8;"></i>
+                                                    <span style="font-size: 0.78rem; color: #64748b;">{{ $meeting->organizer_name ?? '-' }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endforeach
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lower Dashboard Sections (tetap di atas) -->
+    <!-- Statistik Tugas per Penugasan (dipindahkan di bawah Kalender & Tindak Lanjut) -->
+    @if(auth()->user()->isAdmin() || auth()->user()->isManager())
+    <div class="card shadow-sm border-0 rounded-lg mb-5 stats-card-section">
+        <div class="card-header bg-white py-4 px-4 border-0 d-flex align-items-center justify-content-between">
+            <div style="flex: 1;">
+                <h5 class="card-title mb-0 font-weight-bold text-dark">
+                    <span class="title-accent mr-2"></span>Statistik Tugas per Penugasan
+                </h5>
+            </div>
+            
+            <div class="display-toggle-pill mx-auto">
+                <button type="button" class="toggle-btn active" data-display-type="chart">
+                    <i class="fas fa-chart-bar mr-1"></i> Grafik
+                </button>
+                <button type="button" class="toggle-btn" data-display-type="table">
+                    <i class="fas fa-table mr-1"></i> Tabel
+                </button>
+            </div>
+
+            <div style="flex: 1;"></div>
+        </div>
+        <div class="card-body px-4 pb-4">
+            <!-- Diagram Batang -->
+            <div id="user-chart-container">
+                <div class="chart-container" style="height: 350px;">
+                    <canvas id="userAssignmentChart"></canvas>
+                </div>
+            </div>
+            <!-- Tabel Statistik -->
+            <div id="user-table-container" style="display: none;">
+                <div class="table-responsive">
+                    <table class="table table-hover border-0 mb-0">
+                        <thead class="bg-light text-muted text-sm text-uppercase">
+                            <tr>
+                                <th class="border-0 px-3 py-3">Nama Anggota</th>
+                                <th class="border-0 px-3 py-3 text-center">Selesai</th>
+                                <th class="border-0 px-3 py-3 text-center">Proses</th>
+                                <th class="border-0 px-3 py-3 text-center">Menunggu</th>
+                                <th class="border-0 px-3 py-3 text-center">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($userAssignmentStats as $stat)
+                            <tr class="align-middle">
+                                <td class="px-3 py-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-sm mr-3 bg-light text-primary font-weight-bold rounded-circle d-flex align-items-center justify-content-center">
+                                            {{ strtoupper(substr($stat->name, 0, 1)) }}
+                                        </div>
+                                        <span class="font-weight-bold text-dark">{{ $stat->name }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-3 py-3 text-center"><span class="badge badge-soft-success">{{ $stat->completed_actions }}</span></td>
+                                <td class="px-3 py-3 text-center"><span class="badge badge-soft-warning">{{ $stat->in_progress_actions }}</span></td>
+                                <td class="px-3 py-3 text-center"><span class="badge badge-soft-secondary">{{ $stat->pending_actions }}</span></td>
+                                <td class="px-3 py-3 text-center font-weight-bold text-dark">{{ $stat->completed_actions + $stat->in_progress_actions + $stat->pending_actions }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- Redesigned Trend Section (dipindahkan ke bawah bagian ini) -->
+    <div class="row mb-5">
+        <div class="col-lg-8 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Tren Performa Tugas</h5>
+                    <div class="badge badge-light-indigo px-3 py-2">30 Hari Terakhir</div>
+                </div>
+                <div class="card-body">
+                    <div style="height: 350px;">
+                        <canvas id="actionTrendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Aktivitas Rapat</h5>
+                </div>
+                <div class="card-body">
+                    <div style="height: 200px;" class="mb-4">
+                        <canvas id="meetingTrendChart"></canvas>
+                    </div>
+                    <hr class="my-4 opacity-50">
+                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <div class="text-sm text-muted mb-1 text-uppercase font-weight-bold">Tingkat Keberhasilan</div>
+                            <div class="h4 font-weight-bold text-success mb-0">{{ $totalActions > 0 ? number_format(($completedActions/$totalActions)*100, 0) : 0 }}%</div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="text-sm text-muted mb-1 text-uppercase font-weight-bold">Mendatang</div>
+                            <div class="h4 font-weight-bold text-primary mb-0">{{ $scheduledMeetings }}</div>
                         </div>
                     </div>
                 </div>
@@ -384,20 +483,48 @@
                     right: 'today'
                 },
                 height: 'auto',
-                events: "{{ route('dashboard.calendar-events') }}",
+            events: function(info, successCallback, failureCallback) {
+                fetch(`{{ route('dashboard.calendar-events') }}?start=${info.startStr}&end=${info.endStr}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        let filteredData = data;
+                        successCallback(filteredData);
+                    })
+                    .catch(error => failureCallback(error));
+            },
                 dateClick: function(info) {
                     const dateStr = info.dateStr;
                     const events = calendar.getEvents().filter(event => {
-                        const eventDate = event.start.toISOString().split('T')[0];
-                        return eventDate === dateStr;
+                        const d = event.start;
+                        const localDate = d.getFullYear() + '-' +
+                            String(d.getMonth() + 1).padStart(2, '0') + '-' +
+                            String(d.getDate()).padStart(2, '0');
+                        return localDate === dateStr;
                     });
 
                     showDailyInfo(dateStr, events);
                 },
                 eventClick: function(info) {
+                    info.jsEvent.preventDefault();
+                    const props = info.event.extendedProps || {};
+                    const isAdmin = {{ auth()->user()->isAdmin() ? 'true' : 'false' }};
+                    
+                    if (props.type === 'meeting' && props.is_participant === false && !isAdmin) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: '<h5 class="mb-0 font-weight-bold">Akses Terbatas</h5>',
+                            html: '<p class="text-sm text-muted mb-0">Info jadwal ini bersifat tertutup.<br>Anda bukan merupakan staf/partisipan yang diundang.</p>',
+                            confirmButtonColor: '#10b981',
+                            confirmButtonText: 'Mengerti',
+                            customClass: {
+                                popup: 'rounded-xl border-0 shadow-lg',
+                            }
+                        });
+                        return;
+                    }
+
                     if (info.event.url) {
                         window.location.href = info.event.url;
-                        info.jsEvent.preventDefault();
                     }
                 },
                 eventContent: function(arg) {
@@ -433,6 +560,81 @@
                 dayMaxEvents: 2,
             });
             calendar.render();
+
+        }
+
+        // --- Room Usage Calendar Integration ---
+        const roomCalendarEl = document.getElementById('roomUsageCalendar');
+        if (roomCalendarEl) {
+            const roomCalendar = new FullCalendar.Calendar(roomCalendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'id',
+                headerToolbar: {
+                    left: 'title',
+                    right: 'prev,next today'
+                },
+                height: 'auto',
+                events: function(info, successCallback, failureCallback) {
+                    fetch(`{{ route('dashboard.calendar-events') }}?filter=rooms&start=${info.startStr}&end=${info.endStr}`)
+                        .then(response => response.json())
+                        .then(data => successCallback(data))
+                        .catch(error => failureCallback(error));
+                },
+                eventContent: function(arg) {
+                    let textParts = arg.event.title.split(' - ');
+                    let mainTitle = textParts[0]; 
+                    
+                    let el = document.createElement('div');
+                    el.className = 'fc-event-pill px-2 py-1 mb-1 shadow-sm';
+                    el.style.backgroundColor = arg.event.backgroundColor;
+                    el.style.color = 'white';
+                    el.style.borderLeft = '3px solid rgba(255,255,255,0.5)';
+                    el.style.width = '100%';
+                    el.innerHTML = `<span class="text-truncate d-block w-100" style="font-size: 0.65rem">${arg.event.title}</span>`;
+                    return { domNodes: [el] };
+                },
+                eventDidMount: function(info) {
+                    const props = info.event.extendedProps || {};
+                    let content = `<strong>${info.event.title}</strong>`;
+                    if (props.organizer) {
+                        const organizerLabel = props.type === 'meeting' ? 'Penyelenggara' : 'Peminjam / PIC';
+                        content += `<br><span class="text-xs mt-1 d-block"><i class="fas fa-user-circle mr-1"></i> ${organizerLabel}: ${props.organizer}</span>`;
+                    }
+
+                    tippy(info.el, {
+                        content: `<div class="text-left p-1 text-sm">${content}</div>`,
+                        allowHTML: true,
+                        theme: 'light-border',
+                        animation: 'shift-away',
+                        placement: 'top',
+                    });
+                },
+                dayMaxEvents: 3,
+                eventClick: function(info) {
+                    info.jsEvent.preventDefault();
+                    const props = info.event.extendedProps || {};
+                    const isAdmin = {{ auth()->user()->isAdmin() ? 'true' : 'false' }};
+                    
+                    if (props.type === 'meeting' && props.is_participant === false && !isAdmin) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: '<h5 class="mb-0 font-weight-bold">Akses Terbatas</h5>',
+                            html: '<p class="text-sm text-muted mb-0">Rincian penggunaan ruangan ini tertutup.<br>Anda bukan partisipan yang diundang dalam meeting ini.</p>',
+                            confirmButtonColor: '#10b981',
+                            confirmButtonText: 'Mengerti',
+                            customClass: {
+                                popup: 'rounded-xl border-0 shadow-lg',
+                            }
+                        });
+                        return;
+                    }
+
+                    if (info.event.url) {
+                        window.location.href = info.event.url;
+                    }
+                }
+            });
+            roomCalendar.render();
         }
 
         // --- Daily Info Function ---
@@ -721,6 +923,15 @@
     .text-slate { color: #64748b; }
 
     /* Premium Dashboard Extensions */
+    .badge-soft-success { background-color: rgba(16, 185, 129, 0.1); color: #10b981; }
+    .badge-soft-danger { background-color: rgba(239, 68, 68, 0.1); color: #ef4444; }
+    
+    @keyframes pulse-danger {
+        0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+        70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+    .pulse-danger { animation: pulse-danger 2s infinite; }
     .stats-card {
         transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
         box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.1);

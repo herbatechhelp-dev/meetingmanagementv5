@@ -5,13 +5,19 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title') - {{ config('app.name') }}</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     
     <!-- Favicon -->
+    @if(isset($globalSetting) && $globalSetting->favicon_path)
+    <link rel="icon" type="{{ Str::endsWith($globalSetting->favicon_path, '.ico') ? 'image/x-icon' : 'image/png' }}" href="{{ Storage::url($globalSetting->favicon_path) }}">
+    <link rel="apple-touch-icon" href="{{ Storage::url($globalSetting->favicon_path) }}">
+    @else
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/favicon/apple-touch-icon.png') }}">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/favicon/favicon-32x32.png') }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('images/favicon/favicon-16x16.png') }}">
     <link rel="mask-icon" href="{{ asset('images/favicon/safari-pinned-tab.svg') }}" color="#5bbad5">
     <link rel="shortcut icon" href="{{ asset('images/favicon/favicon.ico') }}">
+    @endif
     <meta name="msapplication-TileColor" content="#da532c">
     <meta name="msapplication-config" content="{{ asset('images/favicon/browserconfig.xml') }}">
     <meta name="theme-color" content="#ffffff">
@@ -259,8 +265,12 @@
         <header class="main-header navbar navbar-expand-lg">
             <!-- Logo area -->
             <a href="{{ route('dashboard') }}" class="navbar-brand-custom">
-                <img src="{{ asset('images/logo.png') }}" alt="Logo" class="mr-2" style="height: 32px; width: auto; object-fit: contain;">
-                <span>HERBATECH</span>
+                @if(isset($globalSetting) && $globalSetting->logo_path)
+                    <img src="{{ Storage::url($globalSetting->logo_path) }}" alt="Logo" class="mr-2" style="height: 32px; width: auto; object-fit: contain;">
+                @else
+                    <img src="{{ asset('images/logo.png') }}" alt="Logo" class="mr-2" style="height: 32px; width: auto; object-fit: contain;">
+                @endif
+                <span>{{ $globalSetting->app_name ?? 'HERBATECH' }}</span>
             </a>
 
             <!-- Mobile toggler -->
@@ -286,6 +296,11 @@
                             <i class="fas fa-tasks mr-1"></i> Tugas
                         </a>
                     </li>
+                    <li class="nav-item mr-1">
+                        <a href="{{ route('room-bookings.index') }}" class="nav-link nav-link-custom {{ request()->routeIs('room-bookings.*') ? 'active' : '' }}">
+                            <i class="fas fa-door-open mr-1"></i> Pinjam Ruang
+                        </a>
+                    </li>
 
                     @if(auth()->user()->isAdmin() || auth()->user()->isManager())
                     <li class="nav-item mr-1">
@@ -304,11 +319,18 @@
                             <a href="{{ route('meeting-types.index') }}" class="dropdown-item">
                                 <i class="fas fa-list-ul mr-2"></i> Jenis Meeting
                             </a>
+                            <a href="{{ route('rooms.index') }}" class="dropdown-item {{ request()->routeIs('rooms.*') ? 'active' : '' }}">
+                                <i class="fas fa-door-open mr-2"></i> Manajemen Ruangan
+                            </a>
                             <a href="{{ route('departments.index') }}" class="dropdown-item">
                                 <i class="far fa-building mr-2"></i> Departemen
                             </a>
                             <a href="{{ route('users.index') }}" class="dropdown-item">
                                 <i class="far fa-user mr-2"></i> Manajemen Pengguna
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="{{ route('settings.branding') }}" class="dropdown-item">
+                                <i class="fas fa-paint-brush mr-2 text-primary"></i> Pengaturan Branding
                             </a>
                         </div>
                     </li>
@@ -475,7 +497,7 @@
             <div class="container-fluid">
                 <div class="row align-items-center text-sm">
                     <div class="col-sm-6 text-muted">
-                        &copy; {{ date('Y') }} <span class="font-weight-bold" style="color: var(--accent-color)">HERBATECH</span>. Hak cipta dilindungi undang-undang.
+                        &copy; {{ date('Y') }} <span class="font-weight-bold" style="color: var(--accent-color)">{{ $globalSetting->app_name ?? 'HERBATECH' }}</span>. Hak cipta dilindungi undang-undang.
                     </div>
                     <div class="col-sm-6 text-right text-muted">
                         <span class="px-2 py-1 rounded bg-light">v1.0.0</span>
@@ -494,12 +516,32 @@
     <!-- FullCalendar -->
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/id.js"></script>
-    <!-- Flatpickr -->
+    <!-- Flatpickr & Tippy -->
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://npmcdn.com/flatpickr/dist/l10n/id.js"></script>
+    <script src="https://unpkg.com/@popperjs/core@2"></script>
+    <script src="https://unpkg.com/tippy.js@6"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
+        // Setup AJAX headers for CSRF token
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
+        });
+
         $(document).ready(function() {
+            // Keep session alive every 15 minutes
+            setInterval(function() {
+                if (navigator.onLine) {
+                    $.get("{{ route('keep-alive') }}").fail(function() {
+                        console.log('Failed to keep session alive');
+                    });
+                }
+            }, 15 * 60 * 1000);
+
             // Auto-hide alerts after 5 seconds
             $('.alert').delay(5000).fadeOut(300);
             
