@@ -69,7 +69,7 @@
             left: 0;
             right: 0;
             z-index: 1040;
-            height: 72px; /* Increased from 64px to match larger font */
+            min-height: 72px; /* Changed from fixed height */
             background-color: var(--nav-bg) !important;
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
@@ -94,10 +94,19 @@
         .nav-link-custom {
             font-weight: 500;
             color: var(--text-muted) !important;
-            padding: 0.5rem 1rem !important;
+            padding: 0.5rem 0.75rem !important;
             border-radius: 8px;
             transition: all 0.2s ease;
-            font-size: 1.05rem;
+            font-size: 0.95rem;
+            display: flex !important;
+            align-items: center;
+            white-space: nowrap;
+            gap: 0.35rem; /* Better spacing between icon and text */
+        }
+
+        .nav-link-custom i {
+            margin-right: 0 !important; /* Handled by gap */
+            font-size: 1.1rem;
         }
 
         .nav-link-custom:hover {
@@ -223,10 +232,79 @@
 
         @media (max-width: 991.98px) {
             .main-header {
-                padding: 0 1rem !important;
+                padding: 0.5rem 1rem !important;
+                height: auto !important; 
+                flex-wrap: wrap; /* Fix content clipping when navbar expands */
+            }
+            .navbar-brand-custom {
+                margin-right: auto;
             }
             .navbar-brand-custom span {
-                display: none;
+                display: none; /* Keep hidden on mobile to save space */
+            }
+            /* Create a card-like dropdown for mobile menu */
+            .navbar-collapse {
+                background: #ffffff;
+                border-radius: 12px;
+                padding: 1rem;
+                margin-top: 0.75rem;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+                border: 1px solid rgba(0,0,0,0.05);
+                width: 100%;
+                max-height: calc(100vh - 80px);
+                overflow-y: auto;
+            }
+            .nav-link-custom {
+                padding: 0.75rem 1rem !important;
+                border-bottom: 1px solid #f1f5f9;
+            }
+            .nav-link-custom:last-child {
+                border-bottom: none;
+            }
+            .navbar-nav.ml-auto {
+                flex-direction: row;
+                justify-content: flex-end;
+                width: auto;
+            }
+            .content-wrapper {
+                padding: 16px 12px !important; 
+                margin-top: 80px !important; /* Fixed clipping issue */
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            /* General card and padding fixes for mobile */
+            .card-body {
+                padding: 1.25rem 1rem !important;
+            }
+            .card-header {
+                padding: 1rem !important;
+            }
+            /* Fix page titles and layout on mobile */
+            .content-header h1 {
+                font-size: 1.5rem;
+                margin-bottom: 0.5rem !important;
+            }
+            .content-header .breadcrumb {
+                float: none;
+                background-color: transparent !important;
+                padding: 0;
+            }
+            .content-header {
+                padding-bottom: 0.5rem !important;
+            }
+            /* Buttons should wrap gracefully */
+            .btn {
+                white-space: normal;
+                word-wrap: break-word;
+            }
+            /* Adjust data tables padding */
+            .table th, .table td {
+                padding: 0.75rem 0.5rem !important;
+            }
+            /* Make popovers look better on mobile */
+            .popover {
+                max-width: 90vw !important;
             }
         }
 
@@ -273,13 +351,8 @@
                 <span>{{ $globalSetting->app_name ?? 'HERBATECH' }}</span>
             </a>
 
-            <!-- Mobile toggler -->
-            <button class="navbar-toggler border-0 shadow-none px-0" type="button" data-toggle="collapse" data-target="#mainNavbar">
-                <i class="fas fa-bars text-dark"></i>
-            </button>
-
             <!-- Navigation Links -->
-            <div class="collapse navbar-collapse" id="mainNavbar">
+            <div class="collapse navbar-collapse order-lg-2" id="mainNavbar">
                 <ul class="navbar-nav mr-auto">
                     <li class="nav-item mr-1">
                         <a href="{{ route('dashboard') }}" class="nav-link nav-link-custom {{ request()->routeIs('dashboard') ? 'active' : '' }}">
@@ -336,9 +409,11 @@
                     </li>
                     @endif
                 </ul>
+            </div>
 
-                <!-- Right side: Notifications & Profile -->
-                <ul class="navbar-nav ml-auto align-items-center">
+            <!-- Right side: Notifications & Profile (Always visible) -->
+            <div class="d-flex align-items-center order-lg-3 ml-auto">
+                <ul class="navbar-nav flex-row align-items-center">
                     <!-- Notifications -->
                     <li class="nav-item dropdown mr-3">
                         <a class="nav-link p-0 position-relative" data-toggle="dropdown" href="#">
@@ -422,6 +497,11 @@
                         </div>
                     </li>
                 </ul>
+
+                <!-- Mobile toggler -->
+                <button class="navbar-toggler border-0 shadow-none px-2 ml-1" type="button" data-toggle="collapse" data-target="#mainNavbar">
+                    <i class="fas fa-bars text-dark" style="font-size: 1.4rem;"></i>
+                </button>
             </div>
         </header>
 
@@ -547,6 +627,13 @@
             
             // Active link handling for dropdowns
             $('.dropdown-item.active').parents('.nav-item.dropdown').find('.nav-link').addClass('active');
+
+            // Responsive table wrapper
+            $('table.table').each(function() {
+                if (!$(this).parent().hasClass('table-responsive')) {
+                    $(this).wrap('<div class="table-responsive"></div>');
+                }
+            });
         });
     </script>
     
