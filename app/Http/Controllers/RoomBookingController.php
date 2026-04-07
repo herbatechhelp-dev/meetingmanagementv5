@@ -44,6 +44,7 @@ class RoomBookingController extends Controller
 
         $startTime = Carbon::parse($request->start_time);
         $endTime = Carbon::parse($request->end_time);
+        $location = trim($request->location);
 
         // Anti-clash check
         $clashQuery = function($q) use ($startTime, $endTime) {
@@ -51,12 +52,12 @@ class RoomBookingController extends Controller
               ->where('end_time', '>', $startTime);
         };
 
-        $clashingRoomBooking = RoomBooking::where('location', $request->location)
+        $clashingRoomBooking = RoomBooking::where('location', 'like', $location)
             ->where('status', '!=', 'cancelled')
             ->where($clashQuery)
             ->exists();
 
-        $clashingMeeting = Meeting::where('location', $request->location)
+        $clashingMeeting = Meeting::where('location', 'like', $location)
             ->where('is_online', false)
             ->where('status', '!=', 'cancelled')
             ->where($clashQuery)

@@ -182,6 +182,7 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
+        let hasClash = false;
         let startFP = flatpickr("#start_time", {
             enableTime: true,
             dateFormat: "Y-m-d H:i",
@@ -258,7 +259,7 @@
                         // Clash detection logic
                         let userStart = new Date($('#start_time').val());
                         let userEnd = new Date($('#end_time').val());
-                        let hasClash = false;
+                        hasClash = false;
                         
                         let html = '';
                         response.forEach(function(item) {
@@ -309,6 +310,19 @@
             });
         }
         
+        // Form submission preventer
+        $('#bookingForm').on('submit', function(e) {
+            if (hasClash) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Tidak Bisa Menyimpan',
+                    text: 'Jadwal yang Anda pilih bentrok dengan reservasi lain. Silakan ubah waktu atau lokasi.',
+                    confirmButtonColor: '#4f46e5'
+                });
+            }
+        });
+
         // Initial check if values are present (e.g. going back on validation error)
         if ($('#location').val() && $('#start_time').val()) {
             checkAvailability();

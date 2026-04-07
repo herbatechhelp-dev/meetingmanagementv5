@@ -1035,6 +1035,10 @@ private function isAssignedActionTaker($meeting)
      */
     private function checkRoomConflict($location, $startTime, $endTime, $excludeId = null)
     {
+        $location = trim($location);
+        $startTime = \Carbon\Carbon::parse($startTime);
+        $endTime = \Carbon\Carbon::parse($endTime);
+        
         $clashQuery = function($q) use ($startTime, $endTime) {
             $q->where('start_time', '<', $endTime)
               ->where('end_time', '>', $startTime);

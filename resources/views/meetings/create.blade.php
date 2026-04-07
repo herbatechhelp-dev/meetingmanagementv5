@@ -367,7 +367,8 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Document loaded, initializing meeting form...');
-
+    
+    let hasClash = false;
     let bookedSlots = [];
     let startFP = null;
     let endFP = null;
@@ -579,7 +580,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Clash detection logic
                     let userStart = new Date(document.getElementById('start_time').value);
                     let userEnd = new Date(document.getElementById('end_time').value);
-                    let hasClash = false;
+                    hasClash = false;
                     
                     let html = '';
                     response.forEach(function(item) {
@@ -694,6 +695,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     location.classList.add('is-invalid');
                     alert('Silakan masukkan lokasi meeting.');
                 }
+            }
+            
+            if (hasClash) {
+                isValid = false;
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Tidak Bisa Menyimpan',
+                    text: 'Jadwal yang Anda pilih bentrok dengan jadwal lain. Silakan ubah waktu atau lokasi ruangan.',
+                    confirmButtonColor: '#10b981'
+                });
             }
             
             if (!isValid) {
