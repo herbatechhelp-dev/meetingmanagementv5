@@ -61,10 +61,14 @@
                             </td>
                             <td class="px-4 py-3 align-middle text-center">
                                 <div class="d-flex align-items-center justify-content-center">
+                                    @php
+                                        $display_name = $booking->pic_name ?? ($booking->user->name ?? 'Unknown');
+                                        $initial = strtoupper(substr($display_name, 0, 1));
+                                    @endphp
                                     <div class="bg-indigo text-white rounded-circle d-flex align-items-center justify-content-center font-weight-bold mr-2 text-xs" style="width: 24px; height: 24px;">
-                                        {{ strtoupper(substr($booking->user->name ?? '?', 0, 1)) }}
+                                        {{ $initial }}
                                     </div>
-                                    <span class="text-sm font-weight-medium text-dark">{{ $booking->user->name ?? 'Unknown' }}</span>
+                                    <span class="text-sm font-weight-medium text-dark">{{ $display_name }}</span>
                                 </div>
                             </td>
                             <td class="px-4 py-3 align-middle text-center">

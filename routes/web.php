@@ -161,6 +161,8 @@ Route::get('/test-agenda', function() {
 
     // Admin only routes
     Route::middleware(['role:admin'])->group(function () {
+        Route::get('/settings/branding', [\App\Http\Controllers\SettingController::class, 'branding'])->name('settings.branding');
+        Route::post('/settings/branding', [\App\Http\Controllers\SettingController::class, 'updateBranding'])->name('settings.branding.update');
         Route::resource('meeting-types', MeetingTypeController::class);
         Route::resource('departments', DepartmentController::class);
         Route::resource('users', UserController::class);

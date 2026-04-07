@@ -170,13 +170,24 @@
                 <div class="card-header border-0 bg-white p-3 d-flex align-items-center justify-content-between">
                     <div class="d-flex align-items-center">
                         <div class="icon-box-indigo mr-3" style="background-color: rgba(139, 92, 246, 0.1); color: #8b5cf6;">
-                            <i class="far fa-calendar-check text-lg"></i>
+                            <i class="far fa-building text-lg"></i>
                         </div>
-                        <h5 class="mb-0 font-weight-bold text-dark">Kalender Penggunaan Ruangan</h5>
+                        <div>
+                            <h5 class="mb-0 font-weight-bold text-dark">Kalender Penggunaan Ruangan</h5>
+                            <small class="text-muted d-block mt-1">Pantauan ruang fisik global. Gunakan kalender ini untuk mengecek ketersediaan sebelum memesan.</small>
+                        </div>
                     </div>
                 </div>
                 <div class="card-body p-2">
                     <div id="roomUsageCalendar"></div>
+                </div>
+                <div class="card-footer bg-white border-0 pt-0 pb-3 px-3">
+                    <div class="d-flex justify-content-start small text-muted">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-palette mr-2 opacity-50"></i>
+                            <span class="font-weight-medium">Warna merepresentasikan ruangan rapat secara unik</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -187,9 +198,12 @@
                 <div class="card-header border-0 bg-white p-3 d-flex align-items-center justify-content-between">
                     <div class="d-flex align-items-center">
                         <div class="icon-box-indigo mr-3">
-                            <i class="fas fa-calendar-alt"></i>
+                            <i class="fas fa-user-clock text-lg"></i>
                         </div>
-                        <h5 class="mb-0 font-weight-bold text-dark">Kalender</h5>
+                        <div>
+                            <h5 class="mb-0 font-weight-bold text-dark">Agenda Pribadi Anda</h5>
+                            <small class="text-muted d-block mt-1">Menampilkan mandat rapat khusus dan batas waktu tugas milik Anda.</small>
+                        </div>
                     </div>
 
                 </div>
@@ -479,9 +493,26 @@
                     showDailyInfo(dateStr, events);
                 },
                 eventClick: function(info) {
+                    info.jsEvent.preventDefault();
+                    const props = info.event.extendedProps || {};
+                    const isAdmin = {{ auth()->user()->isAdmin() ? 'true' : 'false' }};
+                    
+                    if (props.type === 'meeting' && props.is_participant === false && !isAdmin) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: '<h5 class="mb-0 font-weight-bold">Akses Terbatas</h5>',
+                            html: '<p class="text-sm text-muted mb-0">Info jadwal ini bersifat tertutup.<br>Anda bukan merupakan staf/partisipan yang diundang.</p>',
+                            confirmButtonColor: '#10b981',
+                            confirmButtonText: 'Mengerti',
+                            customClass: {
+                                popup: 'rounded-xl border-0 shadow-lg',
+                            }
+                        });
+                        return;
+                    }
+
                     if (info.event.url) {
                         window.location.href = info.event.url;
-                        info.jsEvent.preventDefault();
                     }
                 },
                 eventContent: function(arg) {
@@ -547,14 +578,47 @@
                     el.style.color = 'white';
                     el.style.borderLeft = '3px solid rgba(255,255,255,0.5)';
                     el.style.width = '100%';
-                    el.innerHTML = `<span class="text-truncate d-block w-100" style="font-size: 0.65rem" title="${arg.event.title}">${arg.event.title}</span>`;
+                    el.innerHTML = `<span class="text-truncate d-block w-100" style="font-size: 0.65rem">${arg.event.title}</span>`;
                     return { domNodes: [el] };
+                },
+                eventDidMount: function(info) {
+                    const props = info.event.extendedProps || {};
+                    let content = `<strong>${info.event.title}</strong>`;
+                    if (props.organizer) {
+                        const organizerLabel = props.type === 'meeting' ? 'Penyelenggara' : 'Peminjam / PIC';
+                        content += `<br><span class="text-xs mt-1 d-block"><i class="fas fa-user-circle mr-1"></i> ${organizerLabel}: ${props.organizer}</span>`;
+                    }
+
+                    tippy(info.el, {
+                        content: `<div class="text-left p-1 text-sm">${content}</div>`,
+                        allowHTML: true,
+                        theme: 'light-border',
+                        animation: 'shift-away',
+                        placement: 'top',
+                    });
                 },
                 dayMaxEvents: 3,
                 eventClick: function(info) {
+                    info.jsEvent.preventDefault();
+                    const props = info.event.extendedProps || {};
+                    const isAdmin = {{ auth()->user()->isAdmin() ? 'true' : 'false' }};
+                    
+                    if (props.type === 'meeting' && props.is_participant === false && !isAdmin) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: '<h5 class="mb-0 font-weight-bold">Akses Terbatas</h5>',
+                            html: '<p class="text-sm text-muted mb-0">Rincian penggunaan ruangan ini tertutup.<br>Anda bukan partisipan yang diundang dalam meeting ini.</p>',
+                            confirmButtonColor: '#10b981',
+                            confirmButtonText: 'Mengerti',
+                            customClass: {
+                                popup: 'rounded-xl border-0 shadow-lg',
+                            }
+                        });
+                        return;
+                    }
+
                     if (info.event.url) {
                         window.location.href = info.event.url;
-                        info.jsEvent.preventDefault();
                     }
                 }
             });

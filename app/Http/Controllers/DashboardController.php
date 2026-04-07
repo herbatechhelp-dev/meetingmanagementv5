@@ -180,7 +180,7 @@ class DashboardController extends Controller
             ->get()
             ->map(function($b) {
                 $b->title = 'Reservasi: ' . $b->purpose;
-                $b->organizer_name = $b->user->name ?? 'Unknown';
+                $b->organizer_name = $b->pic_name ?? ($b->user->name ?? 'Unknown');
                 return $b;
             });
 
@@ -671,6 +671,11 @@ class DashboardController extends Controller
         if ($start) $roomBookingsQuery->where('start_time', '>=', $start);
         if ($end) $roomBookingsQuery->where('end_time', '<=', $end);
         
+        // If not global rooms calendar, strictly show ONLY the user's own bookings
+        if ($filter !== 'rooms') {
+            $roomBookingsQuery->where('user_id', auth()->id());
+        }
+        
         $roomBookings = $roomBookingsQuery->get()->flatMap(function($booking) use ($filter, $getLocationColor) {
             $events = [];
             $currentDate = $booking->start_time->copy()->startOfDay();
@@ -701,7 +706,7 @@ class DashboardController extends Controller
                         'type' => 'room_booking',
                         'status' => $booking->status,
                         'location' => $booking->location,
-                        'organizer' => $booking->user->name ?? 'Unknown',
+                        'organizer' => $booking->pic_name ?? ($booking->user->name ?? 'Unknown'),
                     ]
                 ];
                 $currentDate->addDay();

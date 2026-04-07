@@ -106,10 +106,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const props = e.extendedProps || {};
 
             document.getElementById('eventTitle').textContent = e.title.replace('📅 ', '');
+            const organizerLabel = props.type === 'room_booking' ? 'Peminjam / PIC' : 'Penyelenggara';
             document.getElementById('eventInfo').innerHTML = `
                 <strong>Waktu:</strong> ${props.original_start} - ${props.original_end}<br>
                 <strong>Lokasi:</strong> ${props.location || 'Online'}<br>
-                <strong>Penyelenggara:</strong> ${props.organizer || '-'}
+                <strong>${organizerLabel}:</strong> ${props.organizer || '-'}
             `;
             const viewBtn = document.getElementById('viewMeetingBtn');
             viewBtn.href = e.url || '#';

@@ -7,6 +7,10 @@
     <title>@yield('title') - {{ config('app.name') }}</title>
     
     <!-- Favicon -->
+    @if(isset($globalSetting) && $globalSetting->favicon_path)
+    <link rel="icon" type="{{ Str::endsWith($globalSetting->favicon_path, '.ico') ? 'image/x-icon' : 'image/png' }}" href="{{ Storage::url($globalSetting->favicon_path) }}">
+    <link rel="apple-touch-icon" href="{{ Storage::url($globalSetting->favicon_path) }}">
+    @else
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/favicon/apple-touch-icon.png') }}">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/favicon/favicon-32x32.png') }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('images/favicon/favicon-16x16.png') }}">
@@ -18,6 +22,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤝</text></svg>">
     <link rel="icon" type="image/png" sizes="16x16" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤝</text></svg>">
     <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤝</text></svg>">
+    @endif
     @endif
 
     <!-- Stylesheets -->

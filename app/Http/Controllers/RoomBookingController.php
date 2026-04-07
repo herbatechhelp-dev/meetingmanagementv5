@@ -35,6 +35,7 @@ class RoomBookingController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            'pic_name' => 'nullable|string|max:255',
             'location' => 'required|string|max:255',
             'purpose' => 'required|string|max:255',
             'start_time' => 'required|date',
@@ -65,9 +66,12 @@ class RoomBookingController extends Controller
             return back()->with('error', 'Ruangan tersebut sudah dibooking pada jam tersebut (terdapat bentrok dengan jadwal lain). Silakan pilih ruangan/waktu berbeda.')
                          ->withInput();
         }
+        
+        $picName = $request->pic_name ?: auth()->user()->name;
 
         RoomBooking::create([
             'user_id' => auth()->id(),
+            'pic_name' => $picName,
             'location' => $request->location,
             'purpose' => $request->purpose,
             'start_time' => $startTime,

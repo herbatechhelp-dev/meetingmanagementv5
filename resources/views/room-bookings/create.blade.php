@@ -32,6 +32,17 @@
                         <div class="row">
                             <div class="col-md-12 mb-3">
                                 <div class="form-group">
+                                    <label class="font-weight-bold text-dark text-sm">Nama Peminjam / PIC</label>
+                                    <input type="text" name="pic_name" class="form-control form-control-lg text-sm @error('pic_name') is-invalid @enderror" value="{{ old('pic_name', auth()->user()->name) }}" placeholder="Contoh: Pak Direktur, atau Tim IT">
+                                    <small class="form-text text-muted">Biarkan sesuai nama Anda jika Anda sendiri yang akan menggunakan ruangan.</small>
+                                    @error('pic_name')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-md-12 mb-3">
+                                <div class="form-group">
                                     <label class="font-weight-bold text-dark text-sm">Nama/Lokasi Ruangan <span class="text-danger">*</span></label>
                                     <input type="text" name="location" class="form-control form-control-lg text-sm @error('location') is-invalid @enderror" value="{{ old('location') }}" required placeholder="Contoh: Ruang Meeting Utama, Ruang Diskusi Lt. 2">
                                     @error('location')
