@@ -1000,11 +1000,34 @@ private function isAssignedActionTaker($meeting)
      */
     public function getBookedSlots(\Illuminate\Http\Request $request)
     {
-        $meetings = Meeting::whereIn('status', ['scheduled', 'ongoing'])
-            ->select('id', 'title', 'start_time', 'end_time')
-            ->get();
+        $location = $request->get('location');
+        $date = $request->get('date'); // Y-m-d format
 
-        return response()->json($meetings);
+        $query = Meeting::whereIn('status', ['scheduled', 'ongoing'])
+            ->where('is_online', false)
+            ->select('id', 'title', 'start_time', 'end_time', 'location');
+
+        $roomBookingsQuery = \App\Models\RoomBooking::whereIn('status', ['booked', 'ongoing'])
+            ->select('id', 'purpose as title', 'start_time', 'end_time', 'location');
+
+        if ($location) {
+            $query->where('location', $location);
+            $roomBookingsQuery->where('location', $location);
+        }
+
+        if ($date) {
+            $query->whereDate('start_time', $date);
+            $roomBookingsQuery->whereDate('start_time', $date);
+        }
+
+        $meetings = $query->get();
+        $roomBookings = $roomBookingsQuery->get()->map(function($booking) {
+            // Append a small tag to differentiate room bookings
+            $booking->title = '[Peminjaman] ' . $booking->title;
+            return $booking;
+        });
+
+        return response()->json($meetings->concat($roomBookings));
     }
 
     /**

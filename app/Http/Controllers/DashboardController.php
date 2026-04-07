@@ -596,7 +596,9 @@ class DashboardController extends Controller
                     'completed' => '#10b981', // Emerald
                     default => '#64748b'      // Slate
                 };
-                $title = '📅 ' . $meeting->title;
+                
+                $prefix = $meeting->status === 'completed' ? '✅ [Selesai] ' : '📅 ';
+                $title = $prefix . $meeting->title;
             }
 
             while ($currentDate <= $endDate) {

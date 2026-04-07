@@ -229,53 +229,65 @@
             </div>
             <!-- Status Ruangan Meeting Card -->
             <div class="card shadow-sm border-0 rounded-xl overflow-hidden bg-white">
-                <div class="card-header border-0 bg-white p-3 d-flex align-items-center justify-content-between">
-                    <div class="d-flex align-items-center">
-                        <div class="icon-box-indigo mr-3">
-                            <i class="fas fa-door-open"></i>
+                <div class="card-header border-0 bg-white p-4 pb-0">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-indigo-soft text-indigo rounded-lg p-2 mr-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; border-radius: 10px; background-color: rgba(79,70,229,0.1);">
+                            <i class="fas fa-door-open" style="color: #4f46e5;"></i>
                         </div>
-                        <h5 class="mb-0 font-weight-bold text-dark">Status Ruangan</h5>
+                        <h5 class="mb-0 font-weight-bold text-dark" style="font-size: 1.1rem;">Status Ruangan</h5>
                     </div>
+                    <hr class="m-0 border-light">
                 </div>
-                <div class="card-body p-0">
+                <div class="card-body p-4">
                     @if($todayRoomSchedules->isEmpty())
-                        <div class="p-4 text-center">
+                        <div class="text-center py-4">
+                            <div class="mb-3" style="font-size: 2rem; opacity: 0.3;">🏢</div>
                             <p class="mb-0 text-muted small">Tidak ada jadwal hari ini.</p>
                         </div>
                     @else
-                        <div class="list-group list-group-flush">
-                            @foreach($todayRoomSchedules as $location => $meetings)
-                                @php
-                                    $isOngoing = $meetings->where('status', 'ongoing')->isNotEmpty();
-                                    $badgeColor = $isOngoing ? 'danger' : 'success';
-                                    $badgeText = $isOngoing ? 'Dipakai' : 'Tersedia';
-                                @endphp
-                                <div class="list-group-item border-0 border-bottom px-3 py-3">
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <h6 class="font-weight-bold mb-0 text-dark">{{ Str::limit($location, 30) }}</h6>
-                                        <span class="badge badge-soft-{{ $badgeColor }} {{ $isOngoing ? 'pulse-danger' : '' }} px-2 py-1" style="font-size: 0.70rem;">
-                                            {{ $badgeText }}
-                                        </span>
-                                    </div>
-                                    <div class="timeline-sm pl-2 mt-2">
-                                        @foreach($meetings as $meeting)
-                                            <div class="timeline-item mb-2 border-left pl-2 ml-1 {{ $meeting->status === 'ongoing' ? 'border-danger' : ($meeting->status === 'completed' ? 'border-success' : 'border-secondary') }}" style="position: relative;">
-                                                <div class="position-absolute rounded-circle {{ $meeting->status === 'ongoing' ? 'bg-danger' : ($meeting->status === 'completed' ? 'bg-success' : 'bg-secondary') }}" 
-                                                     style="width: 6px; height: 6px; left: -4px; top: 5px;"></div>
-                                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                                    <span class="text-xs font-weight-bold text-dark">
-                                                        {{ $meeting->start_time->format('H:i') }} - {{ $meeting->end_time->format('H:i') }}
-                                                    </span>
+                        @foreach($todayRoomSchedules as $location => $meetings)
+                            @php
+                                $isOngoing = $meetings->where('status', 'ongoing')->isNotEmpty();
+                                $badgeText = $isOngoing ? 'Dipakai' : 'Tersedia';
+                            @endphp
+                            <div class="mb-4">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="font-weight-bold mb-0 text-dark" style="font-size: 1rem;">{{ Str::limit($location, 28) }}</h6>
+                                    @if($isOngoing)
+                                        <span class="badge badge-pill font-weight-bold" style="background: rgba(239,68,68,0.12); color: #ef4444; padding: 6px 12px; font-size: 0.78rem;">{{ $badgeText }}</span>
+                                    @else
+                                        <span class="badge badge-pill font-weight-bold" style="background: rgba(16,185,129,0.12); color: #10b981; padding: 6px 12px; font-size: 0.78rem;">{{ $badgeText }}</span>
+                                    @endif
+                                </div>
+                                <div class="pl-1">
+                                    @foreach($meetings as $meeting)
+                                        @php
+                                            $dotColor = $meeting->status === 'ongoing' ? '#ef4444' : ($meeting->status === 'completed' ? '#10b981' : '#94a3b8');
+                                        @endphp
+                                        <div class="d-flex mb-3" style="position: relative; padding-left: 18px;">
+                                            <!-- vertical line -->
+                                            @if(!$loop->last)
+                                            <div style="position: absolute; left: 4px; top: 14px; bottom: -12px; width: 2px; background: #e2e8f0;"></div>
+                                            @endif
+                                            <!-- dot -->
+                                            <div style="position: absolute; left: 0; top: 6px; width: 10px; height: 10px; border-radius: 50%; background: {{ $dotColor }}; flex-shrink: 0;"></div>
+                                            <div style="flex: 1;">
+                                                <div class="font-weight-bold text-dark" style="font-size: 0.9rem; line-height: 1.2;">
+                                                    {{ $meeting->start_time->format('H:i') }} - {{ $meeting->end_time->format('H:i') }}
                                                 </div>
-                                                <div class="text-xs text-muted text-truncate" title="{{ $meeting->title }}">
-                                                    {{ $meeting->title }}
+                                                <div class="text-muted mt-1" style="font-size: 0.82rem;">
+                                                    Reservasi: {{ Str::limit($meeting->title, 35) }}
+                                                </div>
+                                                <div class="d-flex align-items-center mt-1">
+                                                    <i class="fas fa-user-circle mr-1" style="font-size: 0.72rem; color: #94a3b8;"></i>
+                                                    <span style="font-size: 0.78rem; color: #64748b;">{{ $meeting->organizer_name ?? '-' }}</span>
                                                 </div>
                                             </div>
-                                        @endforeach
-                                    </div>
+                                        </div>
+                                    @endforeach
                                 </div>
-                            @endforeach
-                        </div>
+                            </div>
+                        @endforeach
                     @endif
                 </div>
             </div>
