@@ -578,8 +578,9 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch("{{ route('meetings.booked-slots') }}?room_id=" + encodeURIComponent(roomId) + "&date=" + encodeURIComponent(dateObj))
             .then(res => res.json())
             .then(response => {
-                loader.classList.add('none');
+                loader.classList.add('d-none');
                 if (response.length === 0) {
+                    hasClash = false;
                     badge.innerHTML = '<span class="badge badge-pill bg-emerald-soft font-weight-bold" style="padding: 6px 12px;">Tersedia</span>';
                     listContainer.insertAdjacentHTML('beforeend', '<div class="empty-state text-center py-4 text-muted"><i class="fas fa-check-circle fa-2x text-emerald mb-2 opacity-50"></i><br>Tidak ada jadwal</div>');
                 } else {
