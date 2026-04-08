@@ -13,11 +13,27 @@ class RoomBookingController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $bookings = RoomBooking::with('user')
-            ->orderBy('start_time', 'desc')
-            ->paginate(15);
+        $query = RoomBooking::with('user')->orderBy('start_time', 'desc');
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('location', 'like', "%{$search}%")
+                  ->orWhere('purpose', 'like', "%{$search}%")
+                  ->orWhere('pic_name', 'like', "%{$search}%")
+                  ->orWhereHas('user', function($uq) use ($search) {
+                      $uq->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $bookings = $query->paginate(15)->withQueryString();
             
         return view('room-bookings.index', compact('bookings'));
     }
@@ -155,6 +171,32 @@ class RoomBookingController extends Controller
         ]);
 
         return redirect()->route('room-bookings.index')->with('success', 'Reservasi ruangan berhasil diperbarui.');
+    }
+
+    /**
+     * Mark the booking as ongoing.
+     */
+    public function markOngoing(RoomBooking $roomBooking)
+    {
+        if (auth()->id() !== $roomBooking->user_id && !auth()->user()->isAdmin()) {
+            return back()->with('error', 'Anda tidak memiliki akses untuk mengubah status ini.');
+        }
+
+        $roomBooking->update(['status' => 'ongoing']);
+        return back()->with('success', 'Status ruangan berhasil diubah menjadi Sedang Dipakai.');
+    }
+
+    /**
+     * Mark the booking as completed.
+     */
+    public function markCompleted(RoomBooking $roomBooking)
+    {
+        if (auth()->id() !== $roomBooking->user_id && !auth()->user()->isAdmin()) {
+            return back()->with('error', 'Anda tidak memiliki akses untuk mengubah status ini.');
+        }
+
+        $roomBooking->update(['status' => 'completed']);
+        return back()->with('success', 'Status ruangan berhasil diubah menjadi Selesai.');
     }
 
     /**

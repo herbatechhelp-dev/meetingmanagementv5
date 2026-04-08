@@ -94,6 +94,8 @@ Route::delete('/meetings/{meeting}/files/{file}/delete', [MeetingController::cla
     // Room & Booking Routes
     Route::resource('rooms', RoomController::class);
     Route::resource('room-bookings', RoomBookingController::class);
+    Route::post('room-bookings/{roomBooking}/ongoing', [RoomBookingController::class, 'markOngoing'])->name('room-bookings.ongoing');
+    Route::post('room-bookings/{roomBooking}/completed', [RoomBookingController::class, 'markCompleted'])->name('room-bookings.completed');
 
     // Action Items
     Route::resource('action-items', ActionItemController::class)->except(['create', 'store']);

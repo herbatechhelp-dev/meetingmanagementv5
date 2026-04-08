@@ -31,27 +31,34 @@
             <h5 class="card-title font-weight-bold mb-0 text-dark">Data Reservasi Ruangan</h5>
         </div>
         <div class="px-3 pt-3 pb-2 border-top booking-toolbar">
-            <div class="row align-items-end">
-                <div class="col-md-8 mb-2 mb-md-0">
-                    <label class="text-xs font-weight-bold text-uppercase text-muted mb-2">Pencarian Cepat</label>
-                    <div class="input-group">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text bg-light border-0"><i class="fas fa-search text-muted"></i></span>
+            <form method="GET" action="{{ route('room-bookings.index') }}" id="filterForm">
+                <div class="row align-items-end">
+                    <div class="col-md-8 mb-2 mb-md-0">
+                        <label class="text-xs font-weight-bold text-uppercase text-muted mb-2">Pencarian Cepat</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text bg-light border-0"><i class="fas fa-search text-muted"></i></span>
+                            </div>
+                            <input type="text" name="search" id="bookingQuickSearch" class="form-control border-0 bg-light"
+                                placeholder="Cari ruangan, tujuan, nama peminjam, atau waktu..." value="{{ request('search') }}">
+                            @if(request('search') || request('status'))
+                                <div class="input-group-append">
+                                    <a href="{{ route('room-bookings.index') }}" class="btn btn-light border-0 text-muted" title="Reset Filter"><i class="fas fa-times"></i></a>
+                                </div>
+                            @endif
                         </div>
-                        <input type="text" id="bookingQuickSearch" class="form-control border-0 bg-light"
-                            placeholder="Cari ruangan, tujuan, nama peminjam, atau waktu...">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="text-xs font-weight-bold text-uppercase text-muted mb-2">Status</label>
+                        <select name="status" id="bookingQuickStatus" class="form-control bg-light border-0" onchange="document.getElementById('filterForm').submit()">
+                            <option value="" {{ request('status') == '' ? 'selected' : '' }}>Semua Status</option>
+                            <option value="booked" {{ request('status') == 'booked' ? 'selected' : '' }}>Dibooking</option>
+                            <option value="ongoing" {{ request('status') == 'ongoing' ? 'selected' : '' }}>Sedang Dipakai</option>
+                            <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Selesai</option>
+                        </select>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <label class="text-xs font-weight-bold text-uppercase text-muted mb-2">Status</label>
-                    <select id="bookingQuickStatus" class="form-control bg-light border-0">
-                        <option value="">Semua Status</option>
-                        <option value="booked">Dibooking</option>
-                        <option value="ongoing">Sedang Dipakai</option>
-                        <option value="completed">Selesai</option>
-                    </select>
-                </div>
-            </div>
+            </form>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -123,8 +130,36 @@
                                             class="badge badge-soft-secondary px-3 py-1 rounded-pill">{{ ucfirst($booking->status) }}</span>
                                     @endif
                                 </td>
-                                <td class="px-4 py-3 align-middle text-center text-right">
+                                <td class="px-4 py-3 align-middle text-center text-right" style="white-space: nowrap;">
                                     @if(auth()->id() == $booking->user_id || auth()->user()->isAdmin())
+                                        @if($booking->status == 'booked')
+                                            <!-- Mark Ongoing -->
+                                            <form action="{{ route('room-bookings.ongoing', $booking->id) }}" method="POST" class="d-inline">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-soft-success rounded-circle mr-1" title="Mulai Pakai" style="width: 32px; height: 32px; padding: 0;">
+                                                    <i class="fas fa-play"></i>
+                                                </button>
+                                            </form>
+                                        @endif
+
+                                        @if($booking->status == 'ongoing')
+                                            <!-- Mark Completed -->
+                                            <form action="{{ route('room-bookings.completed', $booking->id) }}" method="POST" class="d-inline">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-soft-info rounded-circle mr-1" title="Selesai Dipakai" style="width: 32px; height: 32px; padding: 0;">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                            </form>
+                                        @endif
+
+                                        @if($booking->status != 'completed' && $booking->status != 'cancelled')
+                                            <!-- Edit Button -->
+                                            <a href="{{ route('room-bookings.edit', $booking->id) }}" class="btn btn-sm btn-soft-primary rounded-circle mr-1" title="Edit Reservasi" style="width: 32px; height: 32px; padding: 0; display: inline-flex; justify-content: center; align-items: center;">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        @endif
+
+                                        <!-- Delete Button -->
                                         <form action="{{ route('room-bookings.destroy', $booking->id) }}" method="POST"
                                             onsubmit="return confirm('Apakah Anda yakin ingin membatalkan/menghapus booking ini?');"
                                             class="d-inline">
@@ -254,46 +289,18 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const searchInput = document.getElementById('bookingQuickSearch');
-            const statusSelect = document.getElementById('bookingQuickStatus');
-
-            const applyFilters = function () {
-                const keyword = (searchInput?.value || '').trim().toLowerCase();
-                const selectedStatus = statusSelect?.value || '';
-                let visibleCount = 0;
-
-                document.querySelectorAll('.room-booking-table tbody tr').forEach(row => {
-                    const isEmptyState = row.querySelector('td[colspan]');
-                    if (isEmptyState) {
-                        return;
-                    }
-
-                    const rowText = row.innerText.toLowerCase();
-                    const rowStatus = row.getAttribute('data-status') || '';
-
-                    const matchKeyword = !keyword || rowText.includes(keyword);
-                    const matchStatus = !selectedStatus || rowStatus === selectedStatus;
-
-                    const isVisible = matchKeyword && matchStatus;
-                    row.style.display = isVisible ? '' : 'none';
-                    if (isVisible) {
-                        visibleCount++;
+            
+            // Allow submitting search on Enter press
+            if (searchInput) {
+                searchInput.addEventListener('keypress', function (e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        document.getElementById('filterForm').submit();
                     }
                 });
-
-                const noResult = document.getElementById('bookingNoSearchResult');
-                if (noResult) {
-                    noResult.classList.toggle('d-none', (!keyword && !selectedStatus) || visibleCount > 0);
-                }
-            };
-
-            if (searchInput) {
-                searchInput.addEventListener('input', applyFilters);
             }
 
-            if (statusSelect) {
-                statusSelect.addEventListener('change', applyFilters);
-            }
-
+            const statusSelect = document.getElementById('bookingQuickStatus');
             const statusBtn = document.getElementById('bookingMobileStatusBtn');
             const searchBtn = document.getElementById('bookingMobileSearchBtn');
 

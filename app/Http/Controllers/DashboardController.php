@@ -188,6 +188,15 @@ class DashboardController extends Controller
             ->sortBy('start_time')
             ->groupBy('location');
 
+        $totalRooms = \App\Models\Room::active()->count();
+        $activeRoomsCount = 0;
+        foreach ($todayRoomSchedules as $location => $m) {
+            if ($m->where('status', 'ongoing')->isNotEmpty()) {
+                $activeRoomsCount++;
+            }
+        }
+        $availableRoomsCount = max(0, $totalRooms - $activeRoomsCount);
+
         return view('dashboard.index', compact(
             'totalActions',
             'completedActions',
@@ -206,7 +215,10 @@ class DashboardController extends Controller
             'meetingTrendData',
             'actionPeriod',
             'meetingPeriod',
-            'todayRoomSchedules'
+            'todayRoomSchedules',
+            'totalRooms',
+            'activeRoomsCount',
+            'availableRoomsCount'
         ));
     }
 

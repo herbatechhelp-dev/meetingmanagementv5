@@ -10,9 +10,16 @@
 @section('hide_header', true)
 
 @section('content')
+    <style>
+        @keyframes pulse-live {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            70% { transform: scale(1.03); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+    </style>
     <!-- Extreme Minimalist Stats Cards -->
     <div class="row mb-3">
-        <div class="col-lg-3 col-md-6 mb-4">
+        <div class="col-xl col-lg-4 col-md-6 mb-4">
             <a href="{{ route('action-items.index') }}" class="text-decoration-none transition-hover d-block h-100">
                 <div class="card h-100 border-0 shadow-sm rounded-xl card-vibrant-emerald stats-card">
                     <div class="card-body p-4">
@@ -30,7 +37,7 @@
                 </div>
             </a>
         </div>
-        <div class="col-lg-3 col-md-6 mb-4">
+        <div class="col-xl col-lg-4 col-md-6 mb-4">
             <a href="{{ route('meetings.index') }}" class="text-decoration-none transition-hover d-block h-100">
                 <div class="card h-100 border-0 shadow-sm rounded-xl card-vibrant-indigo stats-card">
                     <div class="card-body p-4">
@@ -48,7 +55,7 @@
                 </div>
             </a>
         </div>
-        <div class="col-lg-3 col-md-6 mb-4">
+        <div class="col-xl col-lg-4 col-md-6 mb-4">
             <a href="{{ route('meetings.index') }}" class="text-decoration-none transition-hover d-block h-100">
                 <div class="card h-100 border-0 shadow-sm rounded-xl card-vibrant-amber stats-card">
                     <div class="card-body p-4">
@@ -66,7 +73,7 @@
                 </div>
             </a>
         </div>
-        <div class="col-lg-3 col-md-6 mb-4">
+        <div class="col-xl col-lg-4 col-md-6 mb-4">
             <a href="{{ route('action-items.index') }}" class="text-decoration-none transition-hover d-block h-100">
                 <div class="card h-100 border-0 shadow-sm rounded-xl card-vibrant-rose stats-card">
                     <div class="card-body p-4">
@@ -79,6 +86,30 @@
                         <div class="d-flex align-items-baseline">
                             <h2 class="font-weight-bold mb-0 mr-2 text-white">{{ $overdueActions }}</h2>
                             <span class="text-xs text-white-50">Perlu Tindakan</span>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-xl col-lg-4 col-md-6 mb-4">
+            <a href="{{ route('room-bookings.index') }}" class="text-decoration-none transition-hover d-block h-100">
+                <div class="card h-100 border-0 shadow-sm rounded-xl stats-card" style="background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);">
+                    <div class="card-body p-3 p-xl-4 d-flex flex-column justify-content-center">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="glass-icon-wrapper mr-2 mr-xl-3 flex-shrink-0" style="width: 32px; height: 32px;">
+                                <i class="fas fa-door-open text-white" style="font-size: 0.85rem;"></i>
+                            </div>
+                            <span class="text-xs font-weight-bold text-uppercase text-white-50 letter-spacing-1">Info Ruangan</span>
+                        </div>
+                        <div class="row text-white mx-0 w-100 mt-auto">
+                            <div class="col-6 px-0" style="border-right: 1px solid rgba(255,255,255,0.2);">
+                                <h3 class="font-weight-bold mb-0 text-white" style="line-height: 1;">{{ $availableRoomsCount }}</h3>
+                                <span class="text-white-50" style="font-size: 0.65rem; font-weight: 600; letter-spacing: 0.5px;">TERSEDIA</span>
+                            </div>
+                            <div class="col-6 px-0 pl-2">
+                                <h3 class="font-weight-bold mb-0 text-white" style="line-height: 1;">{{ $activeRoomsCount }}</h3>
+                                <span class="text-white-50" style="font-size: 0.65rem; font-weight: 600; letter-spacing: 0.5px;">DIPAKAI</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -248,15 +279,20 @@
                         @foreach($todayRoomSchedules as $location => $meetings)
                             @php
                                 $isOngoing = $meetings->where('status', 'ongoing')->isNotEmpty();
-                                $badgeText = $isOngoing ? 'Dipakai' : 'Tersedia';
+                                $badgeText = $isOngoing ? 'SEDANG DIPAKAI' : 'TERSEDIA';
                             @endphp
                             <div class="mb-4">
                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                     <h6 class="font-weight-bold mb-0 text-dark" style="font-size: 1rem;">{{ Str::limit($location, 28) }}</h6>
                                     @if($isOngoing)
-                                        <span class="badge badge-pill font-weight-bold" style="background: rgba(239,68,68,0.12); color: #ef4444; padding: 6px 12px; font-size: 0.78rem;">{{ $badgeText }}</span>
+                                        <span class="badge badge-pill font-weight-bold text-white shadow-sm d-flex align-items-center" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 6px 14px; font-size: 0.72rem; letter-spacing: 0.5px; animation: pulse-live 2s infinite;">
+                                            <span style="width: 6px; height: 6px; border-radius: 50%; background-color: #fff; margin-right: 6px; box-shadow: 0 0 4px rgba(255,255,255,0.8);"></span>
+                                            {{ $badgeText }}
+                                        </span>
                                     @else
-                                        <span class="badge badge-pill font-weight-bold" style="background: rgba(16,185,129,0.12); color: #10b981; padding: 6px 12px; font-size: 0.78rem;">{{ $badgeText }}</span>
+                                        <span class="badge badge-pill font-weight-bold" style="background: rgba(16,185,129,0.12); color: #10b981; padding: 6px 14px; font-size: 0.72rem; letter-spacing: 0.5px;">
+                                            {{ $badgeText }}
+                                        </span>
                                     @endif
                                 </div>
                                 <div class="pl-1">
@@ -272,8 +308,13 @@
                                             <!-- dot -->
                                             <div style="position: absolute; left: 0; top: 6px; width: 10px; height: 10px; border-radius: 50%; background: {{ $dotColor }}; flex-shrink: 0;"></div>
                                             <div style="flex: 1;">
-                                                <div class="font-weight-bold text-dark" style="font-size: 0.9rem; line-height: 1.2;">
-                                                    {{ $meeting->start_time->format('H:i') }} - {{ $meeting->end_time->format('H:i') }}
+                                                <div class="font-weight-bold text-dark d-flex align-items-center" style="font-size: 0.9rem; line-height: 1.2;">
+                                                    <span>{{ $meeting->start_time->format('H:i') }} - {{ $meeting->end_time->format('H:i') }}</span>
+                                                    @if($meeting->status === 'completed')
+                                                        <span class="badge badge-pill ml-2" style="background: rgba(16,185,129,0.1); color: #10b981; font-size: 0.65rem;">SELESAI</span>
+                                                    @elseif($meeting->status === 'ongoing')
+                                                        <span class="badge badge-pill ml-2" style="background: rgba(239,68,68,0.1); color: #ef4444; font-size: 0.65rem;">SEDANG DIPAKAI</span>
+                                                    @endif
                                                 </div>
                                                 <div class="text-muted mt-1" style="font-size: 0.82rem;">
                                                     Reservasi: {{ Str::limit($meeting->title, 35) }}
