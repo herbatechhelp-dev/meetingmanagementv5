@@ -7,488 +7,704 @@
 
 @section('content')
     <div class="card">
-    <div class="card-header">
-        <h3 class="card-title">Daftar Tindak Lanjut</h3>
-        <div class="card-tools">
-            <div class="btn-group">
-                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-                    Filter Status
-                </button>
-                <div class="dropdown-menu">
-                    <a class="dropdown-item" href="{{ request()->fullUrlWithQuery(['status' => '']) }}">Semua</a>
-                    <a class="dropdown-item" href="{{ request()->fullUrlWithQuery(['status' => 'cancelled']) }}">Dibatalkan</a>
-                    <a class="dropdown-item" href="{{ request()->fullUrlWithQuery(['status' => 'pending']) }}">Belum Dikerjakan</a>
-                    <a class="dropdown-item" href="{{ request()->fullUrlWithQuery(['status' => 'in_progress']) }}">Sedang Dikerjakan</a>
-                    <a href="{{ request()->fullUrlWithQuery(['status' => 'waiting_review']) }}" class="dropdown-item {{ request('status') == 'waiting_review' ? 'active' : '' }}">Menunggu Review</a>
-                    <a href="{{ request()->fullUrlWithQuery(['status' => 'needs_revision']) }}" class="dropdown-item {{ request('status') == 'needs_revision' ? 'active' : '' }}">Perlu Revisi</a>
-                    <a class="dropdown-item" href="{{ request()->fullUrlWithQuery(['status' => 'completed']) }}">Selesai</a>
-                
+        <div class="card-header">
+            <h3 class="card-title">Daftar Tindak Lanjut</h3>
+            <div class="card-tools">
+                <div class="btn-group">
+                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" id="actionStatusDropdownBtn">
+                        Filter Status
+                    </button>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" href="{{ request()->fullUrlWithQuery(['status' => '']) }}">Semua</a>
+                        <a class="dropdown-item"
+                            href="{{ request()->fullUrlWithQuery(['status' => 'cancelled']) }}">Dibatalkan</a>
+                        <a class="dropdown-item" href="{{ request()->fullUrlWithQuery(['status' => 'pending']) }}">Belum
+                            Dikerjakan</a>
+                        <a class="dropdown-item"
+                            href="{{ request()->fullUrlWithQuery(['status' => 'in_progress']) }}">Sedang Dikerjakan</a>
+                        <a href="{{ request()->fullUrlWithQuery(['status' => 'waiting_review']) }}"
+                            class="dropdown-item {{ request('status') == 'waiting_review' ? 'active' : '' }}">Menunggu
+                            Review</a>
+                        <a href="{{ request()->fullUrlWithQuery(['status' => 'needs_revision']) }}"
+                            class="dropdown-item {{ request('status') == 'needs_revision' ? 'active' : '' }}">Perlu
+                            Revisi</a>
+                        <a class="dropdown-item"
+                            href="{{ request()->fullUrlWithQuery(['status' => 'completed']) }}">Selesai</a>
+
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-    
-    <!-- Tabs berdasarkan role -->
-    @if(auth()->user()->isAdmin() || auth()->user()->isManager())
-    <div class="card-header p-0 border-bottom-0">
-        <ul class="nav nav-tabs" id="actionItemTabs" role="tablist">
-            @if(auth()->user()->isAdmin())
-            <li class="nav-item">
-                <a class="nav-link {{ $type === 'all' ? 'active' : '' }}" 
-                   href="{{ request()->fullUrlWithQuery(['type' => 'all']) }}">
-                    <i class="fas fa-list mr-1"></i>
-                    Semua Tindak Lanjut
-                    <span class="badge badge-primary ml-1">{{ $stats['all'] ?? 0 }}</span>
-                </a>
-            </li>
-            @endif
-            <li class="nav-item">
-                <a class="nav-link {{ $type === 'created' ? 'active' : '' }}" 
-                   href="{{ request()->fullUrlWithQuery(['type' => 'created']) }}">
-                    <i class="fas fa-plus-circle mr-1"></i>
-                    Yang Saya Buat
-                    <span class="badge badge-info ml-1">{{ $stats['created'] ?? 0 }}</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {{ $type === 'assigned' ? 'active' : '' }}" 
-                   href="{{ request()->fullUrlWithQuery(['type' => 'assigned']) }}">
-                    <i class="fas fa-user-check mr-1"></i>
-                    Tugas Saya
-                    <span class="badge badge-success ml-1">{{ $stats['assigned'] ?? 0 }}</span>
-                </a>
-            </li>
-        </ul>
-    </div>
-    @endif
 
-    <div class="card-body">
-        <!-- Info Tab Aktif -->
+        <!-- Tabs berdasarkan role -->
         @if(auth()->user()->isAdmin() || auth()->user()->isManager())
-            <div class="alert alert-info alert-dismissible fade show mb-3" role="alert">
-                <i class="fas fa-info-circle mr-2"></i>
-                @if($type === 'all')
-                    Menampilkan <strong>semua tindak lanjut</strong> dalam sistem.
-                @elseif($type === 'created')
-                    Menampilkan <strong>tindak lanjut yang Anda buat</strong> dalam berbagai meeting.
-                @else
-                    Menampilkan <strong>tindak lanjut yang ditugaskan kepada Anda</strong>.
-                @endif
-                <button type="button" class="close" data-dismiss="alert">
-                    <span>&times;</span>
-                </button>
-            </div>
-        @else
-            <div class="alert alert-info alert-dismissible fade show mb-3" role="alert">
-                <i class="fas fa-info-circle mr-2"></i>
-                Menampilkan <strong>tindak lanjut yang ditugaskan kepada Anda</strong>.
-                <button type="button" class="close" data-dismiss="alert">
-                    <span>&times;</span>
-                </button>
+            <div class="card-header p-0 border-bottom-0">
+                <ul class="nav nav-tabs flex-nowrap action-tabs-scroll" id="actionItemTabs" role="tablist">
+                    @if(auth()->user()->isAdmin())
+                        <li class="nav-item">
+                            <a class="nav-link {{ $type === 'all' ? 'active' : '' }}"
+                                href="{{ request()->fullUrlWithQuery(['type' => 'all']) }}">
+                                <i class="fas fa-list mr-1"></i>
+                                Semua Tindak Lanjut
+                                <span class="badge badge-primary ml-1">{{ $stats['all'] ?? 0 }}</span>
+                            </a>
+                        </li>
+                    @endif
+                    <li class="nav-item">
+                        <a class="nav-link {{ $type === 'created' ? 'active' : '' }}"
+                            href="{{ request()->fullUrlWithQuery(['type' => 'created']) }}">
+                            <i class="fas fa-plus-circle mr-1"></i>
+                            Yang Saya Buat
+                            <span class="badge badge-info ml-1">{{ $stats['created'] ?? 0 }}</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ $type === 'assigned' ? 'active' : '' }}"
+                            href="{{ request()->fullUrlWithQuery(['type' => 'assigned']) }}">
+                            <i class="fas fa-user-check mr-1"></i>
+                            Tugas Saya
+                            <span class="badge badge-success ml-1">{{ $stats['assigned'] ?? 0 }}</span>
+                        </a>
+                    </li>
+                </ul>
             </div>
         @endif
 
-        <div class="table-responsive">
-            <table class="table table-bordered table-hover">
-                <thead class="text-center" style="background-color: #2c3e50; color: white !important;">
-                    <tr>
+        <div class="px-3 pt-3 pb-2 border-bottom bg-white">
+            <div class="row align-items-end">
+                <div class="col-lg-5 col-md-6 mb-2 mb-md-0">
+                    <label class="text-xs font-weight-bold text-uppercase text-muted mb-2">Pencarian Cepat</label>
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text bg-light border-0"><i class="fas fa-search text-muted"></i></span>
+                        </div>
+                        <input type="text" id="actionItemQuickSearch" class="form-control border-0 bg-light"
+                            placeholder="Cari judul, meeting, departemen, atau penanggung jawab...">
+                    </div>
+                </div>
+                <div class="col-lg-7 col-md-6">
+                    <div class="status-chip-wrap">
+                        <a class="btn btn-sm status-chip {{ request('status') ? '' : 'active' }}" href="{{ request()->fullUrlWithQuery(['status' => '']) }}">Semua</a>
+                        <a class="btn btn-sm status-chip {{ request('status') == 'pending' ? 'active' : '' }}" href="{{ request()->fullUrlWithQuery(['status' => 'pending']) }}">Belum Dikerjakan</a>
+                        <a class="btn btn-sm status-chip {{ request('status') == 'in_progress' ? 'active' : '' }}" href="{{ request()->fullUrlWithQuery(['status' => 'in_progress']) }}">Sedang Dikerjakan</a>
+                        <a class="btn btn-sm status-chip {{ request('status') == 'waiting_review' ? 'active' : '' }}" href="{{ request()->fullUrlWithQuery(['status' => 'waiting_review']) }}">Menunggu Review</a>
+                        <a class="btn btn-sm status-chip {{ request('status') == 'completed' ? 'active' : '' }}" href="{{ request()->fullUrlWithQuery(['status' => 'completed']) }}">Selesai</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <!-- Info Tab Aktif -->
+            @if(auth()->user()->isAdmin() || auth()->user()->isManager())
+                <div class="alert alert-info alert-dismissible fade show mb-3" role="alert">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    @if($type === 'all')
+                        Menampilkan <strong>semua tindak lanjut</strong> dalam sistem.
+                    @elseif($type === 'created')
+                        Menampilkan <strong>tindak lanjut yang Anda buat</strong> dalam berbagai meeting.
+                    @else
+                        Menampilkan <strong>tindak lanjut yang ditugaskan kepada Anda</strong>.
+                    @endif
+                    <button type="button" class="close" data-dismiss="alert">
+                        <span>&times;</span>
+                    </button>
+                </div>
+            @else
+                <div class="alert alert-info alert-dismissible fade show mb-3" role="alert">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    Menampilkan <strong>tindak lanjut yang ditugaskan kepada Anda</strong>.
+                    <button type="button" class="close" data-dismiss="alert">
+                        <span>&times;</span>
+                    </button>
+                </div>
+            @endif
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover action-items-table">
+                    <thead class="text-center" style="background-color: #2c3e50; color: white !important;">
+                        <tr>
 
 
-                        <th class="table-header-custom">Judul</th>
-                        <th class="table-header-custom">Meeting</th>
-                        <th class="table-header-custom">Ditugaskan ke</th>
-                        <th class="table-header-custom">Departemen</th>
-                        <th class="table-header-custom">Batas Waktu</th>
-                        <th class="table-header-custom">Status</th>
-                        <th class="table-header-custom">Prioritas</th>
-                        <th class="table-header-custom" style="width: 120px;">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($actionItems as $item)
-                    @php
-                        $isAssignedToMe = $item->assigned_to == auth()->id();
-                        $isCreatedByMe = $item->meeting && $item->meeting->organizer_id == auth()->id();
-                        $meetingDeleted = !$item->meeting;
-                        $canEditOrDelete = auth()->user()->isAdmin() || 
-                                         ($item->meeting && $item->meeting->organizer_id == auth()->id());
-                    @endphp
-                    
-                    <tr class="{{ $isAssignedToMe ? 'table-warning' : '' }} {{ $isCreatedByMe ? 'table-info' : '' }} {{ $meetingDeleted ? 'table-danger' : '' }}">
-                        <td class="align-middle">
-                            <div>
-                                <strong>{{ $item->title }}</strong>
-                                @if($isAssignedToMe)
-                                <span class="badge badge-warning badge-pill ml-1 small">Tugas Anda</span>
-                                @endif
-                                @if($isCreatedByMe)
-                                <span class="badge badge-info badge-pill ml-1 small">Anda yang Buat</span>
-                                @endif
-                                @if($meetingDeleted)
-                                <span class="badge badge-danger badge-pill ml-1 small">Meeting Dihapus</span>
-                                @endif
-                            </div>
-                            @if($item->description)
-                            <small class="text-muted">{{ Str::limit($item->description, 50) }}</small>
-                            @endif
-                        </td>
-                        <td class="align-middle">
-                            @if($item->meeting)
-                                <a href="{{ route('meetings.show', $item->meeting) }}" class="text-decoration-none">
-                                    {{ Str::limit($item->meeting->title, 30) }}
-                                </a>
-                            @else
-                                <span class="text-danger">
-                                    <i class="fas fa-exclamation-triangle"></i> Meeting telah dihapus
-                                </span>
-                            @endif
-                        </td>
-                        <td class="align-middle">
-                            <div class="d-flex align-items-center">
-                                <i class="fas fa-user-circle mr-2 
-                                    {{ $isAssignedToMe ? 'text-warning' : 'text-muted' }}"></i>
-                                <div>
-                                    <strong class="{{ $isAssignedToMe ? 'text-warning' : '' }}">
-                                        {{ $item->assignedTo->name }}
-                                    </strong>
-                                    <br>
-                                    <small class="text-muted">{{ $item->assignedTo->position }}</small>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="align-middle">{{ $item->department->name }}</td>
-                        <td class="text-center align-middle">
-                            <span class="badge badge-{{ $item->isOverdue() ? 'danger' : 'secondary' }}">
-                                {{ $item->due_date->format('d M Y') }}
-                            </span>
-                            @if($item->isOverdue())
-                            <br><small class="text-danger">Terlambat {{ $item->due_date->diffInDays(now()) }} hari</small>
-                            @elseif($item->isCompletedLate())
-                            <br><small class="text-danger">Selesai Terlambat {{ $item->due_date->startOfDay()->diffInDays($item->completed_at->startOfDay()) }} hari</small>
-                            @endif
-                        </td>
-                        <td class="text-center align-middle">
-                            <span class="badge badge-{{ $item->status_badge }}">
-                                {{ $item->status_label }}
-                            </span>
-                        </td>
-                        <td class="text-center align-middle">
-                            <span class="badge badge-{{ $item->priority_badge }}">
-                                {{ $item->priority_label }}
-                            </span>
-                        </td>
-                        <td class="text-center align-middle" style="white-space: nowrap;">
-                            {{-- 1. Tombol Lihat --}}
-                            <a href="{{ route('action-items.show', $item) }}" 
-                               class="btn btn-info btn-sm mr-1" 
-                               title="Lihat Detail">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            
-                            @if($canEditOrDelete)
-                            {{-- 2. Tombol Edit --}}
-                            <a href="{{ route('action-items.edit', $item) }}" 
-                               class="btn btn-warning btn-sm mr-1" 
-                               title="Edit">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            
-                            {{-- 3. Tombol Hapus --}}
-                            <form action="{{ route('action-items.destroy', $item) }}" 
-                                  method="POST" 
-                                  class="d-inline"
-                                  onsubmit="return confirmDeleteActionItem('{{ addslashes($item->title) }}')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" 
-                                        class="btn btn-danger btn-sm" 
-                                        title="Hapus">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </form>
-                            @endif
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="8" class="text-center py-4">
-                            <div class="text-muted">
-                                <i class="fas fa-tasks fa-3x mb-3"></i>
-                                <h5>Tidak ada tindak lanjut</h5>
-                                <p>
-                                    @if(auth()->user()->isAdmin())
-                                        @if($type === 'all')
-                                            Tidak ada tindak lanjut dalam sistem.
-                                        @elseif($type === 'created')
-                                            Anda belum membuat tindak lanjut apapun.
-                                        @else
-                                            Tidak ada tindak lanjut yang ditugaskan kepada Anda.
+                            <th class="table-header-custom">Judul</th>
+                            <th class="table-header-custom">Meeting</th>
+                            <th class="table-header-custom">Ditugaskan ke</th>
+                            <th class="table-header-custom">Departemen</th>
+                            <th class="table-header-custom">Batas Waktu</th>
+                            <th class="table-header-custom">Status</th>
+                            <th class="table-header-custom">Prioritas</th>
+                            <th class="table-header-custom" style="width: 120px;">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($actionItems as $item)
+                            @php
+                                $isAssignedToMe = $item->assigned_to == auth()->id();
+                                $isCreatedByMe = $item->meeting && $item->meeting->organizer_id == auth()->id();
+                                $meetingDeleted = !$item->meeting;
+                                $canEditOrDelete = auth()->user()->isAdmin() ||
+                                    ($item->meeting && $item->meeting->organizer_id == auth()->id());
+                            @endphp
+
+                            <tr
+                                class="{{ $isAssignedToMe ? 'table-warning' : '' }} {{ $isCreatedByMe ? 'table-info' : '' }} {{ $meetingDeleted ? 'table-danger' : '' }}">
+                                <td class="align-middle">
+                                    <div>
+                                        <strong>{{ $item->title }}</strong>
+                                        @if($isAssignedToMe)
+                                            <span class="badge badge-warning badge-pill ml-1 small">Tugas Anda</span>
                                         @endif
-                                    @elseif(auth()->user()->isManager())
-                                        @if($type === 'created')
-                                            Anda belum membuat tindak lanjut apapun.
-                                        @else
-                                            Tidak ada tindak lanjut yang ditugaskan kepada Anda.
+                                        @if($isCreatedByMe)
+                                            <span class="badge badge-info badge-pill ml-1 small">Anda yang Buat</span>
                                         @endif
-                                    @else
-                                        Tidak ada tindak lanjut yang ditugaskan kepada Anda.
+                                        @if($meetingDeleted)
+                                            <span class="badge badge-danger badge-pill ml-1 small">Meeting Dihapus</span>
+                                        @endif
+                                    </div>
+                                    @if($item->description)
+                                        <small class="text-muted">{{ Str::limit($item->description, 50) }}</small>
                                     @endif
-                                </p>
-                                @if((auth()->user()->isAdmin() || auth()->user()->isManager()) && $type === 'created')
-                                <a href="{{ route('meetings.index') }}" class="btn btn-primary">
-                                    <i class="fas fa-plus mr-1"></i> Buat Meeting Baru
-                                </a>
-                                @endif
-                            </div>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                                </td>
+                                <td class="align-middle">
+                                    @if($item->meeting)
+                                        <a href="{{ route('meetings.show', $item->meeting) }}" class="text-decoration-none">
+                                            {{ Str::limit($item->meeting->title, 30) }}
+                                        </a>
+                                    @else
+                                        <span class="text-danger">
+                                            <i class="fas fa-exclamation-triangle"></i> Meeting telah dihapus
+                                        </span>
+                                    @endif
+                                </td>
+                                <td class="align-middle">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-user-circle mr-2 
+                                            {{ $isAssignedToMe ? 'text-warning' : 'text-muted' }}"></i>
+                                        <div>
+                                            <strong class="{{ $isAssignedToMe ? 'text-warning' : '' }}">
+                                                {{ $item->assignedTo->name }}
+                                            </strong>
+                                            <br>
+                                            <small class="text-muted">{{ $item->assignedTo->position }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="align-middle">{{ $item->department->name }}</td>
+                                <td class="text-center align-middle">
+                                    <span class="badge badge-{{ $item->isOverdue() ? 'danger' : 'secondary' }}">
+                                        {{ $item->due_date->format('d M Y') }}
+                                    </span>
+                                    @if($item->isOverdue())
+                                        <br><small class="text-danger">Terlambat {{ $item->due_date->diffInDays(now()) }}
+                                            hari</small>
+                                    @elseif($item->isCompletedLate())
+                                        <br><small class="text-danger">Selesai Terlambat
+                                            {{ $item->due_date->startOfDay()->diffInDays($item->completed_at->startOfDay()) }}
+                                            hari</small>
+                                    @endif
+                                </td>
+                                <td class="text-center align-middle">
+                                    <span class="badge badge-{{ $item->status_badge }}">
+                                        {{ $item->status_label }}
+                                    </span>
+                                </td>
+                                <td class="text-center align-middle">
+                                    <span class="badge badge-{{ $item->priority_badge }}">
+                                        {{ $item->priority_label }}
+                                    </span>
+                                </td>
+                                <td class="text-center align-middle" style="white-space: nowrap;">
+                                    {{-- 1. Tombol Lihat --}}
+                                    <a href="{{ route('action-items.show', $item) }}" class="btn btn-info btn-sm mr-1"
+                                        title="Lihat Detail">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+
+                                    @if($canEditOrDelete)
+                                        {{-- 2. Tombol Edit --}}
+                                        <a href="{{ route('action-items.edit', $item) }}" class="btn btn-warning btn-sm mr-1"
+                                            title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+
+                                        {{-- 3. Tombol Hapus --}}
+                                        <form action="{{ route('action-items.destroy', $item) }}" method="POST" class="d-inline"
+                                            onsubmit="return confirmDeleteActionItem('{{ addslashes($item->title) }}')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-danger btn-sm" title="Hapus">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    @endif
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="8" class="text-center py-4 mobile-empty-state">
+                                    <div class="text-muted">
+                                        <i class="fas fa-tasks fa-3x mb-3"></i>
+                                        <h5>Tidak ada tindak lanjut</h5>
+                                        <p>
+                                            @if(auth()->user()->isAdmin())
+                                                @if($type === 'all')
+                                                    Tidak ada tindak lanjut dalam sistem.
+                                                @elseif($type === 'created')
+                                                    Anda belum membuat tindak lanjut apapun.
+                                                @else
+                                                    Tidak ada tindak lanjut yang ditugaskan kepada Anda.
+                                                @endif
+                                            @elseif(auth()->user()->isManager())
+                                                @if($type === 'created')
+                                                    Anda belum membuat tindak lanjut apapun.
+                                                @else
+                                                    Tidak ada tindak lanjut yang ditugaskan kepada Anda.
+                                                @endif
+                                            @else
+                                                Tidak ada tindak lanjut yang ditugaskan kepada Anda.
+                                            @endif
+                                        </p>
+                                        @if((auth()->user()->isAdmin() || auth()->user()->isManager()) && $type === 'created')
+                                            <a href="{{ route('meetings.index') }}" class="btn btn-primary">
+                                                <i class="fas fa-plus mr-1"></i> Buat Meeting Baru
+                                            </a>
+                                        @endif
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="text-center py-4 d-none" id="actionItemNoSearchResult">
+                <div class="mobile-empty-state p-4">
+                    <i class="fas fa-search text-muted mb-2"></i>
+                    <h6 class="mb-1">Tidak ada hasil pencarian</h6>
+                    <small class="text-muted">Coba kata kunci lain atau pilih status yang berbeda.</small>
+                </div>
+            </div>
+
+            <div class="mt-3 mobile-pagination-wrap">
+                {{ $actionItems->links() }}
+            </div>
         </div>
-        
-        <div class="mt-3">
-            {{ $actionItems->links() }}
+
+        <div class="mobile-action-spacer d-md-none"></div>
+        <div class="mobile-action-bar d-md-none" id="actionMobileActionBar">
+            <button type="button" class="mobile-action-btn" id="actionMobileStatusBtn">
+                <i class="fas fa-filter"></i>
+                <span>Status</span>
+            </button>
+            <button type="button" class="mobile-action-btn" id="actionMobileSearchBtn">
+                <i class="fas fa-search"></i>
+                <span>Cari</span>
+            </button>
+            <button type="button" class="mobile-action-btn" id="actionMobileTopBtn">
+                <i class="fas fa-arrow-up"></i>
+                <span>Atas</span>
+            </button>
         </div>
-    </div>
 @endsection
 
-@section('scripts')
-<script>
-// Fungsi konfirmasi hapus dengan detail
-function confirmDeleteActionItem(title) {
-    return confirm(`Hapus tindak lanjut "${title}"?\n\nTindakan ini tidak dapat dibatalkan dan semua data terkait akan dihapus permanen!`);
-}
+    @section('scripts')
+        <script>
+            // Fungsi konfirmasi hapus dengan detail
+            function confirmDeleteActionItem(title) {
+                return confirm(`Hapus tindak lanjut "${title}"?\n\nTindakan ini tidak dapat dibatalkan dan semua data terkait akan dihapus permanen!`);
+            }
 
-// Handle loading state untuk semua form hapus
-document.addEventListener('DOMContentLoaded', function() {
-    const deleteForms = document.querySelectorAll('form[action*="action-items"]');
-    deleteForms.forEach(form => {
-        form.addEventListener('submit', function(e) {
-            const button = this.querySelector('button[type="submit"]');
-            if (button && button.innerHTML.includes('fa-trash')) {
-                const originalText = button.innerHTML;
-                button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-                button.disabled = true;
-                button.title = 'Menghapus...';
-                
-                // Re-enable button setelah 5 detik untuk menghindari stuck
+            // Handle loading state untuk semua form hapus
+            document.addEventListener('DOMContentLoaded', function () {
+                const deleteForms = document.querySelectorAll('form[action*="action-items"]');
+                deleteForms.forEach(form => {
+                    form.addEventListener('submit', function (e) {
+                        const button = this.querySelector('button[type="submit"]');
+                        if (button && button.innerHTML.includes('fa-trash')) {
+                            const originalText = button.innerHTML;
+                            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                            button.disabled = true;
+                            button.title = 'Menghapus...';
+
+                            // Re-enable button setelah 5 detik untuk menghindari stuck
+                            setTimeout(() => {
+                                button.innerHTML = originalText;
+                                button.disabled = false;
+                                button.title = 'Hapus';
+                            }, 5000);
+                        }
+                    });
+                });
+
+                // Auto-hide alert setelah 5 detik
+                const autoHideAlert = document.querySelector('.alert-info');
+                if (autoHideAlert) {
+                    setTimeout(() => {
+                        if (autoHideAlert) {
+                            autoHideAlert.remove();
+                        }
+                    }, 5000);
+                }
+
+                const quickSearch = document.getElementById('actionItemQuickSearch');
+                if (quickSearch) {
+                    quickSearch.addEventListener('input', function () {
+                        const keyword = this.value.trim().toLowerCase();
+                        let visibleCount = 0;
+                        document.querySelectorAll('.action-items-table tbody tr').forEach(row => {
+                            const isEmptyState = row.querySelector('td[colspan]');
+                            if (isEmptyState) {
+                                return;
+                            }
+
+                            const text = row.innerText.toLowerCase();
+                            const isVisible = !keyword || text.includes(keyword);
+                            row.style.display = isVisible ? '' : 'none';
+                            if (isVisible) {
+                                visibleCount++;
+                            }
+                        });
+
+                        const noResult = document.getElementById('actionItemNoSearchResult');
+                        if (noResult) {
+                            noResult.classList.toggle('d-none', !keyword || visibleCount > 0);
+                        }
+                    });
+                }
+
+                const statusBtn = document.getElementById('actionMobileStatusBtn');
+                const searchBtn = document.getElementById('actionMobileSearchBtn');
+                const topBtn = document.getElementById('actionMobileTopBtn');
+                const statusDropdownBtn = document.getElementById('actionStatusDropdownBtn');
+
+                if (statusBtn && statusDropdownBtn) {
+                    statusBtn.addEventListener('click', function () {
+                        statusDropdownBtn.click();
+                        statusDropdownBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    });
+                }
+
+                if (searchBtn && quickSearch) {
+                    searchBtn.addEventListener('click', function () {
+                        quickSearch.focus();
+                        quickSearch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    });
+                }
+
+                if (topBtn) {
+                    topBtn.addEventListener('click', function () {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    });
+                }
+            });
+
+            // Toast notification untuk feedback
+            function showToast(message, type = 'info') {
+                // Hapus toast sebelumnya jika ada
+                const existingToasts = document.querySelectorAll('.custom-toast');
+                existingToasts.forEach(toast => toast.remove());
+
+                const toast = document.createElement('div');
+                toast.className = `alert alert-${type} alert-dismissible fade show custom-toast position-fixed`;
+                toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+                toast.innerHTML = `
+            <strong>${type === 'success' ? '✅ Sukses!' : type === 'danger' ? '❌ Error!' : 'ℹ️ Info!'}</strong> ${message}
+            <button type="button" class="close" data-dismiss="alert">
+                <span>&times;</span>
+            </button>
+        `;
+                document.body.appendChild(toast);
+
+                // Auto-hide setelah 3 detik
                 setTimeout(() => {
-                    button.innerHTML = originalText;
-                    button.disabled = false;
-                    button.title = 'Hapus';
-                }, 5000);
+                    if (toast.parentNode) {
+                        toast.remove();
+                    }
+                }, 3000);
             }
-        });
-    });
+        </script>
 
-    // Auto-hide alert setelah 5 detik
-    const autoHideAlert = document.querySelector('.alert-info');
-    if (autoHideAlert) {
-        setTimeout(() => {
-            if (autoHideAlert) {
-                autoHideAlert.remove();
+        @if(session('success'))
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    showToast("{!! session('success') !!}", 'success');
+                });
+            </script>
+        @endif
+
+        @if(session('error'))
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    showToast("{!! session('error') !!}", 'danger');
+                });
+            </script>
+        @endif
+
+        <style>
+            .nav-tabs .nav-link {
+                border: none;
+                border-bottom: 3px solid transparent;
+                color: #6c757d;
+                font-weight: 500;
+                padding: 12px 20px;
+                transition: all 0.3s ease;
             }
-        }, 5000);
-    }
-});
 
-// Toast notification untuk feedback
-function showToast(message, type = 'info') {
-    // Hapus toast sebelumnya jika ada
-    const existingToasts = document.querySelectorAll('.custom-toast');
-    existingToasts.forEach(toast => toast.remove());
-    
-    const toast = document.createElement('div');
-    toast.className = `alert alert-${type} alert-dismissible fade show custom-toast position-fixed`;
-    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-    toast.innerHTML = `
-        <strong>${type === 'success' ? '✅ Sukses!' : type === 'danger' ? '❌ Error!' : 'ℹ️ Info!'}</strong> ${message}
-        <button type="button" class="close" data-dismiss="alert">
-            <span>&times;</span>
-        </button>
-    `;
-    document.body.appendChild(toast);
-    
-    // Auto-hide setelah 3 detik
-    setTimeout(() => {
-        if (toast.parentNode) {
-            toast.remove();
-        }
-    }, 3000);
-}
-</script>
+            .nav-tabs .nav-link.active {
+                border-bottom-color: #007bff;
+                color: #007bff;
+                background-color: transparent;
+            }
 
-@if(session('success'))
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    showToast("{!! session('success') !!}", 'success');
-});
-</script>
-@endif
+            .nav-tabs .nav-link:hover {
+                border-bottom-color: #dee2e6;
+                color: #495057;
+            }
 
-@if(session('error'))
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    showToast("{!! session('error') !!}", 'danger');
-});
-</script>
-@endif
+            .table-warning {
+                background-color: #fff3cd !important;
+            }
 
-<style>
-.nav-tabs .nav-link {
-    border: none;
-    border-bottom: 3px solid transparent;
-    color: #6c757d;
-    font-weight: 500;
-    padding: 12px 20px;
-    transition: all 0.3s ease;
-}
+            .table-info {
+                background-color: #d1ecf1 !important;
+            }
 
-.nav-tabs .nav-link.active {
-    border-bottom-color: #007bff;
-    color: #007bff;
-    background-color: transparent;
-}
+            .table-danger {
+                background-color: #f8d7da !important;
+            }
 
-.nav-tabs .nav-link:hover {
-    border-bottom-color: #dee2e6;
-    color: #495057;
-}
+            .btn-group-sm>.btn {
+                padding: 4px 8px;
+                font-size: 12px;
+                border-radius: 0.25rem;
+                transition: all 0.3s ease;
+            }
 
-.table-warning {
-    background-color: #fff3cd !important;
-}
+            .btn-group-sm>.btn:not(:last-child) {
+                border-top-right-radius: 0;
+                border-bottom-right-radius: 0;
+            }
 
-.table-info {
-    background-color: #d1ecf1 !important;
-}
+            .btn-group-sm>.btn:not(:first-child) {
+                border-top-left-radius: 0;
+                border-bottom-left-radius: 0;
+                margin-left: -1px;
+            }
 
-.table-danger {
-    background-color: #f8d7da !important;
-}
+            .btn-danger {
+                transition: all 0.3s ease;
+            }
 
-.btn-group-sm > .btn {
-    padding: 4px 8px;
-    font-size: 12px;
-    border-radius: 0.25rem;
-    transition: all 0.3s ease;
-}
+            .btn-danger:hover {
+                background-color: #c82333;
+                border-color: #bd2130;
+                transform: scale(1.05);
+            }
 
-.btn-group-sm > .btn:not(:last-child) {
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-}
+            .fa-spinner {
+                animation: spin 1s linear infinite;
+            }
 
-.btn-group-sm > .btn:not(:first-child) {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-    margin-left: -1px;
-}
+            @keyframes spin {
+                0% {
+                    transform: rotate(0deg);
+                }
 
-.btn-danger {
-    transition: all 0.3s ease;
-}
+                100% {
+                    transform: rotate(360deg);
+                }
+            }
 
-.btn-danger:hover {
-    background-color: #c82333;
-    border-color: #bd2130;
-    transform: scale(1.05);
-}
+            .text-decoration-none:hover {
+                text-decoration: underline !important;
+            }
 
-.fa-spinner {
-    animation: spin 1s linear infinite;
-}
+            .badge-pill {
+                font-size: 0.7rem;
+                padding: 0.25em 0.6em;
+            }
 
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
+            /* Hover effects untuk rows */
+            .table-hover tbody tr:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                transition: all 0.3s ease;
+            }
 
-.text-decoration-none:hover {
-    text-decoration: underline !important;
-}
+            /* Responsive design */
+            @media (max-width: 768px) {
+                .table-responsive {
+                    font-size: 0.875rem;
+                }
 
-.badge-pill {
-    font-size: 0.7rem;
-    padding: 0.25em 0.6em;
-}
+                .btn-group-sm>.btn {
+                    padding: 2px 4px;
+                    font-size: 10px;
+                }
 
-/* Hover effects untuk rows */
-.table-hover tbody tr:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    transition: all 0.3s ease;
-}
+                .nav-tabs .nav-link {
+                    padding: 8px 12px;
+                    font-size: 0.875rem;
+                }
 
-/* Responsive design */
-@media (max-width: 768px) {
-    .table-responsive {
-        font-size: 0.875rem;
-    }
-    
-    .btn-group-sm > .btn {
-        padding: 2px 4px;
-        font-size: 10px;
-    }
-    
-    .nav-tabs .nav-link {
-        padding: 8px 12px;
-        font-size: 0.875rem;
-    }
-    
-    .card-header .card-title {
-        font-size: 1.1rem;
-    }
-    
-    .table td, .table th {
-        padding: 0.5rem;
-    }
-}
+                .card-header .card-title {
+                    font-size: 1.1rem;
+                }
 
-/* Empty state styling */
-.text-center.py-4 {
-    background: #f8f9fa;
-    border-radius: 8px;
-}
+                .table td,
+                .table th {
+                    padding: 0.5rem;
+                }
+            }
 
-.text-center.py-4 .fa-tasks {
-    opacity: 0.5;
-}
+            /* Empty state styling */
+            .text-center.py-4 {
+                background: #f8f9fa;
+                border-radius: 8px;
+            }
 
-/* Badge styling */
-.badge {
-    font-size: 0.75em;
-    font-weight: 500;
-}
+            .text-center.py-4 .fa-tasks {
+                opacity: 0.5;
+            }
 
-.badge-primary { background-color: #007bff; }
-.badge-info { background-color: #17a2b8; }
-.badge-success { background-color: #28a745; }
-.badge-warning { background-color: #ffc107; color: #212529; }
-.badge-danger { background-color: #dc3545; }
-.badge-secondary { background-color: #6c757d; }
+            /* Badge styling */
+            .badge {
+                font-size: 0.75em;
+                font-weight: 500;
+            }
 
-/* Alert styling */
-.alert {
-    border: none;
-    border-left: 4px solid;
-}
+            .badge-primary {
+                background-color: #007bff;
+            }
 
-.alert-info {
-    border-left-color: #17a2b8;
-    background-color: #f8f9fa;
-}
+            .badge-info {
+                background-color: #17a2b8;
+            }
 
-/* Card header styling */
-.card-header {
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #dee2e6;
-}
+            .badge-success {
+                background-color: #28a745;
+            }
 
-.card-title {
-    color: #495057;
-    font-weight: 600;
-}
-</style>
-@endsection
+            .badge-warning {
+                background-color: #ffc107;
+                color: #212529;
+            }
+
+            .badge-danger {
+                background-color: #dc3545;
+            }
+
+            .badge-secondary {
+                background-color: #6c757d;
+            }
+
+            /* Alert styling */
+            .alert {
+                border: none;
+                border-left: 4px solid;
+            }
+
+            .alert-info {
+                border-left-color: #17a2b8;
+                background-color: #f8f9fa;
+            }
+
+            /* Card header styling */
+            .card-header {
+                background-color: #f8f9fa;
+                border-bottom: 1px solid #dee2e6;
+            }
+
+            .card-title {
+                color: #495057;
+                font-weight: 600;
+            }
+
+            .action-tabs-scroll {
+                overflow-x: auto;
+                overflow-y: hidden;
+                scrollbar-width: thin;
+                white-space: nowrap;
+            }
+
+            .action-tabs-scroll .nav-item {
+                flex: 0 0 auto;
+            }
+
+            .status-chip-wrap {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.45rem;
+                justify-content: flex-end;
+            }
+
+            .status-chip {
+                border: 1px solid #dbe5ef;
+                color: #64748b;
+                border-radius: 999px !important;
+                background: #f8fbff;
+                font-weight: 600;
+                padding: 0.35rem 0.75rem;
+            }
+
+            .status-chip.active,
+            .status-chip:hover {
+                border-color: #0ea673;
+                background: rgba(14, 166, 115, 0.1);
+                color: #087f59;
+            }
+
+            @media (max-width: 767.98px) {
+                .status-chip-wrap {
+                    justify-content: flex-start;
+                    overflow-x: auto;
+                    flex-wrap: nowrap;
+                    padding-bottom: 0.2rem;
+                }
+
+                .status-chip {
+                    white-space: nowrap;
+                }
+
+                .mobile-action-spacer {
+                    height: 86px;
+                }
+
+                .mobile-action-bar {
+                    position: fixed;
+                    left: 12px;
+                    right: 12px;
+                    bottom: calc(10px + env(safe-area-inset-bottom));
+                    z-index: 1060;
+                    display: flex;
+                    gap: 0.5rem;
+                    padding: 0.45rem;
+                    border-radius: 14px;
+                    background: rgba(255, 255, 255, 0.94);
+                    border: 1px solid #dbe7f2;
+                    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
+                    backdrop-filter: blur(8px);
+                }
+
+                .mobile-action-btn {
+                    flex: 1;
+                    border: 1px solid #dbe5ef;
+                    border-radius: 10px;
+                    padding: 0.45rem 0.35rem;
+                    background: #f8fbff;
+                    color: #334155;
+                    display: inline-flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    font-weight: 700;
+                    font-size: 0.72rem;
+                    gap: 0.2rem;
+                }
+
+                .mobile-action-btn i {
+                    font-size: 0.95rem;
+                }
+            }
+        </style>
+    @endsection

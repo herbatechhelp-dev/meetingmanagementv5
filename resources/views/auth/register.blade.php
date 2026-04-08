@@ -46,9 +46,12 @@
                     @enderror
                 </div>
                 
-                <div class="input-group mb-3">
+                <div class="input-group mb-3" style="position: relative;">
                     <input type="password" name="password" class="form-control @error('password') is-invalid @enderror" 
                            placeholder="Password" required>
+                    <button type="button" class="password-toggle" style="right: 45px; z-index: 5;">
+                        <i class="fas fa-eye"></i>
+                    </button>
                     <div class="input-group-append">
                         <div class="input-group-text">
                             <span class="fas fa-lock"></span>
@@ -61,9 +64,12 @@
                     @enderror
                 </div>
                 
-                <div class="input-group mb-3">
+                <div class="input-group mb-3" style="position: relative;">
                     <input type="password" name="password_confirmation" class="form-control" 
                            placeholder="Retype password" required>
+                    <button type="button" class="password-toggle" style="right: 45px; z-index: 5;">
+                        <i class="fas fa-eye"></i>
+                    </button>
                     <div class="input-group-append">
                         <div class="input-group-text">
                             <span class="fas fa-lock"></span>

@@ -28,6 +28,7 @@
     <!-- Stylesheets -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
         * {
@@ -42,9 +43,10 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Plus Jakarta Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             position: relative;
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
             padding: 20px;
         }
 
@@ -202,7 +204,48 @@
             position: relative;
             z-index: 10;
             width: 100%;
-            max-width: 400px;
+            max-width: 430px;
+            padding: 8px;
+        }
+
+        .guest-container .card,
+        .guest-container .login-card,
+        .guest-container .register-card-body {
+            border-radius: 16px !important;
+            border: 1px solid #e4edf2 !important;
+            box-shadow: 0 14px 32px rgba(15, 23, 42, 0.12) !important;
+        }
+
+        .guest-container h1,
+        .guest-container h2,
+        .guest-container h3,
+        .guest-container .login-logo,
+        .guest-container .register-logo a {
+            font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif !important;
+        }
+
+        .guest-container .btn-primary,
+        .guest-container .login-btn {
+            background: linear-gradient(135deg, #0ea673 0%, #17b67f 100%) !important;
+            border: 1px solid #0ea673 !important;
+            border-radius: 11px !important;
+        }
+
+        .guest-container .btn-primary:hover,
+        .guest-container .login-btn:hover {
+            background: linear-gradient(135deg, #07835a 0%, #0ea673 100%) !important;
+            border-color: #07835a !important;
+        }
+
+        .guest-container .form-control {
+            border-radius: 10px !important;
+            border: 1px solid #dbe5ef;
+            min-height: 44px;
+        }
+
+        .guest-container .form-control:focus {
+            border-color: #0ea673 !important;
+            box-shadow: 0 0 0 0.2rem rgba(14, 166, 115, 0.18) !important;
         }
 
         /* Floating Animation */
@@ -228,11 +271,26 @@
         /* Responsive Design */
         @media (max-width: 480px) {
             body {
-                padding: 15px;
+                padding: 12px;
             }
             
             .guest-container {
-                max-width: 340px;
+                max-width: 100%;
+                padding: 0;
+            }
+
+            .guest-container .card,
+            .guest-container .login-card {
+                border-radius: 14px !important;
+            }
+
+            .guest-container .card-body,
+            .guest-container .register-card-body {
+                padding: 1rem !important;
+            }
+
+            .guest-container .login-logo h1 {
+                font-size: 1.75rem !important;
             }
             
             .background-ornaments .green-ornament {
@@ -260,6 +318,56 @@
 
         ::-webkit-scrollbar-thumb:hover {
             background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        }
+
+        /* Shared Authentication Form Styles */
+        .input-with-icon {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-with-icon i:first-child {
+            position: absolute;
+            left: 12px;
+            color: #94a3b8;
+            z-index: 2;
+            font-size: 0.9rem;
+        }
+
+        .input-with-icon .form-control {
+            width: 100%;
+            padding: 14px 45px 14px 45px;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            padding: 4px;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            z-index: 3;
+            outline: none;
+        }
+
+        .password-toggle:hover {
+            color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+            transform: scale(1.1);
+        }
+
+        .password-toggle:active {
+            transform: scale(0.95);
         }
     </style>
 
@@ -346,12 +454,24 @@
 
             // Password toggle functionality for any password fields
             document.querySelectorAll('.password-toggle').forEach(toggle => {
-                toggle.addEventListener('click', function() {
-                    const passwordInput = this.closest('.input-with-icon').querySelector('input[type="password"], input[type="text"]');
+                toggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const passwordInput = this.parentElement.querySelector('input') || this.parentElement.parentElement.querySelector('input');
                     if (passwordInput) {
                         const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
                         passwordInput.setAttribute('type', type);
-                        this.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+                        
+                        // Update icon
+                        const icon = this.querySelector('i');
+                        if (type === 'text') {
+                            icon.className = 'fas fa-eye-slash';
+                            this.setAttribute('title', 'Hide password');
+                        } else {
+                            icon.className = 'fas fa-eye';
+                            this.setAttribute('title', 'Show password');
+                        }
+                        
+                        passwordInput.focus();
                     }
                 });
             });

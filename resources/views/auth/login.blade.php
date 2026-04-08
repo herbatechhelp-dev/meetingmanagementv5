@@ -363,20 +363,6 @@
     font-size: 1rem; /* Increased from 0.85rem */
 }
 
-.input-with-icon {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-
-.input-with-icon i:first-child {
-    position: absolute;
-    left: 12px;
-    color: #94a3b8;
-    z-index: 2;
-    font-size: 0.9rem;
-}
-
 .input-with-icon .form-control {
     width: 100%;
     padding: 14px 45px 14px 45px;
@@ -399,33 +385,6 @@
     border-color: #dc2626;
 }
 
-.password-toggle {
-    position: absolute;
-    right: 12px;
-    background: none;
-    border: none;
-    color: #94a3b8;
-    cursor: pointer;
-    padding: 4px;
-    transition: all 0.3s ease;
-    font-size: 0.9rem;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 4px;
-    z-index: 3;
-}
-
-.password-toggle:hover {
-    color: #10b981;
-    background: rgba(16, 185, 129, 0.1);
-}
-
-.password-toggle:active {
-    transform: scale(0.95);
-}
 
 /* Error Messages */
 .error-message {
@@ -798,105 +757,5 @@
 }
 </style>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Password toggle functionality - FIXED VERSION
-    const passwordToggle = document.getElementById('passwordToggle');
-    const passwordInput = document.getElementById('password');
-    
-    if (passwordToggle && passwordInput) {
-        passwordToggle.addEventListener('click', function() {
-            const type = passwordInput.getAttribute('type');
-            const newType = type === 'password' ? 'text' : 'password';
-            
-            passwordInput.setAttribute('type', newType);
-            
-            // Update icon
-            const icon = this.querySelector('i');
-            if (newType === 'text') {
-                icon.className = 'fas fa-eye-slash';
-                this.setAttribute('title', 'Hide password');
-            } else {
-                icon.className = 'fas fa-eye';
-                this.setAttribute('title', 'Show password');
-            }
-            
-            // Focus back to input for better UX
-            passwordInput.focus();
-        });
-        
-        // Add hover effects
-        passwordToggle.addEventListener('mouseenter', function() {
-            this.style.transform = 'scale(1.1)';
-        });
-        
-        passwordToggle.addEventListener('mouseleave', function() {
-            this.style.transform = 'scale(1)';
-        });
-    }
-    
-    // Auto-hide alerts after 5 seconds
-    const alerts = document.querySelectorAll('.alert');
-    alerts.forEach(alert => {
-        setTimeout(() => {
-            alert.style.opacity = '0';
-            alert.style.transform = 'translateY(-10px)';
-            setTimeout(() => {
-                if (alert.parentNode) {
-                    alert.parentNode.removeChild(alert);
-                }
-            }, 300);
-        }, 5000);
-    });
-    
-    // Add loading state to login button
-    const loginForm = document.querySelector('.login-form');
-    const loginBtn = document.querySelector('.login-btn');
-    
-    if (loginForm && loginBtn) {
-        loginForm.addEventListener('submit', function(e) {
-            const btnText = loginBtn.querySelector('.btn-text');
-            const btnIcon = loginBtn.querySelector('i');
-            
-            if (btnText && btnIcon) {
-                loginBtn.disabled = true;
-                btnText.textContent = 'Signing In...';
-                btnIcon.className = 'fas fa-spinner loading';
-            }
-        });
-    }
-    
-    // Create additional floating particles dynamically
-    function createParticles() {
-        const particlesContainer = document.querySelector('.floating-particles');
-        if (particlesContainer) {
-            for (let i = 0; i < 4; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'particle';
-                particle.style.width = Math.random() * 8 + 4 + 'px';
-                particle.style.height = particle.style.width;
-                particle.style.left = Math.random() * 100 + '%';
-                particle.style.top = Math.random() * 100 + '%';
-                particle.style.animationDelay = Math.random() * 10 + 's';
-                particle.style.opacity = Math.random() * 0.1 + 0.05;
-                particlesContainer.appendChild(particle);
-            }
-        }
-    }
-    
-    createParticles();
-    
-    // Add input focus effects
-    const inputs = document.querySelectorAll('.form-control');
-    inputs.forEach(input => {
-        input.addEventListener('focus', function() {
-            this.parentElement.classList.add('focused');
-        });
-        
-        input.addEventListener('blur', function() {
-            this.parentElement.classList.remove('focused');
-        });
-    });
-});
-</script>
+
 @endsection
