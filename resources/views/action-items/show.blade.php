@@ -184,11 +184,11 @@
                 <div class="list-group list-group-flush">
                     @foreach($actionItem->files as $file)
                     <div class="list-group-item">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div class="flex-grow-1">
-                                <div class="d-flex align-items-center mb-1">
+                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+                            <div class="flex-grow-1" style="min-width: 0; max-width: 100%;">
+                                <div class="text-truncate mb-1" title="{{ $file->file_name }}">
                                     <i class="fas fa-file text-primary mr-2"></i>
-                                    <strong class="text-truncate">{{ $file->file_name }}</strong>
+                                    <strong>{{ $file->file_name }}</strong>
                                 </div>
                                 <div class="ml-4">
                                     <small class="text-muted d-block">
@@ -204,7 +204,7 @@
                                     @endif
                                 </div>
                             </div>
-                            <div>
+                            <div class="mt-3 mt-md-0 flex-shrink-0 w-100 w-md-auto text-right">
                                 <a href="{{ route('action-items.preview-file', [$actionItem, $file]) }}" target="_blank" class="btn btn-info btn-sm mr-1" title="Lihat/Preview">
                                     <i class="fas fa-eye"></i>
                                 </a>
