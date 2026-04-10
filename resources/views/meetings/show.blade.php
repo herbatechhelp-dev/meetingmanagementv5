@@ -326,20 +326,20 @@
 
                     @if($meeting->minutes)
                         <div class="p-4 bg-light rounded-xl border-0 mb-4" style="line-height: 1.7; color: #475569;">
-                            {!! nl2br(e($meeting->minutes->content)) !!}
+                            {!! $meeting->minutes->content !!}
                         </div>
 
                         @if($meeting->minutes->decisions && count($meeting->minutes->decisions) > 0)
                             <h6 class="font-weight-bold text-dark mb-3">Keputusan Penting</h6>
                             <div class="row g-3 mb-4">
                                 @foreach($meeting->minutes->decisions as $decision)
-                                    @if(!empty(trim($decision)))
+                                    @if(!empty(trim(strip_tags($decision))))
                                         <div class="col-12">
                                             <div class="d-flex align-items-start p-3 bg-white border rounded-xl">
                                                 <div class="bg-success-soft p-2 rounded-lg mr-3 text-success">
                                                     <i class="fas fa-check text-sm"></i>
                                                 </div>
-                                                <span class="text-dark font-weight-medium">{{ $decision }}</span>
+                                                <span class="text-dark font-weight-medium" style="line-height: inherit;">{!! $decision !!}</span>
                                             </div>
                                         </div>
                                     @endif
