@@ -16,6 +16,80 @@
             70% { transform: scale(1.03); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
             100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
+        @keyframes pulse-card-red {
+            0% { transform: scale(1) rotate(-1deg); box-shadow: 0 4px 15px rgba(239, 68, 68, 0.8), 0 0 0 0 rgba(239, 68, 68, 0.8); }
+            25% { transform: scale(1.04) rotate(1deg); box-shadow: 0 4px 25px rgba(245, 158, 11, 0.8), 0 0 0 10px rgba(245, 158, 11, 0.5); }
+            50% { transform: scale(1.02) rotate(-1deg); box-shadow: 0 4px 20px rgba(239, 68, 68, 1), 0 0 0 20px rgba(239, 68, 68, 0); }
+            75% { transform: scale(1.04) rotate(1deg); box-shadow: 0 4px 25px rgba(245, 158, 11, 0.8), 0 0 0 10px rgba(245, 158, 11, 0.5); }
+            100% { transform: scale(1) rotate(-1deg); box-shadow: 0 4px 15px rgba(239, 68, 68, 0.8), 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        @keyframes sonar-wave-bg {
+            0% { transform: scale(0.2); opacity: 1; border-width: 10px; }
+            100% { transform: scale(4); opacity: 0; border-width: 1px; }
+        }
+        @keyframes icon-shake-live {
+            0%, 100% { transform: rotate(0) scale(1.2); }
+            10%, 30%, 50%, 70%, 90% { transform: rotate(-25deg) scale(1.4); }
+            20%, 40%, 60%, 80% { transform: rotate(25deg) scale(1.4); }
+        }
+        @keyframes stripe-move {
+            0% { background-position: 0 0; }
+            100% { background-position: 60px 60px; }
+        }
+        @keyframes number-jump {
+            0%, 100% { transform: translateY(0) scale(1); color: #fff; }
+            50% { transform: translateY(-8px) scale(1.3); color: #fde047; text-shadow: 0px 5px 15px rgba(0,0,0,0.6); }
+        }
+        @keyframes extreme-blink {
+            0%, 49% { background: #fff; color: #ef4444; border-color: #fff; transform: scale(1.1); box-shadow: 0 0 15px #fff; }
+            50%, 100% { background: transparent; color: #fff; border-color: #fff; transform: scale(0.9); box-shadow: none; }
+        }
+        .card-live-pulse {
+            background: repeating-linear-gradient(
+                -45deg,
+                #ef4444,
+                #ef4444 15px,
+                #b91c1c 15px,
+                #b91c1c 30px
+            ) !important;
+            animation: pulse-card-red 1s infinite ease-in-out, stripe-move 1s linear infinite !important;
+            border: 3px solid #fca5a5 !important;
+            position: relative;
+            overflow: hidden !important;
+            z-index: 1;
+        }
+        /* Sonar Effect behind text */
+        .card-live-pulse::before, .card-live-pulse::after {
+            content: '';
+            position: absolute;
+            left: 50%; 
+            top: 50%;
+            width: 100px;
+            height: 100px;
+            margin-left: -50px;
+            margin-top: -50px;
+            background: transparent;
+            border: 4px solid rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            animation: sonar-wave-bg 1s infinite ease-out;
+            pointer-events: none;
+            z-index: -1;
+        }
+        .card-live-pulse::after {
+            animation-delay: 0.5s;
+        }
+        .card-live-pulse * {
+            z-index: 2;
+        }
+        .card-live-pulse .glass-icon-wrapper i {
+            animation: icon-shake-live 0.5s infinite;
+            color: #fde047 !important;
+            text-shadow: 0 0 15px rgba(255,255,255,1);
+        }
+        .card-live-pulse h3 {
+            animation: number-jump 0.5s infinite;
+            display: inline-block;
+        }
     </style>
     <!-- Extreme Minimalist Stats Cards -->
     <div class="row mb-3">
@@ -93,13 +167,18 @@
         </div>
         <div class="col-xl col-lg-4 col-md-6 mb-4">
             <a href="{{ route('room-bookings.index') }}" class="text-decoration-none transition-hover d-block h-100">
-                <div class="card h-100 border-0 shadow-sm rounded-xl stats-card" style="background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);">
+                <div class="card h-100 border-0 shadow-sm rounded-xl stats-card {{ $activeRoomsCount > 0 ? 'card-live-pulse' : '' }}" style="background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);">
                     <div class="card-body p-3 p-xl-4 d-flex flex-column justify-content-center">
                         <div class="d-flex align-items-center mb-3">
                             <div class="glass-icon-wrapper mr-2 mr-xl-3 flex-shrink-0" style="width: 32px; height: 32px;">
                                 <i class="fas fa-door-open text-white" style="font-size: 0.85rem;"></i>
                             </div>
                             <span class="text-xs font-weight-bold text-uppercase text-white-50 letter-spacing-1">Info Ruangan</span>
+                            @if($activeRoomsCount > 0)
+                                <span class="badge badge-pill text-white ml-auto d-flex align-items-center" style="font-size: 0.75rem; font-weight: 800; letter-spacing: 1px; animation: extreme-blink 0.4s infinite; padding: 4px 10px; border-radius: 50px; border: 2px solid #fff;">
+                                    <i class="fas fa-exclamation-triangle mr-1"></i> LIVE
+                                </span>
+                            @endif
                         </div>
                         <div class="row text-white mx-0 w-100 mt-auto">
                             <div class="col-6 px-0" style="border-right: 1px solid rgba(255,255,255,0.2);">
