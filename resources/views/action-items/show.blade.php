@@ -246,9 +246,15 @@
 
                             {{-- Action Buttons --}}
                             <div class="ml-3 flex-shrink-0 d-flex align-items-center" style="gap: 4px;">
-                                <a href="{{ route('action-items.preview-file', [$actionItem, $file]) }}" target="_blank" class="btn btn-outline-info btn-sm" title="Lihat/Preview">
+                                <button type="button" class="btn btn-outline-info btn-sm file-preview-btn"
+                                    data-url="{{ route('action-items.preview-file', [$actionItem, $file]) }}"
+                                    data-name="{{ $file->file_name }}"
+                                    data-type="{{ $file->file_type }}"
+                                    data-size="{{ $file->file_size_formatted }}"
+                                    data-download="{{ route('action-items.download-file', [$actionItem, $file]) }}"
+                                    title="Lihat/Preview">
                                     <i class="fas fa-eye"></i>
-                                </a>
+                                </button>
                                 <a href="{{ route('action-items.download-file', [$actionItem, $file]) }}" class="btn btn-outline-success btn-sm" title="Download">
                                     <i class="fas fa-download"></i>
                                 </a>
@@ -467,12 +473,29 @@
                 @csrf
                 <div class="modal-body">
                     <div class="form-group">
-                        <label for="file" class="font-weight-bold small">File *</label>
-                        <div class="custom-file">
-                            <input type="file" class="custom-file-input" id="file" name="file" required>
-                            <label class="custom-file-label" for="file">Pilih file...</label>
+                        <label for="files" class="font-weight-bold small">File * <small class="text-muted font-weight-normal">(bisa pilih lebih dari 1)</small></label>
+                        <div class="custom-file" id="customFileWrapper">
+                            <input type="file" class="custom-file-input" id="files" name="files[]" multiple required>
+                            <label class="custom-file-label" for="files" id="fileLabel">Pilih file...</label>
                         </div>
-                        <small class="form-text text-muted"><i class="fas fa-info-circle mr-1"></i>Maksimal 10MB</small>
+                        <small class="form-text text-muted"><i class="fas fa-info-circle mr-1"></i>Maksimal 10MB per file</small>
+
+                        {{-- File Preview List --}}
+                        <div id="filePreviewArea" class="file-preview-card mt-2" style="display: none;">
+                            <div class="border border-success rounded" style="background-color: #f0fff4;">
+                                <div class="d-flex align-items-center justify-content-between px-3 py-2 border-bottom" style="background-color: #e8f5e9;">
+                                    <small class="font-weight-bold text-success">
+                                        <i class="fas fa-check-circle mr-1"></i>
+                                        <span id="fileCount">0</span> file siap diupload
+                                        <span class="text-muted ml-1">(<span id="fileTotalSize">0 KB</span>)</span>
+                                    </small>
+                                    <button type="button" class="btn btn-sm text-danger p-0" id="fileClearAllBtn" title="Hapus semua" style="font-size: 0.75rem;">
+                                        <i class="fas fa-trash-alt mr-1"></i>Hapus Semua
+                                    </button>
+                                </div>
+                                <div id="fileListContainer" style="max-height: 200px; overflow-y: auto;"></div>
+                            </div>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label for="description" class="font-weight-bold small">Deskripsi File</label>
@@ -481,7 +504,7 @@
                 </div>
                 <div class="modal-footer py-2">
                     <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-upload mr-1"></i>Upload</button>
+                    <button type="submit" class="btn btn-primary btn-sm" id="uploadSubmitBtn"><i class="fas fa-upload mr-1"></i>Upload</button>
                 </div>
             </form>
         </div>
@@ -489,42 +512,41 @@
 </div>
 @endif
 
+{{-- File Preview Modal --}}
+<div class="modal fade" id="filePreviewModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+        <div class="modal-content" style="border: none; border-radius: 12px; overflow: hidden;">
+            <div class="modal-header py-2 px-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="d-flex align-items-center text-white" style="min-width: 0;">
+                    <i class="fas fa-eye mr-2"></i>
+                    <span id="previewModalTitle" class="font-weight-bold text-truncate" style="font-size: 0.9rem;">Preview</span>
+                </div>
+                <div class="d-flex align-items-center" style="gap: 8px;">
+                    <a href="#" id="previewDownloadBtn" class="btn btn-sm btn-light" title="Download" style="font-size: 0.75rem;">
+                        <i class="fas fa-download mr-1"></i>Download
+                    </a>
+                    <a href="#" id="previewNewTabBtn" target="_blank" class="btn btn-sm btn-outline-light" title="Buka di tab baru" style="font-size: 0.75rem;">
+                        <i class="fas fa-external-link-alt"></i>
+                    </a>
+                    <button type="button" class="close text-white ml-0" data-dismiss="modal" style="opacity: 1; text-shadow: none;">
+                        <span style="font-size: 1.5rem;">&times;</span>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-body p-0" id="previewModalBody" style="min-height: 400px; max-height: 80vh; overflow: auto; background-color: #1a1a2e; display: flex; align-items: center; justify-content: center;">
+                {{-- Content loaded dynamically --}}
+                <div id="previewLoading" class="text-center py-5">
+                    <div class="spinner-border text-light" role="status" style="width: 3rem; height: 3rem;"></div>
+                    <p class="text-light mt-3 mb-0">Memuat preview...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection
 
-@section('scripts')
-<script>
-// Custom file input name display
-document.querySelector('.custom-file-input')?.addEventListener('change', function(e) {
-    var fileName = document.getElementById("file").files[0].name;
-    var nextSibling = e.target.nextElementSibling;
-    nextSibling.innerText = fileName;
-});
-
-// Hapus Konfirmasi
-function confirmDeleteActionItem(title) {
-    return confirm(`Hapus tindak lanjut "${title}"?\n\nTindakan ini tidak dapat dibatalkan dan semua data terkait akan dihapus permanen!`);
-}
-
-// Loading state untuk hapus
-document.addEventListener('DOMContentLoaded', function() {
-    const deleteForms = document.querySelectorAll('form[action*="action-items"]');
-    deleteForms.forEach(form => {
-        form.addEventListener('submit', function(e) {
-            const button = this.querySelector('button[type="submit"]');
-            if (button && button.innerHTML.includes('fa-trash')) {
-                const originalText = button.innerHTML;
-                button.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Menghapus...';
-                button.disabled = true;
-                setTimeout(() => {
-                    button.innerHTML = originalText;
-                    button.disabled = false;
-                }, 5000);
-            }
-        });
-    });
-});
-</script>
-
+@push('styles')
 <style>
 .btn-danger {
     transition: all 0.3s ease;
@@ -565,5 +587,357 @@ document.addEventListener('DOMContentLoaded', function() {
     word-break: break-word;
     line-height: 1.5;
 }
+/* File Upload Preview Card */
+.file-preview-card {
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.file-preview-card.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+.custom-file.file-selected .custom-file-label {
+    border-color: #28a745;
+    color: #28a745;
+}
+.custom-file.file-selected .custom-file-label::after {
+    background-color: #28a745;
+    border-color: #28a745;
+    color: #fff;
+    content: "\2713";
+}
+.file-preview-row {
+    transition: background-color 0.15s ease;
+}
+.file-preview-row:hover {
+    background-color: #e8f5e9;
+}
+.file-remove-btn:hover {
+    background-color: #ffeaea;
+    border-radius: 50%;
+}
+/* File Preview Modal */
+#filePreviewModal .modal-content {
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+#filePreviewModal .modal-header {
+    border-bottom: none;
+}
+#filePreviewModal .modal-body img,
+#filePreviewModal .modal-body video {
+    animation: fadeInPreview 0.3s ease;
+}
+@keyframes fadeInPreview {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+#fileClearAllBtn:hover {
+    text-decoration: underline;
+}
 </style>
-@endsection
+@endpush
+
+@push('scripts')
+<script>
+// === File Preview Modal Logic ===
+(function() {
+    const modal = document.getElementById('filePreviewModal');
+    if (!modal) return;
+
+    const modalTitle = document.getElementById('previewModalTitle');
+    const modalBody = document.getElementById('previewModalBody');
+    const downloadBtn = document.getElementById('previewDownloadBtn');
+    const newTabBtn = document.getElementById('previewNewTabBtn');
+    const loadingEl = document.getElementById('previewLoading');
+
+    const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'];
+    const videoExts = ['mp4', 'webm', 'ogg', 'mov'];
+    const audioExts = ['mp3', 'wav', 'ogg', 'aac', 'flac'];
+    const pdfExts = ['pdf'];
+    const textExts = ['txt', 'csv', 'json', 'xml', 'log', 'md'];
+
+    function getExt(filename) {
+        return filename.split('.').pop().toLowerCase();
+    }
+
+    function buildPreviewContent(url, filename, mimeType, fileSize, downloadUrl) {
+        const ext = getExt(filename);
+
+        if (imageExts.includes(ext)) {
+            return `<img src="${url}" alt="${filename}" style="max-width: 100%; max-height: 78vh; object-fit: contain; display: block; margin: auto;" onload="document.getElementById('previewLoading').style.display='none'" onerror="this.outerHTML='<div class=\'text-center py-5 text-light\'><i class=\'fas fa-exclamation-triangle fa-3x mb-3\'></i><p>Gagal memuat gambar</p></div>'">`;
+        }
+
+        if (pdfExts.includes(ext)) {
+            return `<iframe src="${url}" style="width: 100%; height: 78vh; border: none;" onload="document.getElementById('previewLoading').style.display='none'"></iframe>`;
+        }
+
+        if (videoExts.includes(ext)) {
+            return `<video controls autoplay style="max-width: 100%; max-height: 78vh; display: block; margin: auto;" onloadeddata="document.getElementById('previewLoading').style.display='none'">
+                <source src="${url}" type="${mimeType || 'video/mp4'}">
+                Browser Anda tidak mendukung tag video.
+            </video>`;
+        }
+
+        if (audioExts.includes(ext)) {
+            return `<div class="text-center py-5" style="width: 100%;">
+                <i class="fas fa-music fa-4x text-light mb-4" style="opacity: 0.5;"></i>
+                <p class="text-light mb-4">${filename}</p>
+                <audio controls autoplay style="width: 80%; max-width: 500px;" onloadeddata="document.getElementById('previewLoading').style.display='none'">
+                    <source src="${url}" type="${mimeType || 'audio/mpeg'}">
+                </audio>
+            </div>`;
+        }
+
+        if (textExts.includes(ext)) {
+            // Fetch and display text content
+            fetch(url)
+                .then(r => r.text())
+                .then(text => {
+                    loadingEl.style.display = 'none';
+                    modalBody.innerHTML = `<pre style="color: #e0e0e0; padding: 20px; margin: 0; width: 100%; overflow: auto; font-size: 0.85rem; white-space: pre-wrap; word-wrap: break-word;">${text.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>`;
+                })
+                .catch(() => {
+                    loadingEl.style.display = 'none';
+                    modalBody.innerHTML = '<div class="text-center py-5 text-light"><i class="fas fa-exclamation-triangle fa-3x mb-3"></i><p>Gagal memuat file teks</p></div>';
+                });
+            return ''; // Content loaded async
+        }
+
+        // Unsupported / non-previewable file type - show info card
+        loadingEl.style.display = 'none';
+        const iconMap = {
+            'zip': 'fa-file-archive', 'rar': 'fa-file-archive', '7z': 'fa-file-archive',
+            'doc': 'fa-file-word', 'docx': 'fa-file-word',
+            'xls': 'fa-file-excel', 'xlsx': 'fa-file-excel',
+            'ppt': 'fa-file-powerpoint', 'pptx': 'fa-file-powerpoint',
+        };
+        const colorMap = {
+            'doc': 'color: #2b579a', 'docx': 'color: #2b579a',
+            'xls': 'color: #217346', 'xlsx': 'color: #217346',
+            'ppt': 'color: #d24726', 'pptx': 'color: #d24726',
+        };
+        const icon = iconMap[ext] || 'fa-file';
+        const iconColor = colorMap[ext] || '';
+        return `<div class="text-center py-5" style="width: 100%;">
+            <i class="fas ${icon} fa-5x mb-4" style="opacity: 0.6; ${iconColor || 'color: rgba(255,255,255,0.3)'}"></i>
+            <h5 class="text-light mb-2">${filename}</h5>
+            <p class="text-muted mb-1">Ukuran: ${fileSize}</p>
+            <p class="text-muted mb-4">Tipe file ini tidak dapat di-preview langsung</p>
+            <a href="${downloadUrl}" class="btn btn-primary">
+                <i class="fas fa-download mr-2"></i>Download File
+            </a>
+        </div>`;
+    }
+
+    // Bind click to all preview buttons
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.file-preview-btn');
+        if (!btn) return;
+
+        const url = btn.dataset.url;
+        const name = btn.dataset.name;
+        const type = btn.dataset.type;
+        const size = btn.dataset.size;
+        const downloadUrl = btn.dataset.download;
+
+        // Set modal info
+        modalTitle.textContent = name;
+        downloadBtn.href = downloadUrl;
+        newTabBtn.href = url;
+
+        // Reset and show loading
+        loadingEl.style.display = '';
+        const content = buildPreviewContent(url, name, type, size, downloadUrl);
+        if (content) {
+            modalBody.innerHTML = loadingEl.outerHTML + content;
+        }
+
+        // Open modal
+        $('#filePreviewModal').modal('show');
+    });
+
+    // Clean up on modal close
+    $('#filePreviewModal').on('hidden.bs.modal', function() {
+        modalBody.innerHTML = loadingEl.outerHTML;
+    });
+})();
+
+// === File Upload Preview Logic (Multiple Files) ===
+(function() {
+    const fileInput = document.getElementById('files');
+    const fileLabel = document.getElementById('fileLabel');
+    const previewArea = document.getElementById('filePreviewArea');
+    const fileListContainer = document.getElementById('fileListContainer');
+    const fileCountEl = document.getElementById('fileCount');
+    const fileTotalSizeEl = document.getElementById('fileTotalSize');
+    const clearAllBtn = document.getElementById('fileClearAllBtn');
+    const customFileWrapper = document.getElementById('customFileWrapper');
+    const uploadSubmitBtn = document.getElementById('uploadSubmitBtn');
+
+    if (!fileInput) return;
+
+    // Stored files (DataTransfer to manage file list)
+    let selectedFiles = new DataTransfer();
+
+    const iconMap = {
+        'pdf': ['fa-file-pdf', 'text-danger'],
+        'doc': ['fa-file-word', 'text-primary'],
+        'docx': ['fa-file-word', 'text-primary'],
+        'xls': ['fa-file-excel', 'text-success'],
+        'xlsx': ['fa-file-excel', 'text-success'],
+        'ppt': ['fa-file-powerpoint', 'text-warning'],
+        'pptx': ['fa-file-powerpoint', 'text-warning'],
+        'jpg': ['fa-file-image', 'text-info'],
+        'jpeg': ['fa-file-image', 'text-info'],
+        'png': ['fa-file-image', 'text-info'],
+        'gif': ['fa-file-image', 'text-info'],
+        'zip': ['fa-file-archive', 'text-secondary'],
+        'rar': ['fa-file-archive', 'text-secondary'],
+    };
+
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    function getFileIcon(filename) {
+        const ext = filename.split('.').pop().toLowerCase();
+        return iconMap[ext] || ['fa-file', 'text-muted'];
+    }
+
+    function renderFileList() {
+        const files = selectedFiles.files;
+        
+        if (files.length === 0) {
+            clearAll();
+            return;
+        }
+
+        // Update label
+        fileLabel.textContent = files.length === 1 
+            ? files[0].name 
+            : files.length + ' file dipilih';
+
+        // Calculate total size
+        let totalSize = 0;
+        for (let i = 0; i < files.length; i++) {
+            totalSize += files[i].size;
+        }
+
+        fileCountEl.textContent = files.length;
+        fileTotalSizeEl.textContent = formatFileSize(totalSize);
+
+        // Build file list HTML
+        let html = '';
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const [iconClass, colorClass] = getFileIcon(file.name);
+            const isOversize = file.size > 10 * 1024 * 1024;
+            
+            html += `<div class="d-flex align-items-center px-3 py-2 file-preview-row ${i < files.length - 1 ? 'border-bottom' : ''}" data-index="${i}">
+                <div class="mr-2 flex-shrink-0" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas ${iconClass} ${colorClass}"></i>
+                </div>
+                <div class="flex-grow-1" style="min-width: 0;">
+                    <div class="text-truncate" style="font-size: 0.82rem; font-weight: 600;" title="${file.name}">${file.name}</div>
+                    <small class="${isOversize ? 'text-danger' : 'text-muted'}">
+                        ${formatFileSize(file.size)}${isOversize ? ' <i class="fas fa-exclamation-triangle"></i> Melebihi 10MB!' : ''}
+                    </small>
+                </div>
+                <button type="button" class="btn btn-sm text-danger p-0 ml-2 flex-shrink-0 file-remove-btn" data-index="${i}" title="Hapus file ini" style="width: 22px; height: 22px; line-height: 1;">
+                    <i class="fas fa-times" style="font-size: 0.7rem;"></i>
+                </button>
+            </div>`;
+        }
+        fileListContainer.innerHTML = html;
+
+        // Show area with animation
+        previewArea.style.display = 'block';
+        requestAnimationFrame(() => previewArea.classList.add('show'));
+        customFileWrapper.classList.add('file-selected');
+
+        // Bind individual remove buttons
+        fileListContainer.querySelectorAll('.file-remove-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                removeFileAt(parseInt(this.dataset.index));
+            });
+        });
+    }
+
+    function removeFileAt(index) {
+        const newDt = new DataTransfer();
+        const files = selectedFiles.files;
+        for (let i = 0; i < files.length; i++) {
+            if (i !== index) newDt.items.add(files[i]);
+        }
+        selectedFiles = newDt;
+        fileInput.files = selectedFiles.files;
+        renderFileList();
+    }
+
+    function clearAll() {
+        selectedFiles = new DataTransfer();
+        fileInput.files = selectedFiles.files;
+        fileLabel.textContent = 'Pilih file...';
+        fileListContainer.innerHTML = '';
+        previewArea.classList.remove('show');
+        setTimeout(() => { previewArea.style.display = 'none'; }, 200);
+        customFileWrapper.classList.remove('file-selected');
+    }
+
+    // File input change
+    fileInput.addEventListener('change', function() {
+        if (this.files && this.files.length > 0) {
+            // Append new files to existing selection
+            for (let i = 0; i < this.files.length; i++) {
+                selectedFiles.items.add(this.files[i]);
+            }
+            fileInput.files = selectedFiles.files;
+            renderFileList();
+        }
+    });
+
+    // Clear all button
+    if (clearAllBtn) {
+        clearAllBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            clearAll();
+        });
+    }
+
+    // Reset on modal close
+    $('#uploadFileModal').on('hidden.bs.modal', function() {
+        clearAll();
+    });
+})();
+
+// Hapus Konfirmasi
+function confirmDeleteActionItem(title) {
+    return confirm(`Hapus tindak lanjut "${title}"?\n\nTindakan ini tidak dapat dibatalkan dan semua data terkait akan dihapus permanen!`);
+}
+
+// Loading state untuk hapus
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteForms = document.querySelectorAll('form[action*="action-items"]');
+    deleteForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const button = this.querySelector('button[type="submit"]');
+            if (button && button.innerHTML.includes('fa-trash')) {
+                const originalText = button.innerHTML;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Menghapus...';
+                button.disabled = true;
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                }, 5000);
+            }
+        });
+    });
+});
+</script>
+@endpush

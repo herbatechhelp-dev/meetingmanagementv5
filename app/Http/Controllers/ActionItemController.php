@@ -487,26 +487,30 @@ class ActionItemController extends Controller
         }
 
         $request->validate([
-            'file' => 'required|file|max:10240', // Max 10MB
+            'files' => 'required|array|min:1',
+            'files.*' => 'file|max:10240', // Max 10MB per file
             'description' => 'nullable|string|max:255'
         ]);
 
         try {
-            $file = $request->file('file');
-            $path = $file->store('action_item_files/' . $actionItem->id, 'public');
+            $uploadedCount = 0;
+            foreach ($request->file('files') as $file) {
+                $path = $file->store('action_item_files/' . $actionItem->id, 'public');
 
-            ActionItemFile::create([
-                'action_item_id' => $actionItem->id,
-                'uploaded_by' => auth()->id(),
-                'file_name' => $file->getClientOriginalName(),
-                'file_path' => $path,
-                'file_type' => $file->getMimeType(),
-                'file_size' => $file->getSize(),
-                'description' => $request->description
-            ]);
+                ActionItemFile::create([
+                    'action_item_id' => $actionItem->id,
+                    'uploaded_by' => auth()->id(),
+                    'file_name' => $file->getClientOriginalName(),
+                    'file_path' => $path,
+                    'file_type' => $file->getMimeType(),
+                    'file_size' => $file->getSize(),
+                    'description' => $request->description
+                ]);
+                $uploadedCount++;
+            }
 
             return redirect()->back()
-                ->with('success', 'File berhasil diupload.');
+                ->with('success', "{$uploadedCount} file berhasil diupload.");
         } catch (\Exception $e) {
             return redirect()->back()
                 ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
