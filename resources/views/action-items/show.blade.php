@@ -183,39 +183,80 @@
                 @if($actionItem->files->count() > 0)
                 <div class="list-group list-group-flush">
                     @foreach($actionItem->files as $file)
-                    <div class="list-group-item">
-                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
-                            <div class="flex-grow-1" style="min-width: 0; max-width: 100%;">
-                                <div class="text-truncate mb-1" title="{{ $file->file_name }}">
-                                    <i class="fas fa-file text-primary mr-2"></i>
-                                    <strong>{{ $file->file_name }}</strong>
-                                </div>
-                                <div class="ml-4">
-                                    <small class="text-muted d-block">
-                                        <i class="fas fa-hdd mr-1"></i>{{ $file->file_size_formatted }}
-                                    </small>
-                                    <small class="text-muted d-block">
-                                        <i class="fas fa-user mr-1"></i>{{ $file->uploader->name }}
-                                    </small>
-                                    @if($file->description)
-                                    <small class="text-dark d-block mt-1 p-1 bg-light border-left border-primary" style="font-style: italic;">
-                                        <i class="fas fa-comment-alt mr-1 text-primary"></i> "{{ $file->description }}"
-                                    </small>
-                                    @endif
+                    @php
+                        $ext = strtolower(pathinfo($file->file_name, PATHINFO_EXTENSION));
+                        $iconMap = [
+                            'pdf' => ['fa-file-pdf', 'text-danger'],
+                            'doc' => ['fa-file-word', 'text-primary'],
+                            'docx' => ['fa-file-word', 'text-primary'],
+                            'xls' => ['fa-file-excel', 'text-success'],
+                            'xlsx' => ['fa-file-excel', 'text-success'],
+                            'ppt' => ['fa-file-powerpoint', 'text-warning'],
+                            'pptx' => ['fa-file-powerpoint', 'text-warning'],
+                            'jpg' => ['fa-file-image', 'text-info'],
+                            'jpeg' => ['fa-file-image', 'text-info'],
+                            'png' => ['fa-file-image', 'text-info'],
+                            'gif' => ['fa-file-image', 'text-info'],
+                            'zip' => ['fa-file-archive', 'text-secondary'],
+                            'rar' => ['fa-file-archive', 'text-secondary'],
+                        ];
+                        $icon = $iconMap[$ext] ?? ['fa-file', 'text-muted'];
+                    @endphp
+                    <div class="list-group-item file-attachment-item py-3">
+                        <div class="d-flex align-items-start">
+                            {{-- File Icon --}}
+                            <div class="file-icon-wrapper mr-3 flex-shrink-0">
+                                <div class="file-icon-box rounded d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; background-color: #f0f4ff;">
+                                    <i class="fas {{ $icon[0] }} {{ $icon[1] }} fa-lg"></i>
                                 </div>
                             </div>
-                            <div class="mt-3 mt-md-0 flex-shrink-0 w-100 w-md-auto text-right">
-                                <a href="{{ route('action-items.preview-file', [$actionItem, $file]) }}" target="_blank" class="btn btn-info btn-sm mr-1" title="Lihat/Preview">
+
+                            {{-- File Info --}}
+                            <div class="flex-grow-1" style="min-width: 0;">
+                                {{-- Filename --}}
+                                <div class="d-flex align-items-center mb-1">
+                                    <strong class="text-truncate d-block" title="{{ $file->file_name }}" style="max-width: 100%;">
+                                        {{ $file->file_name }}
+                                    </strong>
+                                </div>
+
+                                {{-- Metadata row --}}
+                                <div class="d-flex flex-wrap align-items-center text-muted" style="gap: 4px 12px; font-size: 0.8rem;">
+                                    <span title="Ukuran file">
+                                        <i class="fas fa-hdd mr-1"></i>{{ $file->file_size_formatted }}
+                                    </span>
+                                    <span class="d-none d-sm-inline text-light">|</span>
+                                    <span title="Diupload oleh">
+                                        <i class="fas fa-user mr-1"></i>{{ $file->uploader->name }}
+                                    </span>
+                                    <span class="d-none d-sm-inline text-light">|</span>
+                                    <span title="Tanggal upload">
+                                        <i class="fas fa-clock mr-1"></i>{{ $file->created_at->format('d M Y H:i') }}
+                                    </span>
+                                </div>
+
+                                {{-- Description --}}
+                                @if($file->description)
+                                <div class="file-description mt-2 p-2 rounded" style="background-color: #f8f9fb; border-left: 3px solid #4e73df; font-size: 0.82rem;">
+                                    <i class="fas fa-comment-alt mr-1 text-primary" style="font-size: 0.75rem;"></i>
+                                    <span class="text-dark">{{ $file->description }}</span>
+                                </div>
+                                @endif
+                            </div>
+
+                            {{-- Action Buttons --}}
+                            <div class="ml-3 flex-shrink-0 d-flex align-items-center" style="gap: 4px;">
+                                <a href="{{ route('action-items.preview-file', [$actionItem, $file]) }}" target="_blank" class="btn btn-outline-info btn-sm" title="Lihat/Preview">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                <a href="{{ route('action-items.download-file', [$actionItem, $file]) }}" class="btn btn-success btn-sm" title="Download">
+                                <a href="{{ route('action-items.download-file', [$actionItem, $file]) }}" class="btn btn-outline-success btn-sm" title="Download">
                                     <i class="fas fa-download"></i>
                                 </a>
                                 @if($file->uploaded_by == auth()->id() && in_array($actionItem->status, ['pending', 'in_progress', 'needs_revision']))
                                 <form action="{{ route('action-items.delete-file', [$actionItem, $file]) }}" method="POST" class="d-inline">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Hapus file ini?')" title="Hapus">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Hapus file ini?')" title="Hapus">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
@@ -226,8 +267,8 @@
                     @endforeach
                 </div>
                 @else
-                <div class="text-center py-4">
-                    <i class="fas fa-file fa-2x text-muted mb-2"></i>
+                <div class="text-center py-5">
+                    <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3 d-block" style="opacity: 0.3;"></i>
                     <p class="text-muted mb-0">Belum ada file bukti yang diunggah.</p>
                 </div>
                 @endif
@@ -503,6 +544,26 @@ document.addEventListener('DOMContentLoaded', function() {
 .card-footer {
     background-color: #f8f9fa;
     border-top: 1px solid #e3e6f0;
+}
+/* File Attachment Styles */
+.file-attachment-item {
+    transition: background-color 0.15s ease;
+    border-left: 3px solid transparent;
+}
+.file-attachment-item:hover {
+    background-color: #f8f9ff;
+    border-left-color: #4e73df;
+}
+.file-icon-box {
+    transition: all 0.2s ease;
+}
+.file-attachment-item:hover .file-icon-box {
+    background-color: #e0e7ff !important;
+    transform: scale(1.05);
+}
+.file-description {
+    word-break: break-word;
+    line-height: 1.5;
 }
 </style>
 @endsection
